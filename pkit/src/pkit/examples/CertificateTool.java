@@ -5,12 +5,13 @@ import pkit.cert.SignUtils;
 import pkit.cert.CertificateData;
 
 import java.io.*;
+import java.util.*;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
 /**
- *  A example of how to use the cert package to signe a cert
+ *  A example of how to use the cert package to sign a cert
  *
  *@author     justinw
  *@created    December 2003
@@ -22,11 +23,16 @@ class CertificateTool {
 	 *
 	 *@param  args  The command line arguments
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		String dn = SignUtils.createDN("My Name", "@Home", "Gumjungle", "Boksburg", "Gauteng", "ZA");
-		RSASigner signer = new RSASigner();
+		if (args.length>1) {
+			System.out.println("Usage: CertificateTool propertiesFile");
+		}
+		Properties props = new Properties();
+		props.load(new FileInputStream(args[0]));
+		RSASigner signer = new RSASigner(props);
 		try {
-			//makes a key pair
+			//make a key pair
 			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA", "SUN");
 			SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
 			keyGen.initialize(1024, random);
