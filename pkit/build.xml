@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<project name="CertTools" basedir="." default="all">
+    <target name="init">
+        <!-- property name="build.compiler" value="jikes"/ -->
+        
+        <property name="build" value="build"/>
+        <property name="dist" value="dist"/>
+        <property name="apidoc" value="docs"/>
+	<property name="source" value="src"/>
+	<property name="etc" value="etc"/>
+		
+        <property name="libs" value=".\lib\bcprov-jdk14-115.jar;.\lib\log4j-1.2.jar;.\lib\ca.jar"/>
+        <property name="jarfile" value="${dist}/certtool.jar"/>
+        
+        <mkdir dir="${dist}"/>
+        <mkdir dir="${build}"/>
+        <mkdir dir="${apidoc}"/>
+    </target>
+
+    <target name="compile" depends="init">
+        <javac srcdir="./${source}" destdir="${build}" debug="true" deprecation="true">
+            <classpath>
+                <pathelement path="${libs}"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="jar" depends="init,compile">
+        <jar jarfile="${jarfile}" compress="true" basedir="${build}" manifest="${etc}/manifest.mf" />
+    </target>
+
+    <target name="all" depends="init,jar" description="Build everything.">
+        <echo message="Application built."/>
+    </target>
+    
+       <target name="makeCACert" depends="all" description="Make a CA root cert." >
+		<java classname="se.anatom.ejbca.admin.ca"  fork="true">
+			            <classpath>
+				    	<path path="${libs}"/>
+				    </classpath>
+			<arg value="makeroot"/>
+			<arg value="C=ZA, O=My Organisation, OU=My Organisation Primary Certificate"/>
+			<arg value="1024"/>
+			<arg value="720"/>
+			<arg value="keystore.p12"/>
+			<arg value="password"/>
+		</java>
+    </target>    
+    
+      <target name="signcert" depends="jar" description="Generates a key and signs it with the CA Cert." >
+		<java classname="pkit/examples/CertificateTool" classpath="./build:${libs}" fork="true" />
+    </target>
+	
+    <target name="clean" depends="init" description="Clean all build products.">
+         <delete dir="${build}"/>
+         <delete dir="${dist}"/>
+    </target>
+
+</project>
