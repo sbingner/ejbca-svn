@@ -21,7 +21,18 @@ import java.math.BigInteger;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.security.cert.X509CRL;
-import java.security.*;
+import java.security.cert.CertificateException;
+import java.security.InvalidKeyException;
+import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.Provider;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.security.SignatureException;
+import java.security.InvalidKeyException;
 
 import se.anatom.ejbca.ca.auth.UserAuthData;
 import se.anatom.ejbca.ca.crl.RevokedCertInfo;
@@ -34,17 +45,40 @@ import se.anatom.ejbca.ca.exception.AuthLoginException;
 import se.anatom.ejbca.ca.exception.SignRequestException;
 import se.anatom.ejbca.ca.exception.SignRequestSignatureException;
 
-import org.bouncycastle.jce.*;
-import org.bouncycastle.asn1.x509.*;
-import org.bouncycastle.asn1.*;
+import org.bouncycastle.jce.PKCS10CertificationRequest;
+import org.bouncycastle.jce.X509KeyUsage;
+import org.bouncycastle.jce.X509V2CRLGenerator;
+import org.bouncycastle.jce.X509V3CertificateGenerator;
+import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
+import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.CRLNumber;
+import org.bouncycastle.asn1.x509.DistributionPoint;
+import org.bouncycastle.asn1.x509.DistributionPointName;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.asn1.x509.X509Extensions;
+import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.DERIA5String;
+import org.bouncycastle.asn1.DERInputStream;
+import org.bouncycastle.asn1.DERObject;
+import org.bouncycastle.asn1.DERInputStream;
+import org.bouncycastle.asn1.ASN1Sequence;
 
 import java.util.Properties;
 
 /**
- *  Creates X509 certificates using RSA keys.
+ *  Creates X509 certificates using RSA keys. <p>
+ *
+ *  NOTE: This class only caters for signing by two or less level CA certs ie a
+ *  root CA cert or sub CA cert signed by a root cert </p>
  *
  *@author     Justin Wood & Tomas Gustavson
  *@created    26 February 2003
+ *@todo       Add support for CA cert levels >2 and add option to use PKCS10
+ *      attributes to construct certs
  */
 public class RSASigner {
 
@@ -65,14 +99,25 @@ public class RSASigner {
 	private boolean emailindn;
 	private boolean finishUser;
 	private SecureRandom random;
-	
+
+	/**
+	 *  The default name used for the keystore file containing the private key
+	 */
 	public static String DEFAULT_KEYSTORE_NAME = "keystore";
-	public static String DEFAULT_PRIVATE_KEY_ALIAS="MyKey";
-	
+	/**
+	 *  The default alias of the private key
+	 */
+	public static String DEFAULT_PRIVATE_KEY_ALIAS = "MyKey";
+
 	Properties defaultProperties;
 	
-	//----------------------------------------
-
+	//the type of keysstore to use eg PKCS12 or JKS
+	String keyStoreType;
+	
+	//the provider to use for the keystore
+	String keyStoreProvider;
+	
+	
 	//Location of CA keystore;
 	String keyStorePath;
 
@@ -140,34 +185,44 @@ public class RSASigner {
 	Long cRLPeriod;
 
 
-	//-------------------------------------------
 	/**
-	 *  Constructor for the RSASigner object sets all fields to the values
-	 * define in the pass properties.
-	 * 
+	 *  Constructor for the RSASigner object sets all fields to the values define
+	 *  in the properties file or leaves them at the default if not defined in the
+	 *  passed properties
+	 *
+	 *@param  properties  RSASigner properties to over ride the default properties.
 	 */
-	public RSASigner (Properties properties) {
+	public RSASigner(Properties properties) {
 		initProperties(properties);
 		initClass();
 	}
-	
+
+
 	/**
-	 *  Constructor for the RSASigner object sets all fields to their most common usage using
-	 * the passed keystore parameters to retreive the private key,
+	 *  Constructor for the RSASigner object sets all fields to their most common
+	 *  usage using the passed keystore parameters to retreive the private key,
+	 *
+	 *@param  keyStorePath     file path the keystore containing the CA's keys
+	 *@param  storePass        the password to this keystore
+	 *@param  privateKeyAlias  the alias of the key to used for signing
+	 *@param  privateKeyPass   The keypass used for the signing key ignored for
+	 *      keystores not supporting alias specific passes
 	 */
-	public RSASigner (String keyStorePath, String storePass, String privateKeyAlias, String privateKeyPass) {
+	public RSASigner(String keyStorePath, String storePass, String privateKeyAlias, String privateKeyPass) {
 		initDefaults();
-		this.keyStorePath=keyStorePath;
-		this.storePass=storePass;
-		this.privateKeyAlias=privateKeyAlias;
-		this.privateKeyPassString=privateKeyPass;
+		this.keyStorePath = keyStorePath;
+		this.storePass = storePass;
+		this.privateKeyAlias = privateKeyAlias;
+		this.privateKeyPassString = privateKeyPass;
 		initClass();
 	}
-	
+
+
 	/**
-	 *  Constructor for the RSASigner object sets all fields to their most common usage.    Initialises the
-	 *  the signer to prompt for passwords via the commandline.   The name of the keystore and private key alias
-	 * are drawn from the propertie file.
+	 *  Constructor for the RSASigner object sets all fields to their most common
+	 *  usage. Initialises the the signer to prompt for passwords via the
+	 *  commandline. The name of the keystore and private key alias are drawn from
+	 *  the propertie file.
 	 */
 	public RSASigner() {
 		initDefaults();
@@ -176,14 +231,14 @@ public class RSASigner {
 
 
 	/**
-	 *  Implements ISignSession::getCertificateChain
+	 *  Retrieves the certificate chain for the signer with the root cert and
+	 *  position 0 the cert it signs at position 1 and so on
 	 *
-	 *@return                      The certificateChain value
-	 *@exception  RemoteException  Description of the Exception
+	 *@return    the certificate chain, never null
+	 *@todo      Add support for certificate levels greater than 2.
 	 */
-	public Certificate[] getCertificateChain() throws RemoteException {
+	public Certificate[] getCertificateChain() {
 		System.out.println(">getCertificateChain()");
-		// TODO: should support more than 2 levels of CAs
 		Certificate[] chain;
 		if (CertTools.isSelfSigned(caCert)) {
 			chain = new Certificate[1];
@@ -195,18 +250,21 @@ public class RSASigner {
 		System.out.println("<getCertificateChain()");
 		return chain;
 	}
+
 	// getRootCertificate
 
 
 	/**
-	 *  Implements ISignSession::createCertificate
+	 *  Returns a certificate created for the passed name and public key with a
+	 *  default key usage i.e. digital signture and key encipherment.
 	 *
-	 *@param  dn             Description of the Parameter
-	 *@param  pk             Description of the Parameter
-	 *@return                Description of the Return Value
+	 *@param  x509Name       The <code>X509Name</code> of the certificate to be
+	 *      signed
+	 *@param  pk             The public key of the
+	 *@return                A signed certicate
 	 *@exception  Exception  Description of the Exception
 	 */
-	public Certificate createCertificate(String dn, PublicKey pk) throws Exception {
+	public Certificate createCertificate(X509Name x509Name, PublicKey pk) throws SignerException {
 		System.out.println(">createCertificate(pk)");
 		// Standard key usages for end users are: digitalSignature | keyEncipherment or nonRepudiation
 		// Default key usage is digitalSignature | keyEncipherment
@@ -219,64 +277,99 @@ public class RSASigner {
 		// keyEncipherment
 		keyusage[2] = true;
 		System.out.println("<createCertificate(pk)");
-		return createCertificate(dn, pk, keyusage);
+		return createCertificate(x509Name, pk, keyusage);
 	}
+
 	// createCertificate
 
 
 	/**
-	 *  Implements ISignSession::createCertificate
+	 *  Creates a certificate for the passed name and public key with specified key
+	 *  usage using a Sun style boolean array. CAs are only allowed to have
+	 *  certificateSign and CRLSign set.
 	 *
-	 *@param  dn             Description of the Parameter
-	 *@param  pk             Description of the Parameter
-	 *@param  keyusage       Description of the Parameter
-	 *@return                Description of the Return Value
+	 *@param  x509Name       The <code>X509Name</code> of the certificate to be
+	 *      signed
+	 *@param  pk             The public key of the certificate to be signed.
+	 *@param  keyusage       A key usage array in Sun's format where bits are set
+	 *      according to id-ce-keyUsage OBJECT IDENTIFIER ::= { id-ce 15 } KeyUsage
+	 *      ::= BIT STRING { digitalSignature (0), nonRepudiation (1),
+	 *      keyEncipherment (2), dataEncipherment (3), keyAgreement (4),
+	 *      keyCertSign (5), cRLSign (6), encipherOnly (7), decipherOnly (8) }
+	 *@return                A signed certificate or null
 	 *@exception  Exception  Description of the Exception
 	 */
-	public Certificate createCertificate(String dn, PublicKey pk, boolean[] keyusage) throws Exception {
-		return createCertificate(dn, pk, sunKeyUsageToBC(keyusage));
+	public Certificate createCertificate(X509Name x509Name, PublicKey pk, boolean[] keyusage) throws SignerException {
+		return createCertificate(x509Name, pk, sunKeyUsageToBC(keyusage));
 	}
 
 
 	/**
-	 *  Implements ISignSession::createCertificate
+	 *  Returns a certificate created for the passed name and public key with the
+	 *  given key usage.
 	 *
-	 *@param  dn             Description of the Parameter
-	 *@param  pk             Description of the Parameter
-	 *@param  keyusage       Description of the Parameter
-	 *@return                Description of the Return Value
+	 *@param  x509Name       The <code>X509Name</code> of the certificate to be
+	 *      signed
+	 *@param  pk             The public key of the certificate to be signed.
+	 *@param  keyusage       nteger with bit mask describing desired keys usage.
+	 *      Bit mask is packed in in integer using constants from CertificateData.
+	 *      ex. int keyusage = CertificateData.digitalSignature |
+	 *      CertificateData.nonRepudiation; gives digitalSignature and
+	 *      nonRepudiation. ex. int keyusage = CertificateData.keyCertSign |
+	 *      CertificateData.cRLSign; gives keyCertSign and cRLSign
+	 *@return                A signed certificate or null
 	 *@exception  Exception  Description of the Exception
 	 */
-	public Certificate createCertificate(String dn, PublicKey pk, int keyusage) throws Exception {
+	public Certificate createCertificate(X509Name x509Name, PublicKey pk, int keyusage) throws SignerException {
 		System.out.println(">createCertificate(pk, ku)");
 		if (false) {
 			// If this is a CA, only allow CA-type keyUsage
 			keyusage = X509KeyUsage.keyCertSign + X509KeyUsage.cRLSign;
 		}
-		System.out.println("dn" + dn);
+		System.out.println("x509Name" + x509Name);
 		System.out.println("caSubjectName" + caSubjectName);
 		System.out.println("validity" + validity);
 		System.out.println("keyusage" + pk);
 		System.out.println("keyusage" + keyusage);
 
-		X509Certificate cert = makeBCCertificate(dn, caSubjectName, validity.longValue(), pk, keyusage);
+		X509Certificate cert = makeBCCertificate(x509Name, caSubjectName, validity.longValue(), pk, keyusage);
 		// Verify before returning
-		cert.verify(caCert.getPublicKey());
+		try {
+			cert.verify(caCert.getPublicKey());
+		} catch (CertificateException e) {
+			throw new SignerException("Error verifying created cert." + e.getMessage());
+		} catch (NoSuchAlgorithmException e) {
+			throw new SignerException("Error verifying created cert." + e.getMessage());
+		} catch (NoSuchProviderException e) {
+			throw new SignerException("Error verifying created cert." + e.getMessage());
+		} catch (InvalidKeyException e) {
+			throw new SignerException("Error verifying created cert." + e.getMessage());
+		} catch (SignatureException e) {
+			throw new SignerException("Error verifying created cert." + e.getMessage());
+		}
+		
 		return cert;
 	}
 	// createCertificate
 
 
 	/**
-	 *  Implements ISignSession::createCertificate
+	 *  Returns a certificate created for the passed name and public key with the
+	 *  given cert type
 	 *
-	 *@param  dn             Description of the Parameter
-	 *@param  certType       Description of the Parameter
-	 *@param  pk             Description of the Parameter
-	 *@return                Description of the Return Value
+	 *@param  x509Name       The <code>X509Name</code> of the certificate to be
+	 *      signed
+	 *@param  certType       integer type of certificate taken from
+	 *      CertificateData.CERT_TYPE_XXX. the type
+	 *      CertificateData.CERT_TYPE_ENCRYPTION gives keyUsage keyEncipherment,
+	 *      dataEncipherment. the type CertificateData.CERT_TYPE_SIGNATURE gives
+	 *      keyUsage digitalSignature, non-repudiation. all other CERT_TYPES gives
+	 *      the default keyUsage digitalSignature, keyEncipherment
+	 *@param  pk             The public key of the certificate to be signed.
+	 *@return                A signed certificate or null
 	 *@exception  Exception  Description of the Exception
 	 */
-	public Certificate createCertificate(String dn, int certType, PublicKey pk) throws Exception {
+	public Certificate createCertificate(X509Name x509Name, int certType, PublicKey pk) throws SignerException {
 		System.out.println(">createCertificate(pk, certType)");
 		// Create an array for KeyUsage acoording to X509Certificate.getKeyUsage()
 		boolean[] keyusage = new boolean[9];
@@ -302,7 +395,7 @@ public class RSASigner {
 							break;
 		}
 
-		Certificate ret = createCertificate(dn, pk, keyusage);
+		Certificate ret = createCertificate(x509Name, pk, keyusage);
 		System.out.println("<createCertificate(pk, certType)");
 		return ret;
 	}
@@ -310,24 +403,26 @@ public class RSASigner {
 
 
 	/**
-	 *  Implements ISignSession::createCertificate
+	 *  Creates a cert using the public key from a self signed cert and teh given
+	 *  name
 	 *
-	 *@param  dn             Description of the Parameter
-	 *@param  incert         Description of the Parameter
-	 *@return                Description of the Return Value
+	 *@param  x509Name       The <code>X509Name</code> of the certificate to be
+	 *      signed
+	 *@param  incert         An existing certificate
+	 *@return                A signed certificate or null
 	 *@exception  Exception  Description of the Exception
+	 *@todo                  extract more extensions than just KeyUsage
 	 */
-	public Certificate createCertificate(String dn, Certificate incert) throws Exception {
+	public Certificate createCertificate(X509Name x509Name, Certificate incert) throws SignerException {
 		System.out.println(">createCertificate(cert)");
 		X509Certificate cert = (X509Certificate) incert;
 		try {
 			cert.verify(cert.getPublicKey());
 		} catch (Exception e) {
-			System.out.println("POPO verification failed for " + dn);
-			throw new Exception("Verification of signature (popo) on certificate failed.");
+			System.out.println("POPO verification failed for " + x509Name);
+			throw new SignerException("Verification of signature (popo) on certificate failed.");
 		}
-		// TODO: extract more extensions than just KeyUsage
-		Certificate ret = createCertificate(dn, cert.getPublicKey(), cert.getKeyUsage());
+		Certificate ret = createCertificate(x509Name, cert.getPublicKey(), cert.getKeyUsage());
 		System.out.println("<createCertificate(cert)");
 		return ret;
 	}
@@ -335,59 +430,56 @@ public class RSASigner {
 
 
 	/**
-	 *  Implements ISignSession::createCertificate
+	 *  Creates a cert using the given name and pkcs10 request
 	 *
-	 *@param  dn             Description of the Parameter
-	 *@param  pkcs10req      Description of the Parameter
-	 *@return                Description of the Return Value
+	 *@param  x509Name       The <code>X509Name</code> of the certificate to be
+	 *      signed
+	 *@param  pkcs10req      a pkcs10 request as DER encoded bytes
+	 *@return                A signed certificate or null
 	 *@exception  Exception  Description of the Exception
 	 */
-	public Certificate createCertificate(String dn, byte[] pkcs10req) throws Exception {
-		return createCertificate(dn, pkcs10req, -1);
+	public Certificate createCertificate(X509Name x509Name, byte[] pkcs10req) throws SignerException {
+		return createCertificate(x509Name, pkcs10req, -1);
 	}
 
 
 	/**
 	 *  Implements ISignSession::createCertificate
 	 *
-	 *@param  dn             Description of the Parameter
-	 *@param  pkcs10req      Description of the Parameter
+	 *@param  x509Name       The <code>X509Name</code> of the certificate to be
+	 *      signed
+	 *@param  pkcs10req      a pkcs10 request as DER encoded bytes
 	 *@param  keyUsage       Description of the Parameter
-	 *@return                Description of the Return Value
+	 *@return                A signed certificate or null
 	 *@exception  Exception  Description of the Exception
 	 */
-	public Certificate createCertificate(String dn, byte[] pkcs10req, int keyUsage) throws Exception {
+	public Certificate createCertificate(X509Name x509Name, byte[] pkcs10req, int keyUsage) throws SignerException {
 		System.out.println(">createCertificate(pkcs10)");
 		Certificate ret = null;
 		try {
 			DERObject derobj = new DERInputStream(new ByteArrayInputStream(pkcs10req)).readObject();
-			DERConstructedSequence seq = (DERConstructedSequence) derobj;
+			ASN1Sequence seq = (ASN1Sequence) derobj;
 			PKCS10CertificationRequest pkcs10 = new PKCS10CertificationRequest(seq);
 			if (pkcs10.verify() == false) {
-				System.out.println("POPO verification failed for " + dn);
-				throw new Exception("Verification of signature (popo) on PKCS10 request failed.");
+				System.out.println("POPO verification failed for " + x509Name);
+				throw new SignerException("Verification of signature (popo) on PKCS10 request failed.");
 			}
 			// TODO: extract more information or attributes
 			if (keyUsage < 0) {
-				ret = createCertificate(dn, pkcs10.getPublicKey());
+				ret = createCertificate(x509Name, pkcs10.getPublicKey());
 			} else {
-				ret = createCertificate(dn, pkcs10.getPublicKey(), keyUsage);
+				ret = createCertificate(x509Name, pkcs10.getPublicKey(), keyUsage);
 			}
 		} catch (IOException e) {
-			System.out.println("Error reading PKCS10-request.");
-			throw new SignRequestException("Error reading PKCS10-request.");
+			throw new SignerException("Error reading PKCS10-request.");
 		} catch (NoSuchAlgorithmException e) {
-			System.out.println("Error in PKCS10-request, no such algorithm.");
-			throw new SignRequestException("Error in PKCS10-request, no such algorithm.");
+			throw new SignerException("Error in PKCS10-request, no such algorithm.");
 		} catch (NoSuchProviderException e) {
-			System.out.println("Internal error processing PKCS10-request.");
-			throw new SignRequestException("Internal error processing PKCS10-request.");
+			throw new SignerException("Internal error processing PKCS10-request.");
 		} catch (InvalidKeyException e) {
-			System.out.println("Error in PKCS10-request, invlid key.");
-			throw new SignRequestException("Error in PKCS10-request, invalid key.");
+			throw new SignerException("Error in PKCS10-request, invalid key.");
 		} catch (SignatureException e) {
-			System.out.println("Error in PKCS10-signature.");
-			throw new SignRequestSignatureException("Error in PKCS10-signature.");
+			throw new SignerException("Error in PKCS10-signature.");
 		}
 		System.out.println("<createCertificate(pkcs10)");
 		return ret;
@@ -401,20 +493,20 @@ public class RSASigner {
 	 *@return                Description of the Return Value
 	 *@exception  Exception  Description of the Exception
 	 */
-	public X509CRL createCRL(Vector certs) throws Exception {
+	public X509CRL createCRL(long crlperiod, Vector certs, int crlnumber) throws SignerException{
 		System.out.println(">createCRL()");
-		X509CRL crl = null;
-		return crl;
+		return makeBCCRL(crlperiod,certs,crlnumber) ;
 	}
-	// createCRL
 
 
 	/**
 	 *  Gets the password from the user.
 	 *
-	 *@param  password       Description of the Parameter
-	 *@return                The password value
+	 *@param  password       A password string
+	 *@param  prompt         The text shown to the user to input a password
+	 *@return                The password as a char array
 	 *@exception  Exception  Description of the Exception
+	 *@todo                  replace with a callback inplementaion JAAS or similar
 	 */
 	private char[] getPassword(String password, String prompt) throws Exception {
 		if (password == null) {
@@ -429,10 +521,10 @@ public class RSASigner {
 
 
 	/**
-	 *  Description of the Method
+	 *  Converts a Sun key usage boolean array to a Bouncy Castle key usage integer
 	 *
-	 *@param  sku  Description of the Parameter
-	 *@return      Description of the Return Value
+	 *@param  sku  Sun key usage style boolean array.
+	 *@return      An bouncy castle style key usage integer
 	 */
 	private int sunKeyUsageToBC(boolean[] sku) {
 
@@ -469,164 +561,196 @@ public class RSASigner {
 
 
 	/**
-	 *  Description of the Method
+	 *  Creates the certificate
 	 *
-	 *@param  dn             Description of the Parameter
-	 *@param  caname         Description of the Parameter
-	 *@param  validity       Description of the Parameter
-	 *@param  publicKey      Description of the Parameter
-	 *@param  keyusage       Description of the Parameter
-	 *@return                Description of the Return Value
+	 *@param  x509Name       The <code>X509Name</code> of the certificate to be
+	 *      signed
+	 *@param  caname         x509Name for the CA
+	 *@param  validity       number of days for which the cert is valid
+	 *@param  publicKey      the public key of the certificate to be signed
+	 *@param  keyusage       integer with bit mask describing desired keys usage.
+	 *      Bit mask is packed in in integer using contants from CertificateData.
+	 *      ex. int keyusage = CertificateData.digitalSignature |
+	 *      CertificateData.nonRepudiation; gives digitalSignature and
+	 *      nonRepudiation. ex. int keyusage = CertificateData.keyCertSign |
+	 *      CertificateData.cRLSign; gives keyCertSign and cRLSign
+	 *@return                A signed certificate or null
 	 *@exception  Exception  Description of the Exception
 	 */
-	private X509Certificate makeBCCertificate(String dn, X509Name caname,
-			long validity, PublicKey publicKey, int keyusage)
-			 throws Exception {
+	private X509Certificate makeBCCertificate(X509Name x509Name, X509Name caname,
+			long validity, PublicKey publicKey, int keyusage) throws SignerException  {
+		X509Certificate cert = null;
 		//start initialising the cert---------------------
 		final String sigAlg = "SHA1WithRSA";
-
-		Date firstDate = new Date();
-		// Set back startdate ten minutes to avoid some problems with wrongly set clocks.
-		firstDate.setTime(firstDate.getTime() - 10 * 60 * 1000);
-		Date lastDate = new Date();
-		// validity in days = validity*24*60*60*1000 milliseconds
-		lastDate.setTime(lastDate.getTime() + (validity * 24 * 60 * 60 * 1000));
-
-		X509V3CertificateGenerator certgen = new X509V3CertificateGenerator();
-		// Serialnumber is random bits, where random generator is initialized with Date.getTime() when this
-		// bean is created.
-		byte[] serno = new byte[8];
-		random.nextBytes(serno);
-		certgen.setSerialNumber((new java.math.BigInteger(serno)).abs());
-		certgen.setNotBefore(firstDate);
-		certgen.setNotAfter(lastDate);
-		certgen.setSignatureAlgorithm(sigAlg);
-		// Make DNs
-		certgen.setSubjectDN(CertTools.stringToBcX509Name(dn));
-		certgen.setIssuerDN(caname);
-		certgen.setPublicKey(publicKey);
-		//end initialising the cert ------------------------
-
-		// Basic constranits, all subcerts are NOT CAs
-		if (usebc == true) {
-			boolean isCA = false;
+		try {
+			Date firstDate = new Date();
+			// Set back startdate ten minutes to avoid some problems with wrongly set clocks.
+			firstDate.setTime(firstDate.getTime() - 10 * 60 * 1000);
+			Date lastDate = new Date();
+			// validity in days = validity*24*60*60*1000 milliseconds
+			lastDate.setTime(lastDate.getTime() + (validity * 24 * 60 * 60 * 1000));
+	
+			X509V3CertificateGenerator certgen = new X509V3CertificateGenerator();
+			// Serialnumber is random bits, where random generator is initialized with Date.getTime() when this
+			// bean is created.
+			byte[] serno = new byte[8];
+			random.nextBytes(serno);
+			certgen.setSerialNumber((new java.math.BigInteger(serno)).abs());
+			certgen.setNotBefore(firstDate);
+			certgen.setNotAfter(lastDate);
+			certgen.setSignatureAlgorithm(sigAlg);
+			// Make DNs
+			certgen.setSubjectDN(x509Name);
+			certgen.setIssuerDN(caname);
+			certgen.setPublicKey(publicKey);
+			//end initialising the cert ------------------------
+	
+			// Basic constranits, all subcerts are NOT CAs
+			if (usebc == true) {
+				boolean isCA = false;
+				/*
+				 *  if ( ((subject.getType() & SecConst.USER_CA) == SecConst.USER_CA) || ((subject.getType() & SecConst.USER_ROOTCA) == SecConst.USER_ROOTCA) )
+				 *  isCA=true;
+				 */
+				BasicConstraints bc = new BasicConstraints(isCA);
+				certgen.addExtension(X509Extensions.BasicConstraints.getId(), bccritical, bc);
+			}
+			// Key usage
+			if (useku == true) {
+				X509KeyUsage ku = new X509KeyUsage(keyusage);
+				certgen.addExtension(X509Extensions.KeyUsage.getId(), kucritical, ku);
+			}
+			// Subject key identifier
+			if (useski == true) {
+				SubjectPublicKeyInfo spki = new SubjectPublicKeyInfo(
+					(DERSequence) new DERInputStream(new ByteArrayInputStream(publicKey.getEncoded())).readObject());
+				SubjectKeyIdentifier ski = new SubjectKeyIdentifier(spki);
+				certgen.addExtension(X509Extensions.SubjectKeyIdentifier.getId(), skicritical, ski);
+			}
+			// Authority key identifier
+			if (useaki == true) {
+				SubjectPublicKeyInfo apki = new SubjectPublicKeyInfo(
+					(DERSequence) new DERInputStream(new ByteArrayInputStream(caCert.getPublicKey().getEncoded())).readObject()
+				);
+				AuthorityKeyIdentifier aki = new AuthorityKeyIdentifier(apki);
+				certgen.addExtension(X509Extensions.AuthorityKeyIdentifier.getId(), akicritical, aki);
+			}
+	
 			/*
-			 *  if ( ((subject.getType() & SecConst.USER_CA) == SecConst.USER_CA) || ((subject.getType() & SecConst.USER_ROOTCA) == SecConst.USER_ROOTCA) )
-			 *  isCA=true;
+			 *  not sure how to handle alternative names at this stage (justin)
+			 *  Subject Alternative name
+			 *  if ((usesan == true) && (subject.getEmail() != null)) {
+			 *  GeneralName gn = new GeneralName(new DERIA5String(subject.getEmail()),1);
+			 *  DERConstructedSequence seq = new DERConstructedSequence();
+			 *  seq.addObject(gn);
+			 *  GeneralNames san = new GeneralNames(seq);
+			 *  certgen.addExtension(X509Extensions.SubjectAlternativeName.getId(), sancritical, san);
+			 *  }
 			 */
-			BasicConstraints bc = new BasicConstraints(isCA);
-			certgen.addExtension(X509Extensions.BasicConstraints.getId(), bccritical, bc);
+			// CRL Distribution point URI
+			if (usecrldist) {
+			    //GeneralName name = new GeneralName(new DERIA5String(cRLDistributionPoint), 6);
+			    GeneralName name = new GeneralName(new DERIA5String(cRLDistURI),6);
+			    GeneralNames names = new GeneralNames(new DERSequence(name));
+			    DistributionPointName distPointName = new DistributionPointName(0, names);
+			    DistributionPoint distPoint = new DistributionPoint(distPointName, null, null);
+			    certgen.addExtension(
+				X509Extensions.CRLDistributionPoints.getId(),
+				crldistcritical,
+				new DERSequence(distPoint));
+			}
+			cert = certgen.generateX509Certificate(privateKey);
+			
+		} catch (SecurityException e) {
+			throw new SignerException("There was a problem creating the cert " + e.getMessage());
+		} catch (SignatureException e) {
+			throw new SignerException("There was a problem creating the cert" + e.getMessage());
+		} catch (InvalidKeyException e) {
+			throw new SignerException("There was a problem creating the cert" + e.getMessage());
+		} catch (IOException e) {
+			throw new SignerException("There was a problem reading the public key from the cert. " + e.getMessage());
 		}
-		// Key usage
-		if (useku == true) {
-			X509KeyUsage ku = new X509KeyUsage(keyusage);
-			certgen.addExtension(X509Extensions.KeyUsage.getId(), kucritical, ku);
-		}
-		// Subject key identifier
-		if (useski == true) {
-			SubjectPublicKeyInfo spki = new SubjectPublicKeyInfo((DERConstructedSequence) new DERInputStream(
-					new ByteArrayInputStream(publicKey.getEncoded())).readObject());
-			SubjectKeyIdentifier ski = new SubjectKeyIdentifier(spki);
-			certgen.addExtension(X509Extensions.SubjectKeyIdentifier.getId(), skicritical, ski);
-		}
-		// Authority key identifier
-		if (useaki == true) {
-			SubjectPublicKeyInfo apki = new SubjectPublicKeyInfo((DERConstructedSequence) new DERInputStream(
-					new ByteArrayInputStream(caCert.getPublicKey().getEncoded())).readObject());
-			AuthorityKeyIdentifier aki = new AuthorityKeyIdentifier(apki);
-			certgen.addExtension(X509Extensions.AuthorityKeyIdentifier.getId(), akicritical, aki);
-		}
-
-		/*
-		 *  not sure how to handle alternative names at this stage (justin)
-		 *  Subject Alternative name
-		 *  if ((usesan == true) && (subject.getEmail() != null)) {
-		 *  GeneralName gn = new GeneralName(new DERIA5String(subject.getEmail()),1);
-		 *  DERConstructedSequence seq = new DERConstructedSequence();
-		 *  seq.addObject(gn);
-		 *  GeneralNames san = new GeneralNames(seq);
-		 *  certgen.addExtension(X509Extensions.SubjectAlternativeName.getId(), sancritical, san);
-		 *  }
-		 */
-		// CRL Distribution point URI
-		if (usecrldist == true) {
-			GeneralName gn = new GeneralName(new DERIA5String(crldisturi), 6);
-			DERConstructedSequence seq = new DERConstructedSequence();
-			seq.addObject(gn);
-			GeneralNames gns = new GeneralNames(seq);
-			DistributionPointName dpn = new DistributionPointName(0, gns);
-			DistributionPoint distp = new DistributionPoint(dpn, null, null);
-			DERConstructedSequence ext = new DERConstructedSequence();
-			ext.addObject(distp);
-			certgen.addExtension(X509Extensions.CRLDistributionPoints.getId(), crldistcritical, ext);
-		}
-
-		X509Certificate cert = certgen.generateX509Certificate(privateKey);
 
 		System.out.println("<makeBCCertificate()");
 		return (X509Certificate) cert;
 	}
+
+	
 	// makeBCCertificate
 
-
 	/**
-	 *  Description of the Method
+	 *  Requests for a CRL to be created with the passed (revoked) certificates.
 	 *
-	 *@param  caname         Description of the Parameter
-	 *@param  crlperiod      Description of the Parameter
-	 *@param  certs          Description of the Parameter
-	 *@param  crlnumber      Description of the Parameter
-	 *@return                Description of the Return Value
+	 *@param  crlperiod      period in days
+	 *@param  certs          collection of RevokedCertInfo object.
+	 *@param  crlnumber      The CRL number
+	 *@return                A signed CRL or null
 	 *@exception  Exception  Description of the Exception
 	 */
-	private X509CRL makeBCCRL(X509Name caname, long crlperiod, Vector certs, int crlnumber)
-			 throws Exception {
+	private X509CRL makeBCCRL(long crlperiod, Vector certs, int crlnumber) throws SignerException {
 		System.out.println(">makeBCCRL()");
-
+		System.out.println("Issued by: " + caCert.getIssuerDN());
+		X509Name caname =new X509Name(caCert.getIssuerDN().toString()); 
+		
+		X509CRL crl =null;
+		
 		final String sigAlg = "SHA1WithRSA";
-
-		Date thisUpdate = new Date();
-		Date nextUpdate = new Date();
-		// crlperiod is hours = crlperiod*60*60*1000 milliseconds
-		nextUpdate.setTime(nextUpdate.getTime() + (crlperiod * 60 * 60 * 1000));
-
-		X509V2CRLGenerator crlgen = new X509V2CRLGenerator();
-		crlgen.setThisUpdate(thisUpdate);
-		crlgen.setNextUpdate(nextUpdate);
-		crlgen.setSignatureAlgorithm(sigAlg);
-		// Make DNs
-		System.out.println("Issuer=" + caname);
-		crlgen.setIssuerDN(caname);
-		if (certs != null) {
-			System.out.println("Number of revoked certificates: " + certs.size());
-			Iterator it = certs.iterator();
-			while (it.hasNext()) {
-				RevokedCertInfo certinfo = (RevokedCertInfo) it.next();
-				crlgen.addCRLEntry(certinfo.getUserCertificate(), certinfo.getRevocationDate(), certinfo.getReason());
+		try {
+			Date thisUpdate = new Date();
+			Date nextUpdate = new Date();
+			// crlperiod is hours = crlperiod*60*60*1000 milliseconds
+			nextUpdate.setTime(nextUpdate.getTime() + (crlperiod * 60 * 60 * 1000));
+	
+			X509V2CRLGenerator crlgen = new X509V2CRLGenerator();
+			crlgen.setThisUpdate(thisUpdate);
+			crlgen.setNextUpdate(nextUpdate);
+			crlgen.setSignatureAlgorithm(sigAlg);
+			// Make DNs
+			System.out.println("Issuer=" + caname);
+			crlgen.setIssuerDN(caname);
+			if (certs != null) {
+				System.out.println("Number of revoked certificates: " + certs.size());
+				Iterator it = certs.iterator();
+				while (it.hasNext()) {
+					RevokedCertInfo certinfo = (RevokedCertInfo) it.next();
+					crlgen.addCRLEntry(certinfo.getUserCertificate(), certinfo.getRevocationDate(), certinfo.getReason());
+				}
 			}
-		}
-
-		// Authority key identifier
-		if (useaki == true) {
-			SubjectPublicKeyInfo apki = new SubjectPublicKeyInfo((DERConstructedSequence) new DERInputStream(
+	
+			// Authority key identifier
+			if (useaki == true) {
+				SubjectPublicKeyInfo apki = new SubjectPublicKeyInfo((DERSequence) new DERInputStream(
 					new ByteArrayInputStream(caCert.getPublicKey().getEncoded())).readObject());
-			AuthorityKeyIdentifier aki = new AuthorityKeyIdentifier(apki);
-			crlgen.addExtension(X509Extensions.AuthorityKeyIdentifier.getId(), akicritical, aki);
+				AuthorityKeyIdentifier aki = new AuthorityKeyIdentifier(apki);
+				crlgen.addExtension(X509Extensions.AuthorityKeyIdentifier.getId(), akicritical, aki);
+			}
+			// CRLNumber extension
+			if (usecrln == true) {
+				CRLNumber crlnum = new CRLNumber(BigInteger.valueOf(crlnumber));
+				crlgen.addExtension(X509Extensions.CRLNumber.getId(), crlncritical, crlnum);
+			}
+			crl = crlgen.generateX509CRL(privateKey); 
+		} catch (SecurityException e) {
+			throw new SignerException("There was a problem generating the CRL" + e.getMessage());
+		} catch (SignatureException e) {
+			throw new SignerException("There was a problem generating the CRL" + e.getMessage());
+		} catch (InvalidKeyException e) {
+			throw new SignerException("There was a problem generating the CRL" + e.getMessage());
+		} catch (IOException e) {
+			throw new SignerException("There was a problem getting the public cert from the signers certficate " + e.getMessage());
 		}
-		// CRLNumber extension
-		if (usecrln == true) {
-			CRLNumber crlnum = new CRLNumber(BigInteger.valueOf(crlnumber));
-			crlgen.addExtension(X509Extensions.CRLNumber.getId(), crlncritical, crlnum);
-		}
-		X509CRL crl = crlgen.generateX509CRL(privateKey);
 
 		System.out.println("<makeBCCRL()");
 		return (X509CRL) crl;
 	}
 	// makeBCCRL
-	
+
+
+	/**
+	 *  Initialises the class variables according to the defaults or properties
+	 */
 	private void initClass() {
-				try {
+		try {
 			// Install BouncyCastle provider
 
 			Provider BCJce = new org.bouncycastle.jce.provider.BouncyCastleProvider();
@@ -635,14 +759,14 @@ public class RSASigner {
 			System.out.println("loaded provider at position " + result);
 
 			// Get env variables and read in nessecary data
-			KeyStore keyStore = KeyStore.getInstance("PKCS12", "BC");
+			KeyStore keyStore = KeyStore.getInstance(keyStoreType,keyStoreProvider);
 
 			InputStream is = new FileInputStream(keyStorePath);
 			System.out.println("keystore:" + keyStorePath);
-			char[] keyStorePass = getPassword(storePass,"Please enter your keystore password: ");
+			char[] keyStorePass = getPassword(storePass, "Please enter your keystore password: ");
 			keyStore.load(is, keyStorePass);
 			System.out.println("privateKeyAlias: " + privateKeyAlias);
-			char[] privateKeyPass = getPassword(privateKeyPassString,"Please enter your private key password (may be blank depending on your keystore implementation)");
+			char[] privateKeyPass = getPassword(privateKeyPassString, "Please enter your private key password (may be blank depending on your keystore implementation)");
 			if ((new String(privateKeyPass)).equals("null")) {
 				privateKeyPass = null;
 			}
@@ -744,17 +868,25 @@ public class RSASigner {
 			e.printStackTrace();
 		}
 	}
-	
+
+
+	/**
+	 *  Initialises the class variables according to the provided props
+	 *
+	 *@param  props  Properties to set the class variables to.
+	 */
 	private void initProperties(Properties props) {
 		initDefaults();
 		//now run through and set all the properties
-		keyStorePath=props.getProperty("keyStorePath");
+		keyStoreType=props.getProperty("keyStoreType");
+		keyStoreProvider=props.getProperty("keyStoreProvider");
+		keyStorePath = props.getProperty("keyStorePath");
 		System.out.println(keyStorePath);
 		//NO DEFAULT if this is null the user will be prompted for it later
-		storePass=props.getProperty("storePass");
-		privateKeyAlias=props.getProperty("privateKeyAlias");
+		storePass = props.getProperty("storePass");
+		privateKeyAlias = props.getProperty("privateKeyAlias");
 		//NO DEFAULT if this is null the user will be prompted later
-		privateKeyPassString=props.getProperty("privateKeyPassString");
+		privateKeyPassString = props.getProperty("privateKeyPassString");
 		validity = new Long(props.getProperty("validity"));
 		basicConstraints = new Boolean(props.getProperty("validity")).booleanValue();
 		basicConstraintsCritical = new Boolean(props.getProperty("validity")).booleanValue();
@@ -768,81 +900,86 @@ public class RSASigner {
 		subjectAlternativeNameCritical = new Boolean(props.getProperty("validity")).booleanValue();
 		cRLDistributionPoint = new Boolean(props.getProperty("validity")).booleanValue();
 		cRLDistributionPointCritical = new Boolean(props.getProperty("validity")).booleanValue();
-		String cRLDistURI =props.getProperty("cRLDistURI");
-		emailInDN =  new Boolean(props.getProperty("validity")).booleanValue();
+		String cRLDistURI = props.getProperty("cRLDistURI");
+		emailInDN = new Boolean(props.getProperty("validity")).booleanValue();
 		cRLNumber = new Boolean(props.getProperty("validity")).booleanValue();
 		cRLNumberCritical = new Boolean(props.getProperty("validity")).booleanValue();
 		cRLPeriod = Long.valueOf(props.getProperty("validity"));
 	}
-	
+
+
 	/**
-	* Sets all the class variables to default values and assign default properties.
-	*/
+	 *  Sets all the class variables to default values and assigns default
+	 *  properties
+	 */
 	private void initDefaults() {
-			defaultProperties = new Properties();
-			//the passwords are not assigned here by default they stay null
-			
-			//file path to the keystore
-			keyStorePath=DEFAULT_KEYSTORE_NAME;
-			defaultProperties.setProperty("keyStorePath",keyStorePath);
-			//the alias given to the private key in the keystore
-			privateKeyAlias=DEFAULT_PRIVATE_KEY_ALIAS;
-			defaultProperties.setProperty("privateKeyAlias",privateKeyAlias);			
-			//Validity in days from days date for created certificate;
-			validity = new Long(730);
-			defaultProperties.setProperty("validity",validity.toString());
-			//Use BasicConstraints?;
-			basicConstraints = true;
-			defaultProperties.setProperty("basicConstraints",Boolean.toString(basicConstraints));
-			//BasicConstraints critical? (RFC2459 says YES);
-			basicConstraintsCritical = true;
-			defaultProperties.setProperty("basicConstraintsCritical",Boolean.toString(basicConstraintsCritical));
-			//Use KeyUsage?;
-			keyUsage = true;
-			defaultProperties.setProperty("keyUsage",Boolean.toString(keyUsage));
-			//KeyUsage critical? (RFC2459 says YES);
-			keyUsageCritical = true;
-			defaultProperties.setProperty("keyUsageCritical",Boolean.toString(keyUsageCritical));
-			//Use SubjectKeyIdentifier?;
-			subjectKeyIdentifier = true;
-			defaultProperties.setProperty("subjectKeyIdentifier",Boolean.toString(subjectKeyIdentifier));
-			//SubjectKeyIdentifier critical? (RFC2459 says NO);
-			subjectKeyIdentifierCritical = false;
-			defaultProperties.setProperty("subjectKeyIdentifierCritical",Boolean.toString(subjectKeyIdentifierCritical));
-			//Use AuthorityKeyIdentifier?;
-			authorityKeyIdentifier = true;
-			defaultProperties.setProperty("authorityKeyIdentifier",Boolean.toString(authorityKeyIdentifier));
-			//AuthorityKeyIdentifier critical? (RFC2459 says NO);
-			authorityKeyIdentifierCritical = false;
-			defaultProperties.setProperty("authorityKeyIdentifierCritical",Boolean.toString(authorityKeyIdentifierCritical));
-			//Use SubjectAlternativeName?;
-			subjectAlternativeName = true;
-			defaultProperties.setProperty("subjectAlternativeName",Boolean.toString(subjectAlternativeName));
-			//SubjectAlternativeName critical? (RFC2459 says NO);
-			subjectAlternativeNameCritical = false;
-			defaultProperties.setProperty("subjectAlternativeNameCritical",Boolean.toString(subjectAlternativeNameCritical));
-			//Use CRLDistributionPoint?;
-			cRLDistributionPoint = false;
-			defaultProperties.setProperty("cRLDistributionPoint",Boolean.toString(cRLDistributionPoint));
-			//CRLDistributionPoint critical? (RFC2459 says NO);
-			cRLDistributionPointCritical = false;
-			defaultProperties.setProperty("cRLDistributionPointCritical",Boolean.toString(cRLDistributionPointCritical));
-			//URI of CRLDistributionPoint?;
-			String cRLDistURI = "http://127.0.0.1:8080/webdist/certdist?cmd=crl";
-			defaultProperties.setProperty("cRLDistURI",cRLDistURI);
-			//Use old style altName with email in DN? (RFC2459 says NO);
-			emailInDN = false;
-			defaultProperties.setProperty("emailInDN",Boolean.toString(emailInDN));
-			//Use CRLNumber?;
-			cRLNumber = true;
-			defaultProperties.setProperty("cRLNumber",Boolean.toString(cRLNumber));
-			//CRLNumber critical? (RFC2459 says NO);
-			cRLNumberCritical = false;
-			defaultProperties.setProperty("cRLNumberCritical",Boolean.toString(cRLNumberCritical));
-			//Period in hours between CRLs beeing issued;
-			cRLPeriod = new Long(24);
-			defaultProperties.setProperty("cRLPeriod",cRLPeriod.toString());
+		defaultProperties = new Properties();
+		//the passwords are not assigned here by default they stay null
+		
+		keyStoreType="PKCS12";
+		defaultProperties.setProperty("keyStoreType",keyStoreType);
+		keyStoreProvider="BC";
+		defaultProperties.setProperty("keyStoreProvider",keyStoreProvider);
+		//file path to the keystore
+		keyStorePath = DEFAULT_KEYSTORE_NAME;
+		defaultProperties.setProperty("keyStorePath", keyStorePath);
+		//the alias given to the private key in the keystore
+		privateKeyAlias = DEFAULT_PRIVATE_KEY_ALIAS;
+		defaultProperties.setProperty("privateKeyAlias", privateKeyAlias);
+		//Validity in days from days date for created certificate;
+		validity = new Long(730);
+		defaultProperties.setProperty("validity", validity.toString());
+		//Use BasicConstraints?;
+		basicConstraints = true;
+		defaultProperties.setProperty("basicConstraints", Boolean.toString(basicConstraints));
+		//BasicConstraints critical? (RFC2459 says YES);
+		basicConstraintsCritical = true;
+		defaultProperties.setProperty("basicConstraintsCritical", Boolean.toString(basicConstraintsCritical));
+		//Use KeyUsage?;
+		keyUsage = true;
+		defaultProperties.setProperty("keyUsage", Boolean.toString(keyUsage));
+		//KeyUsage critical? (RFC2459 says YES);
+		keyUsageCritical = true;
+		defaultProperties.setProperty("keyUsageCritical", Boolean.toString(keyUsageCritical));
+		//Use SubjectKeyIdentifier?;
+		subjectKeyIdentifier = true;
+		defaultProperties.setProperty("subjectKeyIdentifier", Boolean.toString(subjectKeyIdentifier));
+		//SubjectKeyIdentifier critical? (RFC2459 says NO);
+		subjectKeyIdentifierCritical = false;
+		defaultProperties.setProperty("subjectKeyIdentifierCritical", Boolean.toString(subjectKeyIdentifierCritical));
+		//Use AuthorityKeyIdentifier?;
+		authorityKeyIdentifier = true;
+		defaultProperties.setProperty("authorityKeyIdentifier", Boolean.toString(authorityKeyIdentifier));
+		//AuthorityKeyIdentifier critical? (RFC2459 says NO);
+		authorityKeyIdentifierCritical = false;
+		defaultProperties.setProperty("authorityKeyIdentifierCritical", Boolean.toString(authorityKeyIdentifierCritical));
+		//Use SubjectAlternativeName?;
+		subjectAlternativeName = true;
+		defaultProperties.setProperty("subjectAlternativeName", Boolean.toString(subjectAlternativeName));
+		//SubjectAlternativeName critical? (RFC2459 says NO);
+		subjectAlternativeNameCritical = false;
+		defaultProperties.setProperty("subjectAlternativeNameCritical", Boolean.toString(subjectAlternativeNameCritical));
+		//Use CRLDistributionPoint?;
+		cRLDistributionPoint = false;
+		defaultProperties.setProperty("cRLDistributionPoint", Boolean.toString(cRLDistributionPoint));
+		//CRLDistributionPoint critical? (RFC2459 says NO);
+		cRLDistributionPointCritical = false;
+		defaultProperties.setProperty("cRLDistributionPointCritical", Boolean.toString(cRLDistributionPointCritical));
+		//URI of CRLDistributionPoint?;
+		String cRLDistURI = "http://127.0.0.1:8080/webdist/certdist?cmd=crl";
+		defaultProperties.setProperty("cRLDistURI", cRLDistURI);
+		//Use old style altName with email in DN? (RFC2459 says NO);
+		emailInDN = false;
+		defaultProperties.setProperty("emailInDN", Boolean.toString(emailInDN));
+		//Use CRLNumber?;
+		cRLNumber = true;
+		defaultProperties.setProperty("cRLNumber", Boolean.toString(cRLNumber));
+		//CRLNumber critical? (RFC2459 says NO);
+		cRLNumberCritical = false;
+		defaultProperties.setProperty("cRLNumberCritical", Boolean.toString(cRLNumberCritical));
+		//Period in hours between CRLs beeing issued;
+		cRLPeriod = new Long(24);
+		defaultProperties.setProperty("cRLPeriod", cRLPeriod.toString());
 	}
-}
-//RSASigner
+}//RSASigner
 
