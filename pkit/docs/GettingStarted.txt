@@ -1,9 +1,15 @@
-Assuming you have your java environment set up right and you have installed ant
+Assuming you have your java environment and ant installed
 
- run ant targets
-	makeCACert   -to make a cert you can use to sign
-	signcert		-to produce a signed cert
-	
-Note that for now there is a lot of hardcoded stuff like the name of the PKS12 keystore and it's location
-and the passwords and the ... etc.  (see the TODO in docs )
+if you downloaded pkit-noprov.tgz ...
+You still need the bouncy castle provider jar copy yours into pkit's lib directory or download one to there from
+www.bouncycastle.org
 
+If you are building from source ...
+run ant target "all"
+run ant targets "makeCACert"   -to make a cert you can use to sign (or you can use the dummy one provided (keystore.p12))
+run the example.sh script (or make a similar .bat file and run that and if you do then mail it to me
+
+If you have a binary distribution ...
+run the example.sh script (or make a similar .bat file and run that and if you do then mail it to me)
+
+successfull execution of example.sh means you have your environment set up OK

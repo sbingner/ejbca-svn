@@ -1,0 +1,6 @@
+Changes from release 0.01
+
+- Added property based configuration
+- Added sensible constructors
+- Improved the build file (added release target and a couple of other things)
+

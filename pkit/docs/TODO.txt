@@ -1,13 +1,16 @@
 TODO for PKI Tools
 
+Immediate tasks:
+
+- add methods that take an X509Name instead of just dn
+- Add junit to the build file and write tests
+
 In no particular order (but the easy stuff is first)
 
-- split out the fields from the default constructor (some to read from singleton reading from a properties file? 
-	some to be prompted for (callback handler), some to be passed) and make more constructors
--  add JUnit tests
+- update documentation from EJBCA documentation where available
+- Retreive the password via a callback handler and write a sample callback handler
 - make configurable to work with any provider
 - put in apache commons logging with a default log4j logging  
-- update documentation from EJBCA documentation where available
 - chaining of certs
 - implement a signer factory to and related classes to provide a uniform mechanism for signing using different algorithims
 	(only RSA at first)
