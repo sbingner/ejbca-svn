@@ -1,0 +1,18 @@
+pkit  (PKI Tools)
+
+pkit is essentially a hack of code from EJBCA ( http://ejbca.sourceforge.net ) and relies heavily
+on the good work of Tomas Gustavsson and others from from EJBCA.   I have simply de-EJB'ed their code 
+and produced some classes that I hope, with the help of others ( you :-) ) to grow in to a useful, friendly and well written
+API to abstract the complexity of X509 and related PKI requirements and specifications.   I also hope to de-mystify 
+PKI and make it less of a 'dark art' and so I aim to add a lot of documentation and references.    I am very open to critiscism 
+and suggestion from anyone and welcome input from those more knowledge than me ... especially on the security side.
+
+This handful of classes is a humble beginning but 'from small acorns mighty oaks grow'.
+
+Justin Wood
+justin@braidquest.com
+
+CONTRIBUTORS
+ Tomas Gustavsson
+ Justin Wood
+

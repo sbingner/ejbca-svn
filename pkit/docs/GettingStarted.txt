@@ -1,0 +1,9 @@
+Assuming you have your java environment set up right and you have installed ant
+
+ run ant targets
+	makeCACert   -to make a cert you can use to sign
+	signcert		-to produce a signed cert
+	
+Note that for now there is a lot of hardcoded stuff like the name of the PKS12 keystore and it's location
+and the passwords and the ... etc.  (see the TODO in docs )
+
