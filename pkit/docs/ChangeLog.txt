@@ -1,6 +1,22 @@
+Changes from release 0.02
+
+- an ant script is now used to run the examples.
+- fixed most of the CRL generation stuff
+- you can now use and generate any keystore for which you have a provider (tested with JKS and BC PKCS12)
+- There are more sensible constructors in the signer class
+- Added a utility for converting from one keystore type to another
+- Improved the build file (added release target and a couple of other things)
+- The CertificateTool class is now pretty much a useful commandline app.
+- pkit now uses Bouncy Castle's 1.19 release
+- added to the javadoc
+
+	Known bugs
+		- if you try to generate a non blank CRL you'll get an exception
+
 Changes from release 0.01
 
+- Removed the hard coded password
 - Added property based configuration
-- Added sensible constructors
+- Added some more sensible constructors
 - Improved the build file (added release target and a couple of other things)
 

@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+<project name="pkit examples" basedir=".." default="all">
+	<target name="init">
+		<property name="build.compiler" value="jikes"/>
+		
+		<property name="build" value="build"/>
+		<property name="dist" value="dist"/>
+		<property name="apidoc" value="docs/api"/>
+		<property name="src" value="src"/>
+		<property name="etc" value="etc"/>
+			
+		<property name="libs" value="./lib/bcprov-jdk14-118.jar:./lib/log4j-1.2.jar:./lib/ca.jar:./lib/mail.jar:./lib/activation.jar:./lib/bcmail-jdk14-118.jar"/>
+		<property name="jarfile" value="${dist}/pkit.jar"/>
+		
+		<mkdir dir="${dist}"/>
+		<mkdir dir="${build}"/>
+	</target>
+	
+	
+	<target name="makeCACert" depends="init" description="Make a CA root cert and store it in a ks format" >
+		<java classname="pkit.examples.CertificateTool"  fork="true">
+			            <classpath>
+				    	<path path="${libs}:${dist}/pkit.jar"/>
+				    </classpath>
+			<arg value="-selfcert"/>
+			<arg value="C=ZA, O=PKIT, OU=PKIT Certification Authority, CN=PKIT Root CA"/>
+			<arg value="1024"/>
+			<arg value="3640"/>
+			<arg value="PKITCARoot.ks"/>
+			<arg value="password"/>
+			<arg value="yes"/>
+			<arg value="JKS"/>
+		</java>
+	</target>    
+	
+	<target name="makeCSR" depends="init" description="Make a PKCS10 certificate signing rquest." >
+		<java classname="pkit.examples.CertificateTool"  fork="true">
+				    <classpath>
+					<path path="${libs}:${dist}/pkit.jar"/>
+				    </classpath>
+			<arg value="-certreq"/>
+			<arg value="TestUser.ks"/>
+			<arg value="password"/>
+			<arg value="test.csr"/>
+			<arg value="JKS"/>
+		</java>
+	</target>
+	
+	
+	<target name="makeClientCert" depends="init" description="Make a self signed client cert and store it in a ks format." >
+		<java classname="pkit.examples.CertificateTool"  fork="true">
+				    <classpath>
+					<path path="${libs}:${dist}/pkit.jar"/>
+				    </classpath>
+			<arg value="-selfcert"/>
+			<arg value="C=ZA, O=PKIT, OU=PKIT HQ, EmailAddress=test@pkit.co.za, CN=Test User"/>
+			<arg value="1024"/>
+			<arg value="720"/>
+			<arg value="TestUser.ks"/>
+			<arg value="password"/>
+			<arg value="no"/>
+			<arg value="JKS"/>
+		</java>
+	</target>    
+	
+	<target name="signRequest" depends="init" description="sign a certificate for a certificate signing request." >
+		<java classname="pkit.examples.CertificateTool"  fork="true">
+				    <classpath>
+					<path path="${libs}:${dist}/pkit.jar"/>
+				    </classpath>
+			<arg value="-signRequest"/>
+			<arg value="etc/signer.properties"/>
+			<arg value="test.csr"/>
+			<arg value="test.cer"/>
+		</java>
+	</target>    
+	
+	<target name="import" depends="init" description="Import the signed cert into the client keystore." >
+	<java classname="pkit.examples.CertificateTool"  fork="true">
+		    <classpath>
+			<path path="${libs}:${dist}/pkit.jar"/>
+		    </classpath>
+		<arg value="-import"/>
+		<arg value="TestUser.ks"/>
+		<arg value="password"/>
+		<arg value="test.cer"/>
+		<arg value="PKITRootCA.cer"/>
+		<arg value="JKS"/>
+	</java>
+	</target>
+	
+	<target name="export" depends="init" description="Exports the CA's public key " >
+		<java classname="pkit.examples.CertificateTool"  fork="true">
+			<classpath>
+				<path path="${libs}:${dist}/pkit.jar"/>
+			</classpath>
+			<arg value="-export"/>
+			<arg value="PKITCARoot.ks"/>
+			<arg value="password"/>
+			<arg value="MyKey"/>
+			<arg value="PKITRootCA.cer"/>
+			<arg value="JKS"/>
+		</java>
+	</target>
+	
+	<target name="makeCRLBlank" depends="init" description="Make a CA root cert and store it in a ks format" >
+		<java classname="pkit.examples.CertificateTool"  fork="true">
+			            <classpath>
+				    	<path path="${libs}:${dist}/pkit.jar"/>
+				    </classpath>
+			<arg value="-gencrl"/>
+			<arg value="etc/signer.properties"/>
+			<arg value="blank.crl"/>
+		</java>
+	</target>    
+	
+	<target name="makeCRL" depends="init" description="Make a CA root cert and store it in a ks format" >
+		<java classname="pkit.examples.CertificateTool"  fork="true">
+			            <classpath>
+				    	<path path="${libs}:${dist}/pkit.jar"/>
+				    </classpath>
+			<arg value="-gencrl"/>
+			<arg value="etc/signer.properties"/>
+			<arg value="test.crl"/>
+			<arg value="test.cer"/>
+		</java>
+	</target>    
+	
+	<target name="all" depends="makeCACert,export,makeClientCert,makeCSR,signRequest,import" description="Do everything " />
+    
+</project>

@@ -1,15 +1,22 @@
 Assuming you have your java environment and ant installed
 
 if you downloaded pkit-noprov.tgz ...
-You still need the bouncy castle provider jar copy yours into pkit's lib directory or download one to there from
-www.bouncycastle.org
+	You still need the bouncy castle provider jar copy yours into pkit's lib directory or download one to there from
+	www.bouncycastle.org
 
-If you are building from source ...
-run ant target "all"
-run ant targets "makeCACert"   -to make a cert you can use to sign (or you can use the dummy one provided (keystore.p12))
-run the example.sh script (or make a similar .bat file and run that and if you do then mail it to me
+To build from source ...
+	run ant target "all"
 
-If you have a binary distribution ...
-run the example.sh script (or make a similar .bat file and run that and if you do then mail it to me)
+To see what pkit can do ...
+	Take a look at the ant build file build.xml in the scripts directory.   From there you can run most of the 
+	functionality.
 
-successfull execution of example.sh means you have your environment set up OK
+To see how to use pkit in your own code ...
+	Take a look at the CertificateTool class to see how it's done
+
+To actually use pkit ...
+	Type this at the commandline from the pkit home directory
+		java -cp ./lib/bcprov-jdk14-115.jar:./lib/ca.jar:./lib/log4j-1.2.jar:./dist/pkit.jar pkit.examples.CertificateTool
+	to print usage information
+
+

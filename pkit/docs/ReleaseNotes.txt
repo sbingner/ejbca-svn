@@ -1,0 +1,39 @@
+pkit  (PKI Tools)  Release notes
+
+pkit is essentially a hack of code from EJBCA ( http://ejbca.sourceforge.net ) and relies heavily
+on the good work of Tomas Gustavsson and others from from EJBCA.   I have simply de-EJB'ed their code 
+and produced some classes that I hope, with the help of others ( you :-) ) to grow in to a useful, friendly and well written
+API to abstract the complexity of X509 and related PKI requirements and specifications.   I also hope to de-mystify 
+PKI and make it less of a 'dark art' and so I aim to add a lot of documentation and references.   
+
+Currently you will be able to use PKIT to:
+
+- sign a cert to produce a well formed cert for various usages
+- create a keystore (any format for which you have a provider) with an initial private key and self cert 
+- create certificate signing requests (CSRs)
+- received responses from CSR's into the keystore
+- convert keystores with simple content from one format to another as long as you have providers for the formats
+- produce blank CRLs (yes, only blank :-) )
+- a number of other useful PKI related tasks
+
+An example commandline utiltiy is included which shows complete certificate cycle from the generation of a client keystore 
+to the receipt of signed cert.
+
+A note on scripts
+
+I initially started out with the intention of writing shell scripts and batch files to run the examples,
+but now I have settled on ant for doing all that.
+
+EJBCA and pkit
+Since pkit's code is in different module to EJBCA it willl not always do all that EJBCA's signer now does, since 
+work continues on EJBCA independantly.   I will occassionally synch pkit with some of the newer code if required
+or I have the time.
+
+Justin Wood
+justin@braidquest.com
+
+CONTRIBUTORS
+Justin Wood
+Tomas Gustavsson
+
+

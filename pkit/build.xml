@@ -49,7 +49,7 @@
     <target name="clean" depends="init" description="Clean all build products.">
          <delete dir="${build}"/>
          <delete dir="${dist}"/>
-	 <delete dir="${apicdoc}"/>
+	 <delete dir="${apidoc}"/>
     </target>
     
       <target name="release" depends="clean" description="Make a tarball of everything except build dir">
