@@ -1,0 +1,332 @@
+<?xml version="1.0"?>
+<project name="SCEPRAServer" default="help" basedir=".">
+
+	<property name="app.name" value="scepraserver" />
+    <property name="app.name.cap" value="SCEPRAServer" />
+	<property name="app.version" value="${app.name.cap} 0.1 alpha" />
+	
+    <property environment="env" />
+    <property name="ejbca.home" value="${env.EJBCA_HOME}" />
+	
+    <!-- Give user a chance to override without editing this file
+       (and without typing -D each time it compiles it).
+       First it checks your home directory for ejbca.properties
+       net it checks the properties file here. -->
+    <property file="${user.home}/${app.name}.properties" />
+	<property name="java.ver" value="15" />
+
+    <!-- set global properties for this build -->
+    <property name="src" value="./src" />
+	<property name="tmp" value="./tmp" />
+    <property name="bin" value="./${tmp}/bin" />
+    <property name="build" value="${bin}/classes" />
+    <property name="lib" value="lib" />
+
+    <property name="src.java" value="${src}/java" />
+    <property name="src.db" value="${src}/db" />
+    <property name="src.test" value="${src}/test" />
+    
+    <property name="test.dir" value="${bin}/junit" />
+    <property name="test.src.dir" location="${src}/test" />
+    <property name="dist.dir" location="dist" />
+    <property name="apidoc" value="./doc/api" />
+
+	<property name="scepraserver.src" value="${src}/web" />
+	<property name="scepraserver.name" value="scepraserver.war" />
+    <property name="scepraserver.build" value="${tmp}/${scepraserver.name}" />
+    <property name="scepraserverwar" value="${dist.dir}/${scepraserver.name}" />
+	
+	<property name="scepracajbossservice.name" value="scepracajbossservice.jar" />
+    <property name="scepracajbossservice.build" value="${tmp}/${scepracajbossservice.name}" />
+    <property name="scepracajbossservicejar" value="${dist.dir}/${scepracajbossservice.name}" />	
+	
+	<property name="sceprajbosshibernite.name" value="sceprajbosshibernite.har" />
+    <property name="sceprajbosshibernite.build" value="${tmp}/${sceprajbosshibernite.name}" />
+    <property name="sceprajbosshibernitehar" value="${dist.dir}/${sceprajbosshibernite.name}" />		
+	
+    <import file="jboss.xml" />
+
+    <property name="jar.extclasspath" value="lib/bcmail-jdk${java.ver}.jar lib/bcprov-jdk${java.ver}.jar lib/log4j-1.2.7.jar"/>
+
+    <path id="ext.classpath">
+        <fileset dir="lib/ext" includes="*.jar" />
+    </path>
+	
+    <path id="compile.classpath">
+        <path refid="ext.classpath" />
+        <fileset dir="lib" includes="*.jar" excludes="bc*.jar"/>
+        <fileset dir="lib" includes="bcmail-jdk${java.ver}.jar"/>
+    	<fileset dir="lib" includes="bcprov-jdk${java.ver}.jar"/>
+        <path refid="j2ee.classpath" />
+        <path refid="ejbca.classpath" /> 
+    </path>
+
+    <path id="j2ee.classpath">
+        <fileset dir="${jboss.home}/client">
+            <include name="jbossall-client.jar" />
+            <include name="jboss-j2ee.jar" />
+        </fileset>
+    </path>
+	
+    <path id="ejbca.classpath">
+        <fileset dir="${ejbca.home}/dist">
+            <include name="ejbca-ejb.jar" />
+        </fileset>
+    </path>
+
+    <path id="test.compile.classpath">
+        <path refid="compile.classpath" />
+        <path location="${build}" />
+    </path>
+
+
+    <!-- =================================================================== -->
+    <!-- Build ALL                                                           -->
+    <!-- =================================================================== -->
+    <target name="help" >
+        <echo>
+---------- ${app.version} Help ----------
+ scepraserver           : Builds scepraserver.war
+ sceprajbosshibernite   : Builds raserver hibernite configuration package
+ scepracajbossservice   : Builds jboss ra ca service        	
+        	
+ deployscepraserver     : Deploys the scep ra server to app server        	 
+ deployscepracaservice  : Deploys the scep ra ca service to app server
+      </echo>
+    </target>
+    <!-- =================================================================== -->
+    <!-- Create the time stamp and build directory -->
+    <!-- =================================================================== -->
+    <target name="init" depends="j2ee:check">
+        <available file="${ejbca.home}/dist/ejbca-ejb.jar" property="ejbca.home.found"/>
+        <fail message="Environment variable EJBCA_HOME haven't been set or EJBCA haven't been built" unless="ejbca.home.found"/>
+        <echo>
+---------- ${app.version} INITIALIZATION ----------
+        	jboss.home             = ${jboss.home}
+        	ejbca.home             = ${ejbca.home}
+        	java.ver               = ${java.ver}        	
+      </echo>
+        <!-- Create the time stamp -->
+        <tstamp/>
+        <!-- Create the build directory structure used by compile -->
+        <mkdir dir="${build}"/>
+        <mkdir dir="${dist.dir}/${lib}"/>
+    </target>
+
+    <!-- =================================================================== -->
+    <!-- Clean ALL                                                           -->
+    <!-- =================================================================== -->
+    <target name="clean">
+        <!-- Delete the ${build} and ${dist.dir} directory trees -->
+        <delete dir="${build}" />
+        <delete dir="${dist.dir}" />
+        <delete dir="${apidoc}" />
+        <delete dir="${tmp}"/>
+    </target>
+
+
+
+    <!-- =================================================================== -->
+    <!-- Compile java sources                                                -->
+    <!-- =================================================================== -->
+    <target name="compile" depends="init">
+        <javac destdir="${build}" debug="on" includeantruntime="no" encoding="iso8859-1">
+            <classpath refid="compile.classpath" />
+            <src path="${src.java}" />
+        	<exclude name="**/jboss/**" />
+        </javac>
+    	<!-- update web.xml file -->
+
+        <copy todir="${tmp}" overwrite="true">
+			<fileset dir="${scepraserver.src}/WEB-INF/">
+				<include name="web.xml"/>
+			</fileset>	
+			<filterchain>
+			<tokenfilter>
+				<replacestring from="@jboss.conf.dir@" to="${jboss.conf.dir}"/>				
+			</tokenfilter>
+			</filterchain>
+        </copy>
+    </target>
+
+    <!-- =================================================================== -->
+    <!-- Build SCEPRA Server part                                                    -->
+    <!-- =================================================================== -->
+    <target name="scepraserver" depends="compile, sceprajbosshibernite" description="build the war file">
+        <war destfile="${scepraserverwar}" webxml="${tmp}/web.xml">
+            <fileset dir="${scepraserver.src}" excludes="WEB-INF/web.xml" />
+            <classes dir="${build}">
+                <exclude name="**/CVS/**" />
+            	<include name="**/ra/*.class" />
+            	<include name="**/util/*.class" />
+         	</classes>
+        </war>
+    </target>
+    
+    <!-- =================================================================== -->
+    <!-- Build Javadoc part                                                  -->
+    <!-- =================================================================== -->
+    <target name="javadoc" depends="">
+        <mkdir dir="${apidoc}" />
+        <javadoc packagenames="org.ejbca.extra.*" maxmemory="256m" sourcepath="${src.java}" destdir="${apidoc}" extdirs="${lib}" author="true" version="true" use="true" windowtitle="EJBCA API" bottom="Copyright &#169; 2005 PrimeKey Solutions AB.">
+        </javadoc>
+    </target>
+	
+    <!-- =================================================================== -->
+    <!-- Build SCEPRA Hibernite configuration package                       -->
+    <!-- =================================================================== -->
+    <target name="sceprajbosshibernite" depends="compile">
+        <mkdir dir="${sceprajbosshibernite.build}" />
+    	<mkdir dir="${sceprajbosshibernite.build}/META-INF" />
+        <copy todir="${sceprajbosshibernite.build}/META-INF">
+            <fileset dir="${src}/appserver/jboss">
+                <include name="hibernate-service.xml" />
+            </fileset>
+        </copy>
+    	<mkdir dir="${sceprajbosshibernite.build}/org/ejbca/extra/db" />
+        <copy todir="${sceprajbosshibernite.build}/org/ejbca/extra/db">
+            <fileset dir="${src.db}">
+                <include name="Message.hbm.xml" />
+            </fileset>
+        </copy>
+        <copy todir="${sceprajbosshibernite.build}/org/ejbca/extra/db">
+            <fileset dir="${build}/org/ejbca/extra/db">
+                <include name="*.class" />
+            </fileset>
+        </copy>
+        <copy todir="${sceprajbosshibernite.build}">
+            <fileset dir="${lib}">
+               <include name="commons-collections-2.1.1.jar" />
+            </fileset>
+        </copy>    	
+        <jar basedir="${sceprajbosshibernite.build}" jarfile="${sceprajbosshibernitehar}">
+            <manifest>
+                <attribute name="Class-Path" value="" />
+            </manifest>
+        </jar>
+    </target>
+	
+
+	
+	
+    <!-- =================================================================== -->
+    <!-- Build SCEPRACA JBoss Specific Services                       -->
+    <!-- =================================================================== -->
+    <target name="scepracajbossservice" depends="compile, sceprajbosshibernite">
+        <path id="scepracajbossservice.classpath">
+            <pathelement location="${jboss.home}/lib/jboss-system.jar" />
+            <pathelement location="${jboss.home}/lib/jboss-common.jar" />
+            <pathelement location="${jboss.home}/lib/jboss-jmx.jar" />
+        </path>
+        <javac srcdir="${src.java}" extdirs="${lib}" destdir="${build}" debug="on" encoding="iso8859-1">
+            <exclude name="**/CVS/**" />
+            <include name="**/jboss/**" />
+        	<include name="**/caservice/**" />
+        	<include name="**/util/**" />
+            <classpath refid="scepracajbossservice.classpath" />
+            <classpath refid="compile.classpath" />
+        </javac>
+
+        <mkdir dir="${scepracajbossservice.build}" />
+        <copy todir="${scepracajbossservice.build}">
+            <fileset dir="${src}/appserver/jboss">
+                <include name="scepraca-service.xml" />
+            </fileset>
+        </copy>
+        <copy todir="${scepracajbossservice.build}">
+            <fileset dir="${build}">
+                <include name="org/ejbca/extra/caservice/*.class" />
+                <include name="org/ejbca/extra/caservice/jboss/*.class" />
+                <include name="org/ejbca/extra/util/*.class" />
+                <exclude name="org/ejbca/extra/**/*Test*" />
+            </fileset>
+        </copy>
+
+        <jar basedir="${scepracajbossservice.build}" jarfile="${scepracajbossservicejar}">
+            <manifest>
+                <attribute name="Class-Path" value="" />
+            </manifest>
+        </jar>
+    </target>
+
+    <!-- ======================================================================= -->
+    <!-- Deploy SCEP RA Server war to JBoss                                               -->
+    <!-- ======================================================================= -->
+    <target name="deployscepraserver" depends="scepraserver">
+        <antcall target="j2ee:deployscepraserver" />
+    </target>
+
+    <!-- ======================================================================= -->
+    <!-- Deploy SCEP RA CA Service sar to JBoss                                               -->
+    <!-- ======================================================================= -->
+    <target name="deployscepracaservice" depends="scepracajbossservice">
+        <antcall target="j2ee:deployscepracaservice" />
+    </target>
+
+    <target name="test:compile" depends="compile" description="compile JUnit testcases">
+        <mkdir dir="${test.dir}" />
+        <javac srcdir="${test.src.dir}" destdir="${test.dir}" debug="on" includeantruntime="no" encoding="iso8859-1">
+            <classpath refid="test.compile.classpath" />
+        </javac>
+    	<copy todir="${test.dir}">
+            <fileset dir="${src.test}">
+                <include name="jndi.properties" />
+                <include name="log4j.properties" />
+            </fileset>   	
+    	</copy>
+    </target>
+
+    <target name="test:run" depends="test:compile" description="run JUnit testcases">
+        <delete dir="${test.dir}/reports" />
+        <mkdir dir="${test.dir}/reports/html" />
+        <junit printsummary="yes" haltonfailure="no">
+            <classpath>
+                <path refid="test.compile.classpath" />
+                <path location="${test.dir}" />
+            	<path location="${src.db}" />
+            </classpath>
+            <formatter type="xml" />
+            <batchtest fork="yes" todir="${test.dir}/reports">
+                <fileset dir="${test.dir}">
+                    <include name="**/Test*" />
+                    <exclude name="**/TestRunner*" />
+                </fileset>
+            </batchtest>
+        </junit>
+        <junitreport todir="${test.dir}/reports">
+            <fileset dir="${test.dir}/reports">
+                <include name="TEST-*.xml" />
+            </fileset>
+            <report format="frames" todir="${test.dir}/reports/html" />
+        </junitreport>
+    </target>
+    
+    <target name="test:runweb" depends="test:compile,j2ee:assert-run" description="run JUnit web testcases">
+        <delete dir="${test.dir}/web/reports" />
+        <mkdir dir="${test.dir}/web/reports/html" />
+        <junit printsummary="yes" haltonfailure="no">
+			<sysproperty key="testtype" value="WEB"/>
+            <classpath>
+                <path refid="test.compile.classpath" />
+                <path location="${test.dir}" />
+            </classpath>
+            <formatter type="xml" />
+        	<!-- we must use fork=yes or the BC JCE won't be authenticated due to some problem with ant classloading -->
+            <batchtest fork="yes" todir="${test.dir}/web/reports">
+                <fileset dir="${test.dir}">
+                    <include name="**/ra/ProtocolScepHttpTest*" />
+                </fileset>
+            </batchtest>
+        </junit>
+        <junitreport todir="${test.dir}/web/reports">
+            <fileset dir="${test.dir}/web/reports">
+                <include name="TEST-*.xml" />
+            </fileset>
+            <report format="frames" todir="${test.dir}/web/reports/html" />
+        </junitreport>
+    </target>
+
+ 
+
+	
+</project>

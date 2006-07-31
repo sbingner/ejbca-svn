@@ -1,0 +1,10 @@
+<server>
+    <mbean code="org.jboss.hibernate.jmx.Hibernate" 
+           name="jboss.har:service=HibernateRA">
+        <attribute name="DatasourceName">java:/RAMessageDS</attribute>
+        <attribute name="Dialect">org.hibernate.dialect.MySQLDialect</attribute>
+        <attribute name="SessionFactoryName">java:/hibernate/RAMessageSessionFactory</attribute>
+        <attribute name="CacheProviderClass">org.hibernate.cache.HashtableCacheProvider</attribute>
+        <attribute name="Hbm2ddlAuto">update</attribute>
+    </mbean>
+</server>
