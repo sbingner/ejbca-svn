@@ -59,7 +59,6 @@ import org.bouncycastle.cms.RecipientInformationStore;
 import org.bouncycastle.cms.SignerId;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
-import org.bouncycastle.ocsp.OCSPException;
 import org.bouncycastle.util.encoders.Base64;
 import org.ejbca.core.protocol.ResponseStatus;
 import org.ejbca.core.protocol.ScepRequestMessage;
@@ -452,7 +451,7 @@ public class ProtocolScepHttpTest extends TestCase {
         signer2.update("PrimeKey".getBytes());
         return signer2.verify(signature);
     }
-    private byte[] sendScep(boolean post, byte[] scepPackage, boolean noca) throws IOException, OCSPException, NoSuchProviderException {
+    private byte[] sendScep(boolean post, byte[] scepPackage, boolean noca) throws IOException {
         // POST the OCSP request
         // we are going to do a POST
     	String resource = resourceScep;

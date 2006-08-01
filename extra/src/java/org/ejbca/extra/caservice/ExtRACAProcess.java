@@ -605,7 +605,7 @@ public class ExtRACAProcess extends RACAProcess {
 		return retval;
 	}
 	
-	private int getHardTokenIssuerId(Admin admin, String hardTokenIssuerName) throws EjbcaException, ClassCastException, CreateException, NamingException {
+	private int getHardTokenIssuerId(Admin admin, String hardTokenIssuerName) throws ClassCastException, CreateException, NamingException {
 				
 		int retval = getHardTokenSession().getHardTokenIssuerId(admin,hardTokenIssuerName);
 

@@ -139,7 +139,7 @@ public class ScepRequestGenerator {
         return ed;
     }
     
-    private CMSSignedData sign(CMSProcessable signThis, String messageType) throws NoSuchAlgorithmException, NoSuchProviderException, CMSException, IOException, InvalidAlgorithmParameterException, CertStoreException {
+    private CMSSignedData sign(CMSProcessable signThis, String messageType) throws NoSuchAlgorithmException, NoSuchProviderException, CMSException, InvalidAlgorithmParameterException, CertStoreException {
         CMSSignedDataGenerator gen1 = new CMSSignedDataGenerator();
 
         // add authenticated attributes...status, transactionId, sender- and more...

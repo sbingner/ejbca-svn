@@ -12,7 +12,6 @@
  *************************************************************************/
 package org.ejbca.extra.caservice;
 
-import java.io.IOException;
 import java.util.Properties;
 
 import javax.ejb.DuplicateKeyException;
@@ -43,7 +42,7 @@ import org.ejbca.util.query.Query;
  * Contains help methods for storing users in database for approvals.
  * 
  * @author Philip Vendil
- * $Id: RACAProcess.java,v 1.1 2006-07-31 13:13:09 herrvendil Exp $
+ * $Id: RACAProcess.java,v 1.2 2006-08-01 07:35:43 anatom Exp $
  */
 
 public abstract class RACAProcess {
@@ -57,9 +56,9 @@ public abstract class RACAProcess {
 	
 	/**
 	 * Method performin initialization, should be called directly after creation
-	 * @throws IOException 
+	 * @throws ConfigurationException 
 	 */
-	public void init(IRACAService configuration) throws ConfigurationException{
+	public void init(IRACAService configuration) throws ConfigurationException {
 	}
 	
 	

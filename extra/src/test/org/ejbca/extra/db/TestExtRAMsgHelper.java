@@ -18,8 +18,6 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.ejbca.extra.db.ExtRAMsgHelper;
-import org.ejbca.extra.db.ParsedSignatureResult;
 import org.ejbca.util.CertTools;
 
 public class TestExtRAMsgHelper extends TestCase {
@@ -62,31 +60,31 @@ public class TestExtRAMsgHelper extends TestCase {
 		caCertChain.add(Constants.getRootCert());
 		caCertChain.add(Constants.getIntermediateCert());
 		
-		assertTrue(((ParsedSignatureResult) ExtRAMsgHelper.verifySignature(caCertChain, null, signeddata)).isValid());
+		assertTrue((ExtRAMsgHelper.verifySignature(caCertChain, null, signeddata)).isValid());
 		
 		// Test inverted certchain
 		List caCertChain2 = new ArrayList();
 		caCertChain2.add(Constants.getIntermediateCert());
 		caCertChain2.add(Constants.getRootCert());
-		assertTrue(((ParsedSignatureResult) ExtRAMsgHelper.verifySignature(caCertChain2, null, signeddata)).isValid());  
+		assertTrue((ExtRAMsgHelper.verifySignature(caCertChain2, null, signeddata)).isValid());  
 		
 		// Test to sign with incomplete Certchain, no intermediate
 		List caCertChain3 = new ArrayList();
 		caCertChain3.add(Constants.getRootCert());
-		assertFalse(((ParsedSignatureResult) ExtRAMsgHelper.verifySignature(caCertChain3, null, signeddata)).isValid());
+		assertFalse((ExtRAMsgHelper.verifySignature(caCertChain3, null, signeddata)).isValid());
 		
         //	Test to sign with incomplete Certchain, no admin
 		List caCertChain4 = new ArrayList();
 		caCertChain4.add(Constants.getIntermediateCert());
-		assertFalse(((ParsedSignatureResult) ExtRAMsgHelper.verifySignature(caCertChain4, null, signeddata)).isValid());
+		assertFalse((ExtRAMsgHelper.verifySignature(caCertChain4, null, signeddata)).isValid());
 		
 		// Test expired certificates
         Calendar invalidDate = Calendar.getInstance();
         invalidDate.set(2002,2,21,2,21,10);
-        assertFalse(((ParsedSignatureResult) ExtRAMsgHelper.verifySignature(caCertChain, null, signeddata, invalidDate.getTime())).isValid());
+        assertFalse((ExtRAMsgHelper.verifySignature(caCertChain, null, signeddata, invalidDate.getTime())).isValid());
                 
         invalidDate.set(2050,2,21,2,21,10);
-        assertFalse(((ParsedSignatureResult) ExtRAMsgHelper.verifySignature(caCertChain, null, signeddata, invalidDate.getTime())).isValid());
+        assertFalse((ExtRAMsgHelper.verifySignature(caCertChain, null, signeddata, invalidDate.getTime())).isValid());
         
         // Test invalid signature cert
 		byte[] signeddata2 = ExtRAMsgHelper.signData(Constants.getUserKey(),Constants.getIntermediateCert(), testdata.getBytes());
@@ -95,7 +93,7 @@ public class TestExtRAMsgHelper extends TestCase {
 		List caCertChain5 = new ArrayList();
 		caCertChain5.add(Constants.getRootCert());
 				
-		assertFalse(((ParsedSignatureResult) ExtRAMsgHelper.verifySignature(caCertChain5, null, signeddata2)).isValid());
+		assertFalse((ExtRAMsgHelper.verifySignature(caCertChain5, null, signeddata2)).isValid());
         
 		// TODO test crl checks
 

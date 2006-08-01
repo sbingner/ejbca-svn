@@ -14,10 +14,7 @@ package org.ejbca.extra.ra;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -289,22 +286,14 @@ public class ExtRATestClient {
             long pkcs10RequestId = 0;
             long pkcs12RequestId = 0;
             long starttime = new Date().getTime();
-            try{            	
-            	SubMessages submgs = generateSubMessage();
-            	pkcs10RequestId = createPKCS10Request(username,submgs);
-            	if(requestKeyStore){
-            	  pkcs12RequestId = createPKCS12Request(username,submgs);
-            	}
-			    createUser(username, submgs);			
-
-			    run=true;
-            } catch (KeyStoreException e) {
-				println(e.getClass().getName() + " : " +  e.getMessage());
-			} catch (NoSuchAlgorithmException e) {
-				println(e.getClass().getName() + " : " +  e.getMessage());
-			} catch (UnrecoverableKeyException e) {
-				println(e.getClass().getName() + " : " +  e.getMessage());
-			}
+            SubMessages submgs = generateSubMessage();
+            pkcs10RequestId = createPKCS10Request(username,submgs);
+            if(requestKeyStore){
+                pkcs12RequestId = createPKCS12Request(username,submgs);
+            }
+            createUser(username, submgs);			
+            
+            run=true;
 
 			
 			// Wait for response
@@ -374,7 +363,7 @@ public class ExtRATestClient {
 									
 		   }
 
-		private long createPKCS10Request(String username, SubMessages submessages) throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
+		private long createPKCS10Request(String username, SubMessages submessages) {
 			long requestId = random.nextLong();			
             
 			submessages.addSubMessage(new ExtRAPKCS10Request(requestId,username, "CN=PKCS10REQ", "RFC822NAME=PKCS10Request@test.com",
@@ -384,7 +373,7 @@ public class ExtRATestClient {
 			return requestId;
 		}
 		
-		private long createPKCS12Request(String username, SubMessages submessages) throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
+		private long createPKCS12Request(String username, SubMessages submessages) {
 			long requestId = random.nextLong();			
             
 			submessages.addSubMessage(new ExtRAPKCS12Request(requestId,username, "CN=PKCS12REQ", "RFC822NAME=PKCS12Request@test.com",
@@ -395,7 +384,7 @@ public class ExtRATestClient {
 			return requestId;
 		}
 		
-		private SubMessages generateSubMessage() throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
+		private SubMessages generateSubMessage() {
 			
 			if(securitylevel.equalsIgnoreCase(SECURITY_SIGNEDENCRYPTED)){
 				return new SubMessages(raCert,raKey, encCert);					                

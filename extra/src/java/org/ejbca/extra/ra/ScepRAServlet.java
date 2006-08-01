@@ -37,7 +37,6 @@ import org.ejbca.core.model.authorization.AuthorizationDeniedException;
 import org.ejbca.core.model.ca.AuthLoginException;
 import org.ejbca.core.model.ca.AuthStatusException;
 import org.ejbca.core.model.ca.caadmin.CADoesntExistsException;
-import org.ejbca.core.model.ca.catoken.CATokenOfflineException;
 import org.ejbca.core.protocol.IRequestMessage;
 import org.ejbca.core.protocol.ResponseStatus;
 import org.ejbca.core.protocol.ScepRequestMessage;
@@ -64,7 +63,7 @@ import org.hibernate.SessionFactory;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.1 2006-07-31 13:13:10 herrvendil Exp $
+ * @version $Id: ScepRAServlet.java,v 1.2 2006-08-01 07:35:43 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
@@ -300,7 +299,7 @@ public class ScepRAServlet extends HttpServlet {
         }
     }
     
-    private ScepResponseMessage createPendingResponseMessage(IRequestMessage req, X509Certificate racert, PrivateKey rakey, String cryptProvider) throws CATokenOfflineException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
+    private ScepResponseMessage createPendingResponseMessage(IRequestMessage req, X509Certificate racert, PrivateKey rakey, String cryptProvider) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
     	ScepResponseMessage ret = null;
     	// Create the response message and set all required fields
     	try {
@@ -317,10 +316,10 @@ public class ScepRAServlet extends HttpServlet {
     		return null;
 		}
     	if (ret.requireSignKeyInfo()) {
-    		ret.setSignKeyInfo((X509Certificate) racert, rakey, cryptProvider);
+    		ret.setSignKeyInfo(racert, rakey, cryptProvider);
     	}
     	if (ret.requireEncKeyInfo()) {
-    		ret.setEncKeyInfo((X509Certificate) racert, rakey, cryptProvider);
+    		ret.setEncKeyInfo(racert, rakey, cryptProvider);
     	}
     	if (req.getSenderNonce() != null) {
     		ret.setRecipientNonce(req.getSenderNonce());
