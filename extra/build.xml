@@ -369,9 +369,31 @@
         </junitreport>
     </target>
     
-
-
- 
-
+	<target name="ziprelease">
+		<antcall target="clean" />
+        <input message="Version tag for zipfile (ex 3_2_1):" addproperty="extra.zipversion" /> 
+		<zip destfile="../extra_${extra.zipversion}.zip">
+		    <zipfileset dir="." prefix="extra" filemode="600" dirmode="700"> 
+		    	<include name="**/**" />
+		    	<exclude name="**/CVS/**" />
+		    	<exclude name="dist/**" />
+		    	<exclude name="tmp/**" />
+		    	<exclude name="out/**" />
+		    	<exclude name=".settings/**" />
+		    	<exclude name="keystore/**" />
+		    	<exclude name="**/*.class" />
+		    	<exclude name=".classpath" />
+		    	<exclude name=".project" />
+		    	<exclude name="**/.cvsignore" />
+		    	<exclude name="**/*.sh" />
+		    </zipfileset>
+		    <zipfileset dir="." prefix="extra" filemode="700" dirmode="700"> 
+		    	<include name="**/*.sh" />
+		    </zipfileset>
+		</zip>
+        <checksum file="../extra_${extra.zipversion}.zip" algorithm="SHA1" forceOverwrite="yes"/>      
+        <checksum file="../extra_${extra.zipversion}.zip" algorithm="SHA1" property="extraSHA1"/>      
+        <echo message="SHA1 checksum: ${extraSHA1}" />     
+	</target>
 	
 </project>
