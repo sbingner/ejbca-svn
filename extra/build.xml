@@ -152,9 +152,9 @@
     	<mkdir dir="${ext-raclient.build}/META-INF" />
         <copy todir="${ext-raclient.build}">
             <fileset dir="${build}">
-                <include name="se/primeKey/rasrv/db/*.class" />
-                <include name="se/primeKey/rasrv/ra/*.class" />
-                <include name="se/primeKey/rasrv/util/*.class" />
+                <include name="org/ejbca/extra/db/*.class" />
+                <include name="org/ejbca/extra/ra/*.class" />
+                <include name="org/ejbca/extra/util/*.class" />
             </fileset>
         </copy>
         <copy todir="${ext-raclient.build}">
@@ -230,7 +230,7 @@
     <!-- =================================================================== -->
     <target name="javadoc" depends="">
         <mkdir dir="${apidoc}" />
-        <javadoc packagenames="org.ejbca.extra.*" maxmemory="256m" sourcepath="${src.java}" destdir="${apidoc}" extdirs="${lib}" author="true" version="true" use="true" windowtitle="EJBCA API" bottom="Copyright &#169; 2005 PrimeKey Solutions AB.">
+        <javadoc packagenames="org.ejbca.extra.*" maxmemory="256m" sourcepath="${src.java}" destdir="${apidoc}" extdirs="${lib}" author="true" version="true" use="true" windowtitle="EJBCA API" bottom="Copyright &#169; 2006 PrimeKey Solutions AB.">
         </javadoc>
     </target>
 	
