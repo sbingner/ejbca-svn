@@ -20,11 +20,11 @@ import java.math.BigInteger;
  * Parameters inhereited from the base class ExtRARequset is ignored.
  * 
  * @author philip
- * $Id: ExtRARevocationRequest.java,v 1.1 2006-07-31 13:13:06 herrvendil Exp $
+ * $Id: ExtRARevocationRequest.java,v 1.2 2006-08-08 08:56:44 anatom Exp $
  */
 public class ExtRARevocationRequest extends ExtRARequest {
 
-	public static final float LATEST_VERSION = (float) 2.0;
+	public static final float LATEST_VERSION = (float) 3.0;
 	
 	static final int CLASS_TYPE = 8;
 	
@@ -47,14 +47,18 @@ public class ExtRARevocationRequest extends ExtRARequest {
 	private static final String REVOKATIONREASON      = "REVOCATIONREASON";
 	private static final String ISSUERDN              = "ISSUERDN";
 	private static final String CERTIFICATESN         = "CERTIFICATESN";
+    private static final String USERNAME              = "USERNAME";
+    /** If all the users certificates should be revoked */
 	private static final String REVOKEALL             = "REVOKEALL";
+    /** If the user should be revoked as well, and not only the certificates */
 	private static final String REVOKEUSER            = "REVOKEUSER";
+    
 
 	
 	private static final long serialVersionUID = 1L;
 	
 	/**
-	 * Constructor that should be used.
+	 * Constructor revoking a specific certificate.
 	 */
 	public ExtRARevocationRequest(long requestId, String issuerdn, BigInteger certificatesn, int revocationReason){    
 		data.put(REQUESTID, new Long(requestId));
@@ -62,12 +66,13 @@ public class ExtRARevocationRequest extends ExtRARequest {
 		data.put(VERSION, new Float(LATEST_VERSION));
 		data.put(ISSUERDN, issuerdn);
 		data.put(CERTIFICATESN, certificatesn);
+        data.put(USERNAME, "");
 		data.put(REVOKATIONREASON, new Integer(revocationReason));
 		data.put(REVOKEALL, new Boolean(false));
 		data.put(REVOKEUSER, new Boolean(false));
 	}
 	/**
-	 * Constructor that should be used.
+     * Constructor revoking a specific certificate, or optionally all certificates of the user owning this certificate, and optionally the user as well
 	 */
 	public ExtRARevocationRequest(long requestId, String issuerdn, BigInteger certificatesn, int revocationReason, boolean revokeuser, boolean revokeall){    
 		data.put(REQUESTID, new Long(requestId));
@@ -75,10 +80,25 @@ public class ExtRARevocationRequest extends ExtRARequest {
 		data.put(VERSION, new Float(LATEST_VERSION));
 		data.put(ISSUERDN, issuerdn);
 		data.put(CERTIFICATESN, certificatesn);
+        data.put(USERNAME, "");
 		data.put(REVOKATIONREASON, new Integer(revocationReason));
 		data.put(REVOKEALL, new Boolean(revokeall));
 		data.put(REVOKEUSER, new Boolean(revokeuser));
 	}
+    /**
+     * Constructor revoking all of a users certificates, and optionally the user as well
+     */
+    public ExtRARevocationRequest(long requestId, String username, int revocationReason, boolean revokeuser){    
+        data.put(REQUESTID, new Long(requestId));
+        data.put(CLASSTYPE, new Integer(CLASS_TYPE));
+        data.put(VERSION, new Float(LATEST_VERSION));
+        data.put(ISSUERDN, "");
+        data.put(CERTIFICATESN, new BigInteger("-1"));
+        data.put(USERNAME, username);
+        data.put(REVOKATIONREASON, new Integer(revocationReason));
+        data.put(REVOKEALL, new Boolean(true));
+        data.put(REVOKEUSER, new Boolean(revokeuser));
+    }
 	
 
 	/**
@@ -129,9 +149,14 @@ public class ExtRARevocationRequest extends ExtRARequest {
 	
 	
 	public void upgrade() {
-		if(LATEST_VERSION != getVersion()){	
-			data.put(REVOKEALL, new Boolean(false));
-			data.put(REVOKEUSER, new Boolean(false));
+        if(Float.compare(LATEST_VERSION, getVersion()) != 0) {
+            
+            if(data.get(REVOKEALL) == null)
+                data.put(REVOKEALL, new Boolean(false));
+            if(data.get(REVOKEUSER) == null)
+                data.put(REVOKEUSER, new Boolean(false));
+            if(data.get(USERNAME) == null)
+                data.put(USERNAME, "");
 			data.put(VERSION, new Float(LATEST_VERSION));
 		}
 		
