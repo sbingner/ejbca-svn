@@ -41,7 +41,7 @@ import org.ejbca.util.CertTools;
  * 
  * 
  * @author philip
- * $Id: TestRAApi.java,v 1.1 2006-07-31 13:13:10 herrvendil Exp $
+ * $Id: TestRAApi.java,v 1.2 2006-08-08 17:04:42 anatom Exp $
  */
 
 public class TestRAApi extends TestCase {
@@ -260,7 +260,37 @@ public class TestRAApi extends TestCase {
 		
 		ExtRAResponse resp4 = (ExtRAResponse) submessagesresp4.getSubMessages().iterator().next();
 		assertTrue(resp4.getRequestId() == 8);
-		assertTrue(resp4.isSuccessful() == true); 
+		assertTrue(resp4.isSuccessful() == true);
+		
+		// try to revoke a users all certificates by giving the username
+		SubMessages smgs5 = new SubMessages(null,null,null);
+		smgs5.addSubMessage(new ExtRARevocationRequest(9, "SimplePKCS10Test1", ExtRARevocationRequest.REVOKATION_REASON_UNSPECIFIED, false));
+		
+		TestMessageHome.msghome.create("SimpleRevocationTest", smgs5);
+		
+        Message msg5 = waitForUser("SimpleRevocationTest");
+		
+		assertNotNull(msg5);
+		
+		SubMessages submessagesresp5 = msg5.getSubMessages(null,null,null);
+		
+		assertTrue(submessagesresp5.getSubMessages().size() == 1);
+		
+		ExtRAResponse resp5 = (ExtRAResponse) submessagesresp5.getSubMessages().iterator().next();
+		assertTrue(resp5.getRequestId() == 9);
+		assertTrue(resp5.isSuccessful() == true);
+		
+		// try some error cases
+		SubMessages smgs6 = new SubMessages(null,null,null);
+		smgs6.addSubMessage(new ExtRARevocationRequest(10, null, ExtRARevocationRequest.REVOKATION_REASON_UNSPECIFIED, false));		
+		TestMessageHome.msghome.create("SimpleRevocationTest", smgs6);
+        Message msg6 = waitForUser("SimpleRevocationTest");
+		assertNotNull(msg6);
+		SubMessages submessagesresp6 = msg6.getSubMessages(null,null,null);
+		assertTrue(submessagesresp6.getSubMessages().size() == 1);
+		ExtRAResponse resp6 = (ExtRAResponse) submessagesresp6.getSubMessages().iterator().next();
+		assertTrue(resp6.getRequestId() == 10);
+		assertTrue(resp6.isSuccessful() == true);
 	}
 	
 	public void test05GenerateSimpleEditUserRequest() throws Exception {

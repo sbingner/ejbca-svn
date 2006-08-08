@@ -12,6 +12,7 @@
  *************************************************************************/
 package org.ejbca.extra.caservice;
 
+import java.math.BigInteger;
 import java.rmi.RemoteException;
 import java.security.KeyPair;
 import java.security.KeyStore;
@@ -32,6 +33,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.ejbca.core.EjbcaException;
 import org.ejbca.core.ejb.ca.caadmin.ICAAdminSessionLocal;
@@ -392,20 +394,42 @@ public class ExtRACAProcess extends RACAProcess {
 		log.debug("Processing ExtRARevocationRequest");
 		ExtRAResponse retval = null;
      
-		 try {			 
-			String username = getCertStoreSession().findUsernameByCertSerno(admin,submessage.getCertificateSN(), CertTools.stringToBCDNString(submessage.getIssuerDN()));
-			if (submessage.getRevokeAll() || submessage.getRevokeUser()) {
-				// Revoke all users certificates by revoking the whole user
-				UserDataVO vo = getUserAdminSession().findUser(admin,username);
-				getUserAdminSession().revokeUser(admin,username, submessage.getRevocationReason());
-				if (!submessage.getRevokeUser()) {
-					// If we were not to revoke the user itself, but only the certificates, we should set back status
-					getUserAdminSession().setUserStatus(admin, username, vo.getStatus());
-				}
+		try {			 
+			// If this is a message that dod contain an explicit username, use it
+			String username = submessage.getUsername();
+			String issuerDN = submessage.getIssuerDN();
+			BigInteger serno = submessage.getCertificateSN();
+			if (StringUtils.isEmpty(issuerDN) && StringUtils.isEmpty(username)) {
+				retval = new ExtRAResponse(submessage.getRequestId(),false,"Either username or issuer/serno os required");
 			} else {
-				getUserAdminSession().revokeCert(admin,submessage.getCertificateSN(),CertTools.stringToBCDNString(submessage.getIssuerDN()), username, submessage.getRevocationReason());				
+				if (StringUtils.isEmpty(username)) {
+					username = getCertStoreSession().findUsernameByCertSerno(admin, serno, CertTools.stringToBCDNString(issuerDN));
+				} 
+				if (username != null) {
+					if ( (submessage.getRevokeAll() || submessage.getRevokeUser()) ) {
+						// Revoke all users certificates by revoking the whole user
+						UserDataVO vo = getUserAdminSession().findUser(admin,username);
+						if (vo != null) {
+							getUserAdminSession().revokeUser(admin,username, submessage.getRevocationReason());
+							if (!submessage.getRevokeUser()) {
+								// If we were not to revoke the user itself, but only the certificates, we should set back status
+								getUserAdminSession().setUserStatus(admin, username, vo.getStatus());
+							}					
+						} else {
+							retval = new ExtRAResponse(submessage.getRequestId(),false,"User not found from username: username="+username);							
+						}
+					} else {
+						// Revoke only this certificate
+						getUserAdminSession().revokeCert(admin, serno, CertTools.stringToBCDNString(issuerDN), username, submessage.getRevocationReason());				
+					}					
+				} else {
+					retval = new ExtRAResponse(submessage.getRequestId(),false,"User not found from issuer/serno: issuer='"+issuerDN+", serno="+serno);					
+				}
+				// If we didn't create any other return value, it was a success
+				if (retval == null) {
+					retval = new ExtRAResponse(submessage.getRequestId(),true,null);					
+				}
 			}
-			retval = new ExtRAResponse(submessage.getRequestId(),true,null);
 		} catch (AuthorizationDeniedException e) {
 			log.error("Error processing ExtRARevocationRequest : ", e);
 			retval = new ExtRAResponse(submessage.getRequestId(),false, "AuthorizationDeniedException: " + e.getMessage());
