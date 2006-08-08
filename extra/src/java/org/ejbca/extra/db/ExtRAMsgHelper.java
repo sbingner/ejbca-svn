@@ -41,6 +41,7 @@ import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSProcessableByteArray;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.CMSSignedDataGenerator;
+import org.bouncycastle.cms.CMSSignedGenerator;
 import org.bouncycastle.cms.RecipientInformation;
 import org.bouncycastle.cms.RecipientInformationStore;
 import org.bouncycastle.cms.SignerInformation;
@@ -50,7 +51,7 @@ import org.bouncycastle.cms.SignerInformationStore;
  * Class conatning static help methods used to encrypt, decrypt, sign  and verify ExtRASubMessages
  * 
  * @author philip
- * $Id: ExtRAMsgHelper.java,v 1.1 2006-07-31 13:13:07 herrvendil Exp $
+ * $Id: ExtRAMsgHelper.java,v 1.2 2006-08-08 17:11:40 anatom Exp $
  */
 public class ExtRAMsgHelper {
 	
@@ -58,7 +59,7 @@ public class ExtRAMsgHelper {
 
 	private static String provider = "BC"; // default provider
 	private static String encAlg = CMSEnvelopedDataGenerator.AES256_CBC; // default encryption algorithm
-	private static String signAlg = CMSSignedDataGenerator.DIGEST_SHA256; // default signature digest
+	private static String signAlg = CMSSignedGenerator.DIGEST_SHA256; // default signature digest
 	
 	/**
 	 * Method to initalize the helper class. Should be called before any of the methods are used

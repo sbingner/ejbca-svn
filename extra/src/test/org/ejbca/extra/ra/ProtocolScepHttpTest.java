@@ -53,7 +53,7 @@ import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSProcessable;
 import org.bouncycastle.cms.CMSSignedData;
-import org.bouncycastle.cms.CMSSignedDataGenerator;
+import org.bouncycastle.cms.CMSSignedGenerator;
 import org.bouncycastle.cms.RecipientInformation;
 import org.bouncycastle.cms.RecipientInformationStore;
 import org.bouncycastle.cms.SignerId;
@@ -72,6 +72,7 @@ import com.meterware.httpunit.WebRequest;
 import com.meterware.httpunit.WebResponse;
 
 /** Tests http pages of ocsp and scep
+ * @version $Id: ProtocolScepHttpTest.java,v 1.3 2006-08-08 17:11:40 anatom Exp $
  **/
 public class ProtocolScepHttpTest extends TestCase {
     private static Logger log = Logger.getLogger(ProtocolScepHttpTest.class);
@@ -196,11 +197,11 @@ public class ProtocolScepHttpTest extends TestCase {
         
         // Pre-generate key for all requests to speed things up a bit
         keys = KeyTools.genKeys(1024);
-        byte[] msgBytes = genScepRequest(CMSSignedDataGenerator.DIGEST_SHA1);
+        byte[] msgBytes = genScepRequest(CMSSignedGenerator.DIGEST_SHA1);
         // Send message with GET
         byte[] retMsg = sendScep(false, msgBytes, false);
         assertNotNull(retMsg);
-        checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=sceptest", senderNonce, transId, false, CMSSignedDataGenerator.DIGEST_SHA1, true, ResponseStatus.PENDING);
+        checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=sceptest", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, true, ResponseStatus.PENDING);
         log.debug("<test03ScepRequestOKSHA1()");
     }
 
@@ -211,11 +212,11 @@ public class ProtocolScepHttpTest extends TestCase {
         
         // Pre-generate key for all requests to speed things up a bit
         keys = KeyTools.genKeys(512);
-        byte[] msgBytes = genScepRequest(CMSSignedDataGenerator.DIGEST_MD5);
+        byte[] msgBytes = genScepRequest(CMSSignedGenerator.DIGEST_MD5);
         // Send message with GET
         byte[] retMsg = sendScep(false, msgBytes, false);
         assertNotNull(retMsg);
-        checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=sceptest", senderNonce, transId, false, CMSSignedDataGenerator.DIGEST_MD5, true, ResponseStatus.PENDING);
+        checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=sceptest", senderNonce, transId, false, CMSSignedGenerator.DIGEST_MD5, true, ResponseStatus.PENDING);
         log.debug("<test04ScepRequestOKMD5()");
     }
 
@@ -224,11 +225,11 @@ public class ProtocolScepHttpTest extends TestCase {
         // find a CA, create a user and
         // send SCEP req to server and get good response with cert
         
-        byte[] msgBytes = genScepRequest(CMSSignedDataGenerator.DIGEST_SHA1);
+        byte[] msgBytes = genScepRequest(CMSSignedGenerator.DIGEST_SHA1);
         // Send message with GET
         byte[] retMsg = sendScep(true, msgBytes, false);
         assertNotNull(retMsg);
-        checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=sceptest", senderNonce, transId, false, CMSSignedDataGenerator.DIGEST_SHA1, true, ResponseStatus.PENDING);
+        checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=sceptest", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, true, ResponseStatus.PENDING);
         log.debug(">test05ScepRequestPostOK()");
     }
 

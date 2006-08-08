@@ -48,6 +48,7 @@ import org.bouncycastle.cms.CMSProcessable;
 import org.bouncycastle.cms.CMSProcessableByteArray;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.CMSSignedDataGenerator;
+import org.bouncycastle.cms.CMSSignedGenerator;
 import org.bouncycastle.util.encoders.Base64;
 import org.ejbca.core.protocol.ExtendedPKCS10CertificationRequest;
 import org.ejbca.core.protocol.ScepRequestMessage;
@@ -61,7 +62,7 @@ public class ScepRequestGenerator {
     private X509Certificate cacert = null;
     private String reqdn = null;
     private KeyPair keys = null;
-    private String digestOid = CMSSignedDataGenerator.DIGEST_SHA1;
+    private String digestOid = CMSSignedGenerator.DIGEST_SHA1;
     private ExtendedPKCS10CertificationRequest p10request;
     int keysize = 1024;
     private String senderNonce = null;
