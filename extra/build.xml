@@ -341,6 +341,9 @@
     	</copy>
     </target>
 
+    <!-- 
+    To run these tests you may have to edit TestMessageHome.java to enter your database ocnfiguration 
+    -->
     <target name="test:run" depends="test:compile" description="run JUnit testcases">
         <delete dir="${test.dir}/reports" />
         <mkdir dir="${test.dir}/reports/html" />
