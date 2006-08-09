@@ -400,7 +400,7 @@ public class ExtRACAProcess extends RACAProcess {
 			String issuerDN = submessage.getIssuerDN();
 			BigInteger serno = submessage.getCertificateSN();
 			if (StringUtils.isEmpty(issuerDN) && StringUtils.isEmpty(username)) {
-				retval = new ExtRAResponse(submessage.getRequestId(),false,"Either username or issuer/serno os required");
+				retval = new ExtRAResponse(submessage.getRequestId(),false,"Either username or issuer/serno is required");
 			} else {
 				if (StringUtils.isEmpty(username)) {
 					username = getCertStoreSession().findUsernameByCertSerno(admin, serno, CertTools.stringToBCDNString(issuerDN));
