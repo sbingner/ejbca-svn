@@ -41,7 +41,7 @@ import org.ejbca.util.CertTools;
  * 
  * 
  * @author philip
- * $Id: TestRAApi.java,v 1.3 2006-08-09 07:33:07 anatom Exp $
+ * $Id: TestRAApi.java,v 1.4 2006-08-09 09:01:19 anatom Exp $
  */
 
 public class TestRAApi extends TestCase {
@@ -293,6 +293,32 @@ public class TestRAApi extends TestCase {
 		assertTrue(resp6.getRequestId() == 10);
 		assertTrue(resp6.isSuccessful() == false);
         assertEquals(resp6.getFailInfo(), "Either username or issuer/serno is required");
+        
+        // Then a message with a suername that does not exist
+        SubMessages smgs7 = new SubMessages(null,null,null);
+        smgs7.addSubMessage(new ExtRARevocationRequest(11, "184hjeyyydvv88q", ExtRARevocationRequest.REVOKATION_REASON_UNSPECIFIED, false));     
+        TestMessageHome.msghome.create("SimpleRevocationTest", smgs7);
+        Message msg7 = waitForUser("SimpleRevocationTest");
+        assertNotNull(msg7);
+        SubMessages submessagesresp7 = msg7.getSubMessages(null,null,null);
+        assertTrue(submessagesresp7.getSubMessages().size() == 1);
+        ExtRAResponse resp7 = (ExtRAResponse) submessagesresp7.getSubMessages().iterator().next();
+        assertTrue(resp7.getRequestId() == 11);
+        assertTrue(resp7.isSuccessful() == false);
+        assertEquals(resp7.getFailInfo(), "User not found from username: username=184hjeyyydvv88q");
+
+        // Then a message with a issuer/serno that does not exist
+        SubMessages smgs8 = new SubMessages(null,null,null);
+        smgs8.addSubMessage(new ExtRARevocationRequest(12, "CN=ffo558444,O=338qqwaa,C=qq", new BigInteger("123"), ExtRARevocationRequest.REVOKATION_REASON_UNSPECIFIED, false, false));     
+        TestMessageHome.msghome.create("SimpleRevocationTest", smgs8);
+        Message msg8 = waitForUser("SimpleRevocationTest");
+        assertNotNull(msg8);
+        SubMessages submessagesresp8 = msg8.getSubMessages(null,null,null);
+        assertTrue(submessagesresp8.getSubMessages().size() == 1);
+        ExtRAResponse resp8 = (ExtRAResponse) submessagesresp8.getSubMessages().iterator().next();
+        assertTrue(resp8.getRequestId() == 12);
+        assertTrue(resp8.isSuccessful() == false);
+        assertEquals(resp8.getFailInfo(), "User not found from issuer/serno: issuer='CN=ffo558444,O=338qqwaa,C=qq', serno=123");
 	}
 	
 	public void test05GenerateSimpleEditUserRequest() throws Exception {

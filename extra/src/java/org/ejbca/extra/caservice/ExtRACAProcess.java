@@ -423,7 +423,7 @@ public class ExtRACAProcess extends RACAProcess {
 						getUserAdminSession().revokeCert(admin, serno, CertTools.stringToBCDNString(issuerDN), username, submessage.getRevocationReason());				
 					}					
 				} else {
-					retval = new ExtRAResponse(submessage.getRequestId(),false,"User not found from issuer/serno: issuer='"+issuerDN+", serno="+serno);					
+					retval = new ExtRAResponse(submessage.getRequestId(),false,"User not found from issuer/serno: issuer='"+issuerDN+"', serno="+serno);					
 				}
 				// If we didn't create any other return value, it was a success
 				if (retval == null) {
