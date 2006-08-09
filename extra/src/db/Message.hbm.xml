@@ -12,7 +12,7 @@
             <generator class="assigned" />
         </id>
         <property name="messageid" type="string">
-            <column name="user" />
+            <column name="messageid" />
         </property>
         <property name="type" type="integer">
             <column name="type" not-null="true" />
