@@ -41,7 +41,7 @@ import org.ejbca.util.CertTools;
  * 
  * 
  * @author philip
- * $Id: TestRAApi.java,v 1.2 2006-08-08 17:04:42 anatom Exp $
+ * $Id: TestRAApi.java,v 1.3 2006-08-09 07:33:07 anatom Exp $
  */
 
 public class TestRAApi extends TestCase {
@@ -280,7 +280,8 @@ public class TestRAApi extends TestCase {
 		assertTrue(resp5.getRequestId() == 9);
 		assertTrue(resp5.isSuccessful() == true);
 		
-		// try some error cases
+		// Try some error cases
+        // First a message with null as parameters
 		SubMessages smgs6 = new SubMessages(null,null,null);
 		smgs6.addSubMessage(new ExtRARevocationRequest(10, null, ExtRARevocationRequest.REVOKATION_REASON_UNSPECIFIED, false));		
 		TestMessageHome.msghome.create("SimpleRevocationTest", smgs6);
@@ -290,7 +291,8 @@ public class TestRAApi extends TestCase {
 		assertTrue(submessagesresp6.getSubMessages().size() == 1);
 		ExtRAResponse resp6 = (ExtRAResponse) submessagesresp6.getSubMessages().iterator().next();
 		assertTrue(resp6.getRequestId() == 10);
-		assertTrue(resp6.isSuccessful() == true);
+		assertTrue(resp6.isSuccessful() == false);
+        assertEquals(resp6.getFailInfo(), "Either username or issuer/serno is required");
 	}
 	
 	public void test05GenerateSimpleEditUserRequest() throws Exception {
