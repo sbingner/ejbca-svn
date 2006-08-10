@@ -32,6 +32,8 @@ import org.ejbca.core.ejb.ca.store.ICertificateStoreSessionLocalHome;
 import org.ejbca.core.ejb.ra.raadmin.IRaAdminSessionLocal;
 import org.ejbca.core.ejb.ra.raadmin.IRaAdminSessionLocalHome;
 import org.ejbca.core.model.SecConst;
+import org.ejbca.core.model.approval.ApprovalException;
+import org.ejbca.core.model.approval.WaitingForApprovalException;
 import org.ejbca.core.model.authorization.AuthorizationDeniedException;
 import org.ejbca.core.model.ca.SignRequestSignatureException;
 import org.ejbca.core.model.ca.caadmin.CAInfo;
@@ -56,7 +58,7 @@ import org.ejbca.util.query.Query;
  * 
  * 
  * @author Philip Vendil
- * $Id: SCEPRACAProcess.java,v 1.1 2006-07-31 13:13:09 herrvendil Exp $
+ * $Id: SCEPRACAProcess.java,v 1.2 2006-08-10 13:05:00 anatom Exp $
  */
 public class SCEPRACAProcess extends RACAProcess {
 	
@@ -151,6 +153,12 @@ public class SCEPRACAProcess extends RACAProcess {
 					} catch (FinderException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
+					} catch (ApprovalException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (WaitingForApprovalException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				}else{
 					sendSCEPFailedMessage(msg.getMessageid(), new String(Base64.encode(((SCEPSubMessage) msg.getSubMessages(null,null,null).getSubMessages().iterator().next()).getScepData())));
@@ -214,8 +222,10 @@ public class SCEPRACAProcess extends RACAProcess {
 	 * @throws UserDoesntFullfillEndEntityProfile 
 	 * @throws AuthorizationDeniedException 
 	 * @throws DuplicateKeyException 
+	 * @throws WaitingForApprovalException 
+	 * @throws ApprovalException 
 	 */
-	private void extractUserDataAndAdd(String user, String msg, X509Certificate signercert) throws DuplicateKeyException, AuthorizationDeniedException, UserDoesntFullfillEndEntityProfile, FinderException{
+	private void extractUserDataAndAdd(String user, String msg, X509Certificate signercert) throws DuplicateKeyException, AuthorizationDeniedException, UserDoesntFullfillEndEntityProfile, FinderException, ApprovalException, WaitingForApprovalException{
 		log.debug(">extractUserDataAndAdd()");		
 		String dn = signercert.getSubjectDN().toString();
 		String subjectaltname = null;

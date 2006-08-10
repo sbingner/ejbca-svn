@@ -23,6 +23,8 @@ import javax.naming.InitialContext;
 import org.apache.log4j.Logger;
 import org.ejbca.core.ejb.ra.IUserAdminSessionLocal;
 import org.ejbca.core.ejb.ra.IUserAdminSessionLocalHome;
+import org.ejbca.core.model.approval.ApprovalException;
+import org.ejbca.core.model.approval.WaitingForApprovalException;
 import org.ejbca.core.model.authorization.AuthorizationDeniedException;
 import org.ejbca.core.model.log.Admin;
 import org.ejbca.core.model.ra.UserDataVO;
@@ -42,7 +44,7 @@ import org.ejbca.util.query.Query;
  * Contains help methods for storing users in database for approvals.
  * 
  * @author Philip Vendil
- * $Id: RACAProcess.java,v 1.2 2006-08-01 07:35:43 anatom Exp $
+ * $Id: RACAProcess.java,v 1.3 2006-08-10 13:05:00 anatom Exp $
  */
 
 public abstract class RACAProcess {
@@ -109,9 +111,11 @@ public abstract class RACAProcess {
 	 * @throws AuthorizationDeniedException 
 	 * @throws FinderException 
 	 * @throws DuplicateKeyException 
+	 * @throws WaitingForApprovalException 
+	 * @throws ApprovalException 
 	 * 
 	 */
-	protected void storeUserData(Admin admin, UserDataVO userdata, boolean clearpwd, int status) throws AuthorizationDeniedException, UserDoesntFullfillEndEntityProfile, DuplicateKeyException, FinderException{
+	protected void storeUserData(Admin admin, UserDataVO userdata, boolean clearpwd, int status) throws AuthorizationDeniedException, UserDoesntFullfillEndEntityProfile, DuplicateKeyException, FinderException, ApprovalException, WaitingForApprovalException{
 		log.debug(">storeUserData() username : " + userdata.getUsername());
 		
 		// Check if user exists
