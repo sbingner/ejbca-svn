@@ -44,7 +44,7 @@ import org.ejbca.util.query.Query;
  * Contains help methods for storing users in database for approvals.
  * 
  * @author Philip Vendil
- * $Id: RACAProcess.java,v 1.3 2006-08-10 13:05:00 anatom Exp $
+ * $Id: RACAProcess.java,v 1.4 2006-08-11 04:20:42 herrvendil Exp $
  */
 
 public abstract class RACAProcess {
@@ -126,7 +126,7 @@ public abstract class RACAProcess {
 			}else{
 				log.debug(" New User " + userdata.getUsername() + ", adding userdata." );
 				getUserAdminSession().addUser(admin,userdata,clearpwd);
-				getUserAdminSession().setUserStatus(admin,userdata.getUsername(), status);
+				getUserAdminSession().setUserStatus(admin,userdata.getUsername(), status, true);
 			}
 	
 		log.debug("<storeUserData()");

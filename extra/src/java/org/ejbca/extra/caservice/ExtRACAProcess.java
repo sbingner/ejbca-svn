@@ -394,6 +394,7 @@ public class ExtRACAProcess extends RACAProcess {
 		log.debug("Processing ExtRARevocationRequest");
 		ExtRAResponse retval = null;
      
+
 		try {			 
 			// If this is a message that dod contain an explicit username, use it
 			String username = submessage.getUsername();
@@ -413,7 +414,7 @@ public class ExtRACAProcess extends RACAProcess {
 							getUserAdminSession().revokeUser(admin,username, submessage.getRevocationReason());
 							if (!submessage.getRevokeUser()) {
 								// If we were not to revoke the user itself, but only the certificates, we should set back status
-								getUserAdminSession().setUserStatus(admin, username, vo.getStatus());
+								getUserAdminSession().setUserStatus(admin, username, vo.getStatus(), false);
 							}					
 						} else {
 							retval = new ExtRAResponse(submessage.getRequestId(),false,"User not found from username: username="+username);							
