@@ -44,7 +44,7 @@ import org.ejbca.util.query.Query;
  * Contains help methods for storing users in database for approvals.
  * 
  * @author Philip Vendil
- * $Id: RACAProcess.java,v 1.4 2006-08-11 04:20:42 herrvendil Exp $
+ * $Id: RACAProcess.java,v 1.5 2006-08-12 17:15:50 anatom Exp $
  */
 
 public abstract class RACAProcess {
@@ -105,7 +105,7 @@ public abstract class RACAProcess {
 	}
 	
 	/**
-	 * Help method used to store userdata in userdatabase with given status, tha is
+	 * Help method used to store userdata in userdatabase with given status, that is
 	 * waiting for user to be reviewed.
 	 * @throws UserDoesntFullfillEndEntityProfile 
 	 * @throws AuthorizationDeniedException 
@@ -126,7 +126,7 @@ public abstract class RACAProcess {
 			}else{
 				log.debug(" New User " + userdata.getUsername() + ", adding userdata." );
 				getUserAdminSession().addUser(admin,userdata,clearpwd);
-				getUserAdminSession().setUserStatus(admin,userdata.getUsername(), status, true);
+				getUserAdminSession().setUserStatus(admin,userdata.getUsername(), status);
 			}
 	
 		log.debug("<storeUserData()");

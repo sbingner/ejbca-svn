@@ -414,7 +414,7 @@ public class ExtRACAProcess extends RACAProcess {
 							getUserAdminSession().revokeUser(admin,username, submessage.getRevocationReason());
 							if (!submessage.getRevokeUser()) {
 								// If we were not to revoke the user itself, but only the certificates, we should set back status
-								getUserAdminSession().setUserStatus(admin, username, vo.getStatus(), false);
+								getUserAdminSession().setUserStatus(admin, username, vo.getStatus());
 							}					
 						} else {
 							retval = new ExtRAResponse(submessage.getRequestId(),false,"User not found from username: username="+username);							
