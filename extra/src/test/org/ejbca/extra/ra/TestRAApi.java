@@ -20,6 +20,7 @@ import java.util.Iterator;
 import junit.framework.TestCase;
 
 import org.ejbca.extra.db.Constants;
+import org.ejbca.extra.db.ExtRACardRenewalRequest;
 import org.ejbca.extra.db.ExtRAPKCS10Response;
 import org.ejbca.extra.db.ExtRAPKCS12Response;
 import org.ejbca.extra.db.ExtRAResponse;
@@ -28,6 +29,7 @@ import org.ejbca.extra.db.Message;
 import org.ejbca.extra.db.SubMessages;
 import org.ejbca.extra.db.TestExtRAMessages;
 import org.ejbca.extra.db.TestMessageHome;
+import org.ejbca.util.Base64;
 import org.ejbca.util.CertTools;
 
 
@@ -41,7 +43,7 @@ import org.ejbca.util.CertTools;
  * 
  * 
  * @author philip
- * $Id: TestRAApi.java,v 1.4 2006-08-09 09:01:19 anatom Exp $
+ * $Id: TestRAApi.java,v 1.5 2006-08-15 17:49:28 anatom Exp $
  */
 
 public class TestRAApi extends TestCase {
@@ -340,9 +342,6 @@ public class TestRAApi extends TestCase {
 		ExtRAResponse resp = (ExtRAResponse) submessagesresp.getSubMessages().iterator().next();
 		assertTrue("Wrong Request ID" + resp.getRequestId(), resp.getRequestId() == 11);
 		assertTrue(resp.isSuccessful() == true);
-	
-
-
 	}	
 	
 	public void test06GenerateComplexRequest() throws Exception {
@@ -401,12 +400,53 @@ public class TestRAApi extends TestCase {
 		
 	} 
 	
+	public void test07GenerateSimpleCardRenewalRequest() throws Exception {
+		
+		// First fail message
+		SubMessages smgs = new SubMessages(null,null,null);
+		String cert1 = new String(Base64.encode(firstCertificate.getEncoded()));
+		smgs.addSubMessage(new ExtRACardRenewalRequest(10, cert1, cert1, null, null));
+		TestMessageHome.msghome.create("SimpleCardRenewalTest", smgs);
+        Message msg = waitForUser("SimpleCardRenewalTest");
+		assertNotNull(msg);
+		SubMessages submessagesresp = msg.getSubMessages(null,null,null);
+		assertTrue("Number of submessages " + submessagesresp.getSubMessages().size(), submessagesresp.getSubMessages().size() == 1);
+		ExtRAResponse resp = (ExtRAResponse) submessagesresp.getSubMessages().iterator().next();
+		assertTrue("Wrong Request ID" + resp.getRequestId(), resp.getRequestId() == 10);
+		assertTrue(resp.isSuccessful() == false);
+        assertEquals(resp.getFailInfo(), "An authentication cert, a signature cert, an authentication request and a signature request are required");
+
+        // Second fail message
+		smgs = new SubMessages(null,null,null);
+		smgs.addSubMessage(new ExtRACardRenewalRequest(11, null, null, Constants.pkcs10_1, Constants.pkcs10_2));
+		TestMessageHome.msghome.create("SimpleCardRenewalTest", smgs);
+        msg = waitForUser("SimpleCardRenewalTest");
+		assertNotNull(msg);
+		submessagesresp = msg.getSubMessages(null,null,null);
+		assertTrue("Number of submessages " + submessagesresp.getSubMessages().size(), submessagesresp.getSubMessages().size() == 1);
+		resp = (ExtRAResponse) submessagesresp.getSubMessages().iterator().next();
+		assertTrue("Wrong Request ID" + resp.getRequestId(), resp.getRequestId() == 11);
+		assertTrue(resp.isSuccessful() == false);
+        assertEquals(resp.getFailInfo(), "An authentication cert, a signature cert, an authentication request and a signature request are required");
+
+        // Second fail message
+		smgs = new SubMessages(null,null,null);
+		smgs.addSubMessage(new ExtRACardRenewalRequest(12, cert1, cert1, Constants.pkcs10_1, Constants.pkcs10_2));
+		TestMessageHome.msghome.create("SimpleCardRenewalTest", smgs);
+        msg = waitForUser("SimpleCardRenewalTest");
+		assertNotNull(msg);
+		submessagesresp = msg.getSubMessages(null,null,null);
+		assertTrue("Number of submessages " + submessagesresp.getSubMessages().size(), submessagesresp.getSubMessages().size() == 1);
+		resp = (ExtRAResponse) submessagesresp.getSubMessages().iterator().next();
+		assertTrue("Wrong Request ID" + resp.getRequestId(), resp.getRequestId() == 12);
+		assertTrue(resp.isSuccessful());
+	}
 	
 	
 	
 	
 	private Message waitForUser(String user) throws InterruptedException{
-		int waittime = 30; // Wait a maximum if 15 seconds
+		int waittime = 30; // Wait a maximum of 30 seconds
 		
 		boolean processed = false;
 		Message msg = null;

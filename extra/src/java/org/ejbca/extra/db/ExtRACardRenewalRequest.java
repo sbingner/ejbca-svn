@@ -12,7 +12,13 @@
  *************************************************************************/
 package org.ejbca.extra.db;
 
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.ejbca.util.CertTools;
 
 /**
  * Ext RA card renewal sub message used when a users certificates on a PrimeCard smart card should be renewed.
@@ -20,9 +26,10 @@ import java.security.cert.X509Certificate;
  * Parameters inherited from the base class ExtRARequset is ignored.
  * 
  * @author tomas
- * @version $Id: ExtRACardRenewalRequest.java,v 1.1 2006-08-15 10:44:19 anatom Exp $
+ * @version $Id: ExtRACardRenewalRequest.java,v 1.2 2006-08-15 17:49:25 anatom Exp $
  */
 public class ExtRACardRenewalRequest extends ExtRARequest {
+	private static final Log log = LogFactory.getLog(ExtRACardRenewalRequest.class);
 
 	public static final float LATEST_VERSION = (float) 1.0;
 	
@@ -35,6 +42,10 @@ public class ExtRACardRenewalRequest extends ExtRARequest {
 	private static final String SIGNCERT           = "SIGNCERT";
 	private static final String AUTHPKCS10         = "AUTHPKCS10";
     private static final String SIGNPKCS10         = "SIGNPKCS10";
+	private static final String AUTHPROFILE        = "AUTHPROFILE";
+	private static final String SIGNPROFILE        = "SIGNPROFILE";
+    private static final String AUTHCA             = "AUTHCA";
+    private static final String SIGNCA             = "SIGNCA";
     
 
 	
@@ -43,7 +54,7 @@ public class ExtRACardRenewalRequest extends ExtRARequest {
 	/**
 	 * Constructor revoking a specific certificate.
 	 */
-	public ExtRACardRenewalRequest(long requestId, X509Certificate authcert, X509Certificate signcert, String authreq, String signreq){    
+	public ExtRACardRenewalRequest(long requestId, String authcert, String signcert, String authreq, String signreq){    
 		data.put(REQUESTID, new Long(requestId));
 		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
 		data.put(VERSION, new Float(LATEST_VERSION));
@@ -52,8 +63,29 @@ public class ExtRACardRenewalRequest extends ExtRARequest {
 		data.put(SIGNCERT, signcert);
         data.put(AUTHPKCS10, authreq);
 		data.put(SIGNPKCS10, signreq);
+		data.put(AUTHPROFILE, Integer.valueOf(-1));
+		data.put(SIGNPROFILE, Integer.valueOf(-1));
+		data.put(AUTHCA, Integer.valueOf(-1));
+		data.put(SIGNCA, Integer.valueOf(-1));
 	}
 
+	/**
+	 * Constructor revoking a specific certificate.
+	 */
+	public ExtRACardRenewalRequest(long requestId, String authcert, String signcert, String authreq, String signreq, int authProfile, int signProfile, int authCA, int signCA){    
+		data.put(REQUESTID, new Long(requestId));
+		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
+		data.put(VERSION, new Float(LATEST_VERSION));
+        
+		data.put(AUTHCERT, authcert);
+		data.put(SIGNCERT, signcert);
+        data.put(AUTHPKCS10, authreq);
+		data.put(SIGNPKCS10, signreq);
+		data.put(AUTHPROFILE, Integer.valueOf(authProfile));
+		data.put(SIGNPROFILE, Integer.valueOf(signProfile));
+		data.put(AUTHCA, Integer.valueOf(authCA));
+		data.put(SIGNCA, Integer.valueOf(signCA));
+	}
 	/**
 	 * Constructor used when laoded from a persisted state
 	 */	
@@ -63,8 +95,51 @@ public class ExtRACardRenewalRequest extends ExtRARequest {
 	public float getLatestVersion() {
 		return LATEST_VERSION;
 	}
+
+	/** Helper method */
+	public X509Certificate getAuthCertificate() {
+		return getCertificate(getAuthCert());
+	}
+	/** Helper method */
+	public X509Certificate getSignCertificate() {
+		return getCertificate(getSignCert());
+	}
+	private X509Certificate getCertificate(String certStr) {
+		X509Certificate ret = null;
+		if (StringUtils.isNotEmpty(certStr)) {
+			try {
+				ret = CertTools.getCertfromByteArray(certStr.getBytes());
+			} catch (CertificateException e) {
+				log.error("Error decoding certificate: ", e);
+			}			
+		}
+		return ret;
+	}
 	
-	
+	/**
+	 * Returns the profile for authentication cert.
+	 */
+	public int getAuthProfile(){
+	   return ((Integer) data.get(AUTHPROFILE)).intValue();	
+	}
+	/**
+	 * Returns the profile for signature cert.
+	 */
+	public int getSignProfile(){
+	   return ((Integer) data.get(SIGNPROFILE)).intValue();	
+	}
+	/**
+	 * Returns the CAid for authentication cert.
+	 */
+	public int getAuthCA(){
+	   return ((Integer) data.get(AUTHCA)).intValue();	
+	}
+	/**
+	 * Returns the CAid for signaturecert.
+	 */
+	public int getSignCA(){
+	   return ((Integer) data.get(SIGNCA)).intValue();	
+	}
 	/**
 	 * Returns the auth certificate
 	 */

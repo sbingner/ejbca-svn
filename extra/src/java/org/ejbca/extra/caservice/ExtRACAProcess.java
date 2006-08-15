@@ -12,6 +12,7 @@
  *************************************************************************/
 package org.ejbca.extra.caservice;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.rmi.RemoteException;
 import java.security.KeyPair;
@@ -23,12 +24,15 @@ import java.security.PrivateKey;
 import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.Iterator;
 
 import javax.ejb.CreateException;
 import javax.ejb.FinderException;
+import javax.ejb.ObjectNotFoundException;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -50,6 +54,12 @@ import org.ejbca.core.ejb.ra.raadmin.IRaAdminSessionLocal;
 import org.ejbca.core.ejb.ra.raadmin.IRaAdminSessionLocalHome;
 import org.ejbca.core.model.SecConst;
 import org.ejbca.core.model.authorization.AuthorizationDeniedException;
+import org.ejbca.core.model.ca.AuthLoginException;
+import org.ejbca.core.model.ca.AuthStatusException;
+import org.ejbca.core.model.ca.IllegalKeyException;
+import org.ejbca.core.model.ca.SignRequestException;
+import org.ejbca.core.model.ca.SignRequestSignatureException;
+import org.ejbca.core.model.ca.caadmin.CADoesntExistsException;
 import org.ejbca.core.model.ca.caadmin.CAInfo;
 import org.ejbca.core.model.ca.crl.RevokedCertInfo;
 import org.ejbca.core.model.keyrecovery.KeyRecoveryData;
@@ -57,7 +67,10 @@ import org.ejbca.core.model.log.Admin;
 import org.ejbca.core.model.ra.ExtendedInformation;
 import org.ejbca.core.model.ra.UserDataConstants;
 import org.ejbca.core.model.ra.UserDataVO;
+import org.ejbca.core.protocol.IResponseMessage;
 import org.ejbca.core.protocol.PKCS10RequestMessage;
+import org.ejbca.extra.db.ExtRACardRenewalRequest;
+import org.ejbca.extra.db.ExtRACardRenewalResponse;
 import org.ejbca.extra.db.ExtRAEditUserRequest;
 import org.ejbca.extra.db.ExtRAKeyRecoveryRequest;
 import org.ejbca.extra.db.ExtRAPKCS10Request;
@@ -227,6 +240,13 @@ public class ExtRACAProcess extends RACAProcess {
 				return new ExtRAResponse(((ExtRARequest) submessage).getRequestId(),false, errormessage);
 			}
 		}
+		if(submessage instanceof ExtRACardRenewalRequest){
+			if(errormessage == null){
+				return processExtRACardRenewalRequest(admin, (ExtRACardRenewalRequest) submessage);
+			}else{
+				return new ExtRACardRenewalResponse(((ExtRARequest) submessage).getRequestId(),false, errormessage, null, null);
+			}
+		}
 		log.error("Received an illegal submessage request :" + submessage.getClass().getName());
 		return null; // Should never happen.
 	}
@@ -393,8 +413,6 @@ public class ExtRACAProcess extends RACAProcess {
 	private ISubMessage processExtRARevocationRequest(Admin admin, ExtRARevocationRequest submessage) {
 		log.debug("Processing ExtRARevocationRequest");
 		ExtRAResponse retval = null;
-     
-
 		try {			 
 			// If this is a message that dod contain an explicit username, use it
 			String username = submessage.getUsername();
@@ -445,7 +463,117 @@ public class ExtRACAProcess extends RACAProcess {
 		return retval;
 	}
 	
+	private ISubMessage processExtRACardRenewalRequest(Admin admin, ExtRACardRenewalRequest submessage) {
+		log.debug("Processing ExtRACardRenewalRequest");
+		ExtRAResponse retval = null;
+		try {
+			X509Certificate authcert = submessage.getAuthCertificate();
+			X509Certificate signcert = submessage.getSignCertificate();
+			String authReq = submessage.getAuthPkcs10();
+			String signReq = submessage.getSignPkcs10();
+			if ( (authcert == null) || (signcert == null) || (authReq == null) || (signReq == null) ) {
+				retval = new ExtRAResponse(submessage.getRequestId(),false,"An authentication cert, a signature cert, an authentication request and a signature request are required");
+			} else {
+				BigInteger serno = authcert.getSerialNumber();
+				String issuerDN = authcert.getIssuerDN().getName();
+				String username = getCertStoreSession().findUsernameByCertSerno(admin, serno, CertTools.stringToBCDNString(issuerDN));
+				if (username != null) {
+		            final UserDataVO data = getUserAdminSession().findUser(admin, username);
+		            if ( data.getStatus() != UserDataConstants.STATUS_NEW) {
+		            	log.error("User status must be new for "+username);
+						retval = new ExtRAResponse(submessage.getRequestId(),false,"User status must be new for "+username);
+		            } else {
+		    			byte[] authReqBytes = authReq.getBytes();
+		    			byte[] signReqBytes = signReq.getBytes();
+		            	int certProfile = data.getCertificateProfileId();
+		            	int caid = data.getCAId();
+		            	//TODO: dessa skall tas från hard token profilen, if possible
+		            	int authCertProfile = certProfile;
+		            	if (submessage.getAuthProfile() != -1) {
+		            		authCertProfile = submessage.getAuthProfile();
+		            	}
+		            	int signCertProfile = certProfile;
+		            	if (submessage.getSignProfile() != -1) {
+		            		signCertProfile = submessage.getSignProfile();
+		            	}
+		            	int authCA = caid;
+		            	if (submessage.getAuthCA() != -1) {
+		            		authCA = submessage.getAuthCA();
+		            	}
+		            	int signCA = caid;
+		            	if (submessage.getSignCA() != -1) {
+		            		signCA = submessage.getSignCA();
+		            	}
+		            	// Set certificate profile and CA for auth certificate
+		            	getUserAdminSession().changeUser(admin, username,data.getPassword(), data.getDN(), data.getSubjectAltName(),
+		            			data.getEmail(), true, data.getEndEntityProfileId(), authCertProfile, data.getType(),
+		            			data.getTokenType(), data.getHardTokenIssuerId(), data.getStatus(), authCA);
+		            	X509Certificate authcertOut=pkcs10CertRequest(admin, signsession, authReqBytes, username, data.getPassword());
 
+		            	// Set certificate and CA for sign certificate
+		            	getUserAdminSession().changeUser(admin, username, data.getPassword(), data.getDN(), data.getSubjectAltName(),
+		            			data.getEmail(), true, data.getEndEntityProfileId(), signCertProfile, data.getType(),
+		            			data.getTokenType(), data.getHardTokenIssuerId(), UserDataConstants.STATUS_NEW, signCA);
+		            	X509Certificate signcertOut=pkcs10CertRequest(admin, signsession, signReqBytes, username, data.getPassword());
+
+		            	// We are generated all right
+		            	data.setStatus(UserDataConstants.STATUS_GENERATED);
+		            	// set back to original values (except for generated)
+		            	getUserAdminSession().changeUser(admin, data, true); 
+		            	retval = new ExtRACardRenewalResponse(submessage.getRequestId(), true, null, authcertOut, signcertOut);
+		            }
+				} else {
+					retval = new ExtRAResponse(submessage.getRequestId(),false,"User not found from issuer/serno: issuer='"+issuerDN+"', serno="+serno);					
+				}
+			} 			
+		} catch(Exception e) {
+			log.error("Error processing ExtRACardRenewalRequest : ", e);
+			retval = new ExtRAResponse(submessage.getRequestId(),false,e.getMessage());
+		} 
+			
+		return retval;
+	}
+    /**
+     * Handles PKCS10 certificate request, these are constructed as: <code> CertificationRequest
+     * ::= SEQUENCE { certificationRequestInfo  CertificationRequestInfo, signatureAlgorithm
+     * AlgorithmIdentifier{{ SignatureAlgorithms }}, signature                       BIT STRING }
+     * CertificationRequestInfo ::= SEQUENCE { version             INTEGER { v1(0) } (v1,...),
+     * subject             Name, subjectPKInfo   SubjectPublicKeyInfo{{ PKInfoAlgorithms }},
+     * attributes          [0] Attributes{{ CRIAttributes }}} SubjectPublicKeyInfo { ALGORITHM :
+     * IOSet} ::= SEQUENCE { algorithm           AlgorithmIdentifier {{IOSet}}, subjectPublicKey
+     * BIT STRING }</code> PublicKey's encoded-format has to be RSA X.509.
+     *
+     * @param signsession signsession to get certificate from
+     * @param b64Encoded base64 encoded pkcs10 request message
+     * @param username username of requesting user
+     * @param password password of requesting user
+     * @param resulttype should indicate if a PKCS7 or just the certificate is wanted.
+     *
+     * @return Base64 encoded byte[] 
+     * @throws ClassNotFoundException 
+     * @throws SignRequestSignatureException 
+     * @throws SignRequestException 
+     * @throws CADoesntExistsException 
+     * @throws IllegalKeyException 
+     * @throws AuthLoginException 
+     * @throws AuthStatusException 
+     * @throws ObjectNotFoundException 
+     * @throws IOException 
+     * @throws CertificateException 
+     * @throws CertificateEncodingException 
+     */
+    private X509Certificate pkcs10CertRequest(Admin administrator, ISignSessionLocal signsession, byte[] b64Encoded,
+        String username, String password) throws ObjectNotFoundException, AuthStatusException, AuthLoginException, IllegalKeyException, CADoesntExistsException, SignRequestException, SignRequestSignatureException, ClassNotFoundException, CertificateEncodingException, CertificateException, IOException {
+        X509Certificate cert=null;
+		PKCS10RequestMessage req = RequestHelper.genPKCS10RequestMessageFromPEM(b64Encoded);
+		req.setUsername(username);
+        req.setPassword(password);
+        IResponseMessage resp = signsession.createCertificate(administrator,req,Class.forName("org.ejbca.core.protocol.X509ResponseMessage"));
+        cert = CertTools.getCertfromByteArray(resp.getResponseMessage());
+        return cert;
+    } //pkcs10CertReq
+
+	
     private UserDataVO generateUserDataVO(Admin admin, ExtRARequest submessage) throws ClassCastException, EjbcaException, CreateException, NamingException{
         String dirAttributes = submessage.getSubjectDirectoryAttributes();
         ExtendedInformation ext = null;

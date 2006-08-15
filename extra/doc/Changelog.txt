@@ -1,6 +1,6 @@
 3.3b11
 ------
-- Addition of card renewal messages
+- Addition of card renewal messages and service
 
 3.3b10
 ------
