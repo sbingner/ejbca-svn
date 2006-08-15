@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * 
  * @author philip
- * $Id: SubMessageFactory.java,v 1.1 2006-07-31 13:13:07 herrvendil Exp $
+ * $Id: SubMessageFactory.java,v 1.2 2006-08-15 10:44:19 anatom Exp $
  */
 
 class SubMessageFactory {
@@ -66,6 +66,14 @@ class SubMessageFactory {
 			retval =  new ExtRAResponse();
 			log.debug("Class of type ExtRAResponse created");
 			break;			
+        case ExtRACardRenewalRequest.CLASS_TYPE:
+            retval =  new ExtRACardRenewalRequest();
+            log.debug("Class of type ExtRACardRenewalRequest created");
+            break;          
+        case ExtRACardRenewalResponse.CLASS_TYPE:
+            retval =  new ExtRACardRenewalResponse();
+            log.debug("Class of type ExtRACardRenewalResponse created");
+            break;          
 		default:
 			log.error("Error Class of type : " + classType + " not registred");
 		}

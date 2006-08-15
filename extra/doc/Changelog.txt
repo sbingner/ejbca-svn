@@ -1,5 +1,9 @@
-3.3
----
+3.3b11
+------
+- Addition of card renewal messages
+
+3.3b10
+------
 - Addition of more revocation options
 - Changed name of column user to messageId in database, to upgrade run (on mysql):
   alter table message change user messageId varchar(255);
