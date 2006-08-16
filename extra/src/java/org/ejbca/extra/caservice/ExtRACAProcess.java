@@ -90,7 +90,9 @@ import org.ejbca.util.CertTools;
 import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
-
+/**
+ * @version $Id: ExtRACAProcess.java,v 1.10 2006-08-16 17:44:04 anatom Exp $
+ */
 public class ExtRACAProcess extends RACAProcess {
 
 	private static Logger log = Logger.getLogger(ExtRACAProcess.class);
