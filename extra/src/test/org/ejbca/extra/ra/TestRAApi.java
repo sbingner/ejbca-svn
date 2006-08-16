@@ -43,7 +43,7 @@ import org.ejbca.util.CertTools;
  * 
  * 
  * @author philip
- * $Id: TestRAApi.java,v 1.5 2006-08-15 17:49:28 anatom Exp $
+ * $Id: TestRAApi.java,v 1.6 2006-08-16 10:25:23 anatom Exp $
  */
 
 public class TestRAApi extends TestCase {
@@ -429,7 +429,7 @@ public class TestRAApi extends TestCase {
 		assertTrue(resp.isSuccessful() == false);
         assertEquals(resp.getFailInfo(), "An authentication cert, a signature cert, an authentication request and a signature request are required");
 
-        // Second fail message
+        // Third fail message
 		smgs = new SubMessages(null,null,null);
 		smgs.addSubMessage(new ExtRACardRenewalRequest(12, cert1, cert1, Constants.pkcs10_1, Constants.pkcs10_2));
 		TestMessageHome.msghome.create("SimpleCardRenewalTest", smgs);
@@ -439,7 +439,10 @@ public class TestRAApi extends TestCase {
 		assertTrue("Number of submessages " + submessagesresp.getSubMessages().size(), submessagesresp.getSubMessages().size() == 1);
 		resp = (ExtRAResponse) submessagesresp.getSubMessages().iterator().next();
 		assertTrue("Wrong Request ID" + resp.getRequestId(), resp.getRequestId() == 12);
-		assertTrue(resp.isSuccessful());
+        assertTrue(resp.isSuccessful() == false);
+        assertEquals(resp.getFailInfo(), "User status must be new for SimplePKCS10Test1");
+        
+        // TODO: make a successful message, but user status must be set to new then
 	}
 	
 	
