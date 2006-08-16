@@ -18,6 +18,7 @@ import java.security.cert.X509Certificate;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.ejbca.util.Base64;
 import org.ejbca.util.CertTools;
 
 /**
@@ -26,7 +27,7 @@ import org.ejbca.util.CertTools;
  * Parameters inherited from the base class ExtRARequset is ignored.
  * 
  * @author tomas
- * @version $Id: ExtRACardRenewalRequest.java,v 1.2 2006-08-15 17:49:25 anatom Exp $
+ * @version $Id: ExtRACardRenewalRequest.java,v 1.3 2006-08-16 10:24:19 anatom Exp $
  */
 public class ExtRACardRenewalRequest extends ExtRARequest {
 	private static final Log log = LogFactory.getLog(ExtRACardRenewalRequest.class);
@@ -108,7 +109,7 @@ public class ExtRACardRenewalRequest extends ExtRARequest {
 		X509Certificate ret = null;
 		if (StringUtils.isNotEmpty(certStr)) {
 			try {
-				ret = CertTools.getCertfromByteArray(certStr.getBytes());
+				ret = CertTools.getCertfromByteArray(Base64.decode(certStr.getBytes()));
 			} catch (CertificateException e) {
 				log.error("Error decoding certificate: ", e);
 			}			
