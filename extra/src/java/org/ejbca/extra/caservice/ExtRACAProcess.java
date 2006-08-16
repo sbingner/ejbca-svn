@@ -483,6 +483,7 @@ public class ExtRACAProcess extends RACAProcess {
 		            	log.error("User status must be new for "+username);
 						retval = new ExtRAResponse(submessage.getRequestId(),false,"User status must be new for "+username);
 		            } else {
+                        log.info("Processing Card Renewal for: issuer='"+issuerDN+"', serno="+serno);
 		    			byte[] authReqBytes = authReq.getBytes();
 		    			byte[] signReqBytes = signReq.getBytes();
 		            	int certProfile = data.getCertificateProfileId();
@@ -523,6 +524,7 @@ public class ExtRACAProcess extends RACAProcess {
 		            	retval = new ExtRACardRenewalResponse(submessage.getRequestId(), true, null, authcertOut, signcertOut);
 		            }
 				} else {
+                    log.error("User not found from issuer/serno: issuer='"+issuerDN+"', serno="+serno);
 					retval = new ExtRAResponse(submessage.getRequestId(),false,"User not found from issuer/serno: issuer='"+issuerDN+"', serno="+serno);					
 				}
 			} 			
