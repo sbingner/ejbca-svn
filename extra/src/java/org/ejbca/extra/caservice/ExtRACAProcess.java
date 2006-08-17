@@ -62,6 +62,7 @@ import org.ejbca.core.model.ca.SignRequestSignatureException;
 import org.ejbca.core.model.ca.caadmin.CADoesntExistsException;
 import org.ejbca.core.model.ca.caadmin.CAInfo;
 import org.ejbca.core.model.ca.crl.RevokedCertInfo;
+import org.ejbca.core.model.ca.store.CertificateInfo;
 import org.ejbca.core.model.keyrecovery.KeyRecoveryData;
 import org.ejbca.core.model.log.Admin;
 import org.ejbca.core.model.ra.ExtendedInformation;
@@ -91,7 +92,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.11 2006-08-16 17:50:42 anatom Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.12 2006-08-17 11:22:43 anatom Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -482,6 +483,59 @@ public class ExtRACAProcess extends RACAProcess {
 			} else {
 				BigInteger serno = authcert.getSerialNumber();
 				String issuerDN = authcert.getIssuerDN().getName();
+                // Verify the certificates with CA cert, and then verify the pcks10 requests
+                CertificateInfo authInfo = getCertStoreSession().getCertificateInfo(admin, CertTools.getFingerprintAsString(authcert));
+                Certificate authcacert = getCertStoreSession().findCertificateByFingerprint(admin, authInfo.getCAFingerprint());
+                CertificateInfo signInfo = getCertStoreSession().getCertificateInfo(admin, CertTools.getFingerprintAsString(signcert));
+                Certificate signcacert = getCertStoreSession().findCertificateByFingerprint(admin, signInfo.getCAFingerprint());
+                // Verify certificate
+                try {
+                    authcert.verify(authcacert.getPublicKey());                    
+                } catch (Exception e) {
+                    log.error("Error verifying authentication certificate: ", e);
+                    retval = new ExtRAResponse(submessage.getRequestId(),false,"Error verifying authentication certificate: "+e.getMessage());
+                    return retval;
+                }
+                try {
+                    signcert.verify(signcacert.getPublicKey());                    
+                } catch (Exception e) {
+                    log.error("Error verifying signature certificate: ", e);
+                    retval = new ExtRAResponse(submessage.getRequestId(),false,"Error verifying signature certificate: "+e.getMessage());
+                    return retval;
+                }
+                // Verify requests
+                byte[] authReqBytes = authReq.getBytes();
+                byte[] signReqBytes = signReq.getBytes();
+                PKCS10RequestMessage authPkcs10 = RequestHelper.genPKCS10RequestMessageFromPEM(authReqBytes);
+                PKCS10RequestMessage signPkcs10 = RequestHelper.genPKCS10RequestMessageFromPEM(signReqBytes);
+                String authok = null;
+                try {
+                    if (!authPkcs10.verify(authcert.getPublicKey())) {
+                        authok = "Verify failed for authentication request";
+                    }                    
+                } catch (Exception e) {
+                    authok="Error verifying authentication request: "+e.getMessage();
+                    log.error("Error verifying authentication request: ", e);
+                }
+                if (authok != null) {
+                    retval = new ExtRAResponse(submessage.getRequestId(),false,authok);
+                    return retval;                                        
+                }
+                String signok = null;
+                try {
+                    if (!signPkcs10.verify(signcert.getPublicKey())) {
+                        signok = "Verify failed for signature request";
+                    }                    
+                } catch (Exception e) {
+                    signok="Error verifying signaturerequest: "+e.getMessage();
+                    log.error("Error verifying signaturerequest: ", e);
+                }
+                if (signok != null) {
+                    retval = new ExtRAResponse(submessage.getRequestId(),false,signok);
+                    return retval;                                        
+                }
+                
+                // Now start the actual work, we are ok and verified here
 				String username = getCertStoreSession().findUsernameByCertSerno(admin, serno, CertTools.stringToBCDNString(issuerDN));
 				if (username != null) {
 		            final UserDataVO data = getUserAdminSession().findUser(admin, username);
@@ -490,11 +544,9 @@ public class ExtRACAProcess extends RACAProcess {
 						retval = new ExtRAResponse(submessage.getRequestId(),false,"User status must be new for "+username);
 		            } else {
                         log.info("Processing Card Renewal for: issuer='"+issuerDN+"', serno="+serno);
-		    			byte[] authReqBytes = authReq.getBytes();
-		    			byte[] signReqBytes = signReq.getBytes();
 		            	int certProfile = data.getCertificateProfileId();
 		            	int caid = data.getCAId();
-		            	//TODO: dessa skall tas från hard token profilen, if possible
+		            	//TODO: these should be taken from hard token profilen, if possible
 		            	int authCertProfile = certProfile;
 		            	if (submessage.getAuthProfile() != -1) {
 		            		authCertProfile = submessage.getAuthProfile();
@@ -517,7 +569,7 @@ public class ExtRACAProcess extends RACAProcess {
 		            			data.getTokenType(), data.getHardTokenIssuerId(), data.getStatus(), authCA);
 		            	// We may have changed to a new autogenerated password
 			            UserDataVO data1 = getUserAdminSession().findUser(admin, username);
-		            	X509Certificate authcertOut=pkcs10CertRequest(admin, getSignSession(), authReqBytes, username, data1.getPassword());
+		            	X509Certificate authcertOut=pkcs10CertRequest(admin, getSignSession(), authPkcs10, username, data1.getPassword());
 
 		            	// Set certificate and CA for sign certificate
 		            	getUserAdminSession().changeUser(admin, username, data.getPassword(), data.getDN(), data.getSubjectAltName(),
@@ -525,7 +577,7 @@ public class ExtRACAProcess extends RACAProcess {
 		            			data.getTokenType(), data.getHardTokenIssuerId(), UserDataConstants.STATUS_NEW, signCA);
 		            	// We may have changed to a new autogenerated password
 			            data1 = getUserAdminSession().findUser(admin, username);
-		            	X509Certificate signcertOut=pkcs10CertRequest(admin, getSignSession(), signReqBytes, username, data1.getPassword());
+		            	X509Certificate signcertOut=pkcs10CertRequest(admin, getSignSession(), signPkcs10, username, data1.getPassword());
 
 		            	// We are generated all right
 		            	data.setStatus(UserDataConstants.STATUS_GENERATED);
@@ -574,10 +626,9 @@ public class ExtRACAProcess extends RACAProcess {
      * @throws CertificateException 
      * @throws CertificateEncodingException 
      */
-    private X509Certificate pkcs10CertRequest(Admin administrator, ISignSessionLocal signsession, byte[] b64Encoded,
+    private X509Certificate pkcs10CertRequest(Admin administrator, ISignSessionLocal signsession, PKCS10RequestMessage req,
         String username, String password) throws ObjectNotFoundException, AuthStatusException, AuthLoginException, IllegalKeyException, CADoesntExistsException, SignRequestException, SignRequestSignatureException, ClassNotFoundException, CertificateEncodingException, CertificateException, IOException {
         X509Certificate cert=null;
-		PKCS10RequestMessage req = RequestHelper.genPKCS10RequestMessageFromPEM(b64Encoded);
 		req.setUsername(username);
         req.setPassword(password);
         IResponseMessage resp = signsession.createCertificate(administrator,req,Class.forName("org.ejbca.core.protocol.X509ResponseMessage"));

@@ -43,7 +43,7 @@ import org.ejbca.util.CertTools;
  * 
  * 
  * @author philip
- * $Id: TestRAApi.java,v 1.6 2006-08-16 10:25:23 anatom Exp $
+ * $Id: TestRAApi.java,v 1.7 2006-08-17 11:22:45 anatom Exp $
  */
 
 public class TestRAApi extends TestCase {
@@ -405,6 +405,7 @@ public class TestRAApi extends TestCase {
 		// First fail message
 		SubMessages smgs = new SubMessages(null,null,null);
 		String cert1 = new String(Base64.encode(firstCertificate.getEncoded()));
+        String cert2 = new String(Base64.encode(secondCertificate.getEncoded()));
 		smgs.addSubMessage(new ExtRACardRenewalRequest(10, cert1, cert1, null, null));
 		TestMessageHome.msghome.create("SimpleCardRenewalTest", smgs);
         Message msg = waitForUser("SimpleCardRenewalTest");
@@ -439,6 +440,19 @@ public class TestRAApi extends TestCase {
 		assertTrue("Number of submessages " + submessagesresp.getSubMessages().size(), submessagesresp.getSubMessages().size() == 1);
 		resp = (ExtRAResponse) submessagesresp.getSubMessages().iterator().next();
 		assertTrue("Wrong Request ID" + resp.getRequestId(), resp.getRequestId() == 12);
+        assertTrue(resp.isSuccessful() == false);
+        assertEquals(resp.getFailInfo(), "Verify failed for signature request");
+        
+        // Fourth fail message
+        smgs = new SubMessages(null,null,null);
+        smgs.addSubMessage(new ExtRACardRenewalRequest(12, cert1, cert2, Constants.pkcs10_1, Constants.pkcs10_2));
+        TestMessageHome.msghome.create("SimpleCardRenewalTest", smgs);
+        msg = waitForUser("SimpleCardRenewalTest");
+        assertNotNull(msg);
+        submessagesresp = msg.getSubMessages(null,null,null);
+        assertTrue("Number of submessages " + submessagesresp.getSubMessages().size(), submessagesresp.getSubMessages().size() == 1);
+        resp = (ExtRAResponse) submessagesresp.getSubMessages().iterator().next();
+        assertTrue("Wrong Request ID" + resp.getRequestId(), resp.getRequestId() == 12);
         assertTrue(resp.isSuccessful() == false);
         assertEquals(resp.getFailInfo(), "User status must be new for SimplePKCS10Test1");
         
