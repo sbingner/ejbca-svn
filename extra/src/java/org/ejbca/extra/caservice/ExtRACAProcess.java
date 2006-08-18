@@ -63,6 +63,9 @@ import org.ejbca.core.model.ca.caadmin.CADoesntExistsException;
 import org.ejbca.core.model.ca.caadmin.CAInfo;
 import org.ejbca.core.model.ca.crl.RevokedCertInfo;
 import org.ejbca.core.model.ca.store.CertificateInfo;
+import org.ejbca.core.model.hardtoken.profiles.EIDProfile;
+import org.ejbca.core.model.hardtoken.profiles.HardTokenProfile;
+import org.ejbca.core.model.hardtoken.profiles.SwedishEIDProfile;
 import org.ejbca.core.model.keyrecovery.KeyRecoveryData;
 import org.ejbca.core.model.log.Admin;
 import org.ejbca.core.model.ra.ExtendedInformation;
@@ -92,7 +95,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.12 2006-08-17 11:22:43 anatom Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.13 2006-08-18 16:39:07 anatom Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -544,25 +547,59 @@ public class ExtRACAProcess extends RACAProcess {
 						retval = new ExtRAResponse(submessage.getRequestId(),false,"User status must be new for "+username);
 		            } else {
                         log.info("Processing Card Renewal for: issuer='"+issuerDN+"', serno="+serno);
-		            	int certProfile = data.getCertificateProfileId();
-		            	int caid = data.getCAId();
-		            	//TODO: these should be taken from hard token profilen, if possible
-		            	int authCertProfile = certProfile;
+                        int authCertProfile = -1;
+                        int signCertProfile = -1;
+                        int authCA = -1;
+                        int signCA = -1;
+                        // Get the profiles and CAs from the message if they exist
 		            	if (submessage.getAuthProfile() != -1) {
 		            		authCertProfile = submessage.getAuthProfile();
 		            	}
-		            	int signCertProfile = certProfile;
 		            	if (submessage.getSignProfile() != -1) {
 		            		signCertProfile = submessage.getSignProfile();
 		            	}
-		            	int authCA = caid;
 		            	if (submessage.getAuthCA() != -1) {
 		            		authCA = submessage.getAuthCA();
 		            	}
-		            	int signCA = caid;
 		            	if (submessage.getSignCA() != -1) {
 		            		signCA = submessage.getSignCA();
 		            	}
+                        HardTokenProfile htp = getHardTokenSession().getHardTokenProfile(admin, data.getTokenType());
+                        if ( htp!=null && htp instanceof EIDProfile ) {
+                        	EIDProfile hardTokenProfile = (EIDProfile)htp;
+                        	if (authCertProfile == -1) {
+                        		authCertProfile = hardTokenProfile.getCertificateProfileId(SwedishEIDProfile.CERTUSAGE_AUTHENC);                        		
+                        	}
+                        	if (signCertProfile == -1) {
+                        		signCertProfile = hardTokenProfile.getCertificateProfileId(SwedishEIDProfile.CERTUSAGE_SIGN);
+                        	}
+                        	if (authCA == -1) {
+                        		authCA = hardTokenProfile.getCAId(SwedishEIDProfile.CERTUSAGE_AUTHENC);
+                        		if (authCA == EIDProfile.CAID_USEUSERDEFINED) {
+                        			authCA = data.getCAId();
+                        		}
+                        	}
+                        	if (signCA == -1) {
+                        		signCA = hardTokenProfile.getCAId(SwedishEIDProfile.CERTUSAGE_SIGN);
+                        		if (signCA == EIDProfile.CAID_USEUSERDEFINED) {
+                        			signCA = data.getCAId();
+                        		}                        		
+                        	}
+                        } else {
+                        	if (authCertProfile == -1) {
+                        		authCertProfile = data.getCertificateProfileId();
+                        	}
+                        	if (signCertProfile == -1) {
+                        		signCertProfile = data.getCertificateProfileId();
+                        	}
+                        	if (authCA == -1) {
+                        		authCA = data.getCAId();
+                        	}
+                        	if (signCA == -1) {
+                        		signCA = data.getCAId();
+                        	}
+                        }
+
 		            	// Set certificate profile and CA for auth certificate
 		            	getUserAdminSession().changeUser(admin, username,data.getPassword(), data.getDN(), data.getSubjectAltName(),
 		            			data.getEmail(), true, data.getEndEntityProfileId(), authCertProfile, data.getType(),
