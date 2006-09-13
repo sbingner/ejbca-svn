@@ -1,3 +1,7 @@
+3.3.0
+-----
+- Released
+
 3.3b11
 ------
 - Addition of card renewal messages and service
