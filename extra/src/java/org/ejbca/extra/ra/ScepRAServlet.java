@@ -36,7 +36,9 @@ import org.apache.log4j.Logger;
 import org.ejbca.core.model.authorization.AuthorizationDeniedException;
 import org.ejbca.core.model.ca.AuthLoginException;
 import org.ejbca.core.model.ca.AuthStatusException;
+import org.ejbca.core.model.ca.SignRequestException;
 import org.ejbca.core.model.ca.caadmin.CADoesntExistsException;
+import org.ejbca.core.model.ra.NotFoundException;
 import org.ejbca.core.protocol.IRequestMessage;
 import org.ejbca.core.protocol.ResponseStatus;
 import org.ejbca.core.protocol.ScepRequestMessage;
@@ -63,7 +65,7 @@ import org.hibernate.SessionFactory;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.2 2006-08-01 07:35:43 anatom Exp $
+ * @version $Id: ScepRAServlet.java,v 1.3 2006-09-29 13:44:54 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
@@ -299,7 +301,7 @@ public class ScepRAServlet extends HttpServlet {
         }
     }
     
-    private ScepResponseMessage createPendingResponseMessage(IRequestMessage req, X509Certificate racert, PrivateKey rakey, String cryptProvider) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
+    private ScepResponseMessage createPendingResponseMessage(IRequestMessage req, X509Certificate racert, PrivateKey rakey, String cryptProvider) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, IOException, SignRequestException, NotFoundException {
     	ScepResponseMessage ret = null;
     	// Create the response message and set all required fields
     	try {
