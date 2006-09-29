@@ -72,7 +72,7 @@ import com.meterware.httpunit.WebRequest;
 import com.meterware.httpunit.WebResponse;
 
 /** Tests http pages of ocsp and scep
- * @version $Id: ProtocolScepHttpTest.java,v 1.3 2006-08-08 17:11:40 anatom Exp $
+ * @version $Id: ProtocolScepHttpTest.java,v 1.4 2006-09-29 14:33:49 anatom Exp $
  **/
 public class ProtocolScepHttpTest extends TestCase {
     private static Logger log = Logger.getLogger(ProtocolScepHttpTest.class);
@@ -100,18 +100,21 @@ public class ProtocolScepHttpTest extends TestCase {
 
     public ProtocolScepHttpTest(String name) {
         super(name);
+        // Install BouncyCastle provider
+        CertTools.installBCProvider();
     }
 
     protected void setUp() throws Exception {
         log.debug(">setUp()");
 
-        // Install BouncyCastle provider
-        CertTools.installBCProvider();
 
         // We want to get error responses without exceptions
         HttpUnitOptions.setExceptionsThrownOnErrorStatus(false);
 
-        
+		if (keys == null) {
+			keys = KeyTools.genKeys(512);
+		}
+
       /* ctx = getInitialContext();
         Object obj = ctx.lookup("CAAdminSession");
         ICAAdminSessionHome cahome = (ICAAdminSessionHome) javax.rmi.PortableRemoteObject.narrow(obj, ICAAdminSessionHome.class);
@@ -195,8 +198,6 @@ public class ProtocolScepHttpTest extends TestCase {
         // send SCEP req to server and get good response with cert
 
         
-        // Pre-generate key for all requests to speed things up a bit
-        keys = KeyTools.genKeys(1024);
         byte[] msgBytes = genScepRequest(CMSSignedGenerator.DIGEST_SHA1);
         // Send message with GET
         byte[] retMsg = sendScep(false, msgBytes, false);
@@ -210,8 +211,6 @@ public class ProtocolScepHttpTest extends TestCase {
         // find a CA create a user and
         // send SCEP req to server and get good response with cert
         
-        // Pre-generate key for all requests to speed things up a bit
-        keys = KeyTools.genKeys(512);
         byte[] msgBytes = genScepRequest(CMSSignedGenerator.DIGEST_MD5);
         // Send message with GET
         byte[] retMsg = sendScep(false, msgBytes, false);
