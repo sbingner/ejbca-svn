@@ -69,6 +69,7 @@ import org.ejbca.core.model.hardtoken.profiles.SwedishEIDProfile;
 import org.ejbca.core.model.keyrecovery.KeyRecoveryData;
 import org.ejbca.core.model.log.Admin;
 import org.ejbca.core.model.ra.ExtendedInformation;
+import org.ejbca.core.model.ra.NotFoundException;
 import org.ejbca.core.model.ra.UserDataConstants;
 import org.ejbca.core.model.ra.UserDataVO;
 import org.ejbca.core.protocol.IResponseMessage;
@@ -95,7 +96,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.13 2006-08-18 16:39:07 anatom Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.14 2006-09-29 08:06:52 herrvendil Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -380,7 +381,7 @@ public class ExtRACAProcess extends RACAProcess {
 			if(orgcert == null){
 				throw new EjbcaException("Error in Key Recovery Request, couldn't find specified certificate");
 			}
-			if(!getKeyRecoverySession().markAsRecoverable(admin,orgcert)){
+			if(!getKeyRecoverySession().markAsRecoverable(admin,orgcert,userdata.getEndEntityProfileId())){
 				throw new EjbcaException("Error in Key Recovery Request, no keys saved for specified request");
 			}
 			KeyRecoveryData keyData = getKeyRecoverySession().keyRecovery(admin, submessage.getUsername(), userdata.getEndEntityProfileId());
@@ -664,7 +665,7 @@ public class ExtRACAProcess extends RACAProcess {
      * @throws CertificateEncodingException 
      */
     private X509Certificate pkcs10CertRequest(Admin administrator, ISignSessionLocal signsession, PKCS10RequestMessage req,
-        String username, String password) throws ObjectNotFoundException, AuthStatusException, AuthLoginException, IllegalKeyException, CADoesntExistsException, SignRequestException, SignRequestSignatureException, ClassNotFoundException, CertificateEncodingException, CertificateException, IOException {
+        String username, String password) throws NotFoundException, AuthStatusException, AuthLoginException, IllegalKeyException, CADoesntExistsException, SignRequestException, SignRequestSignatureException, ClassNotFoundException, CertificateEncodingException, CertificateException, IOException {
         X509Certificate cert=null;
 		req.setUsername(username);
         req.setPassword(password);
