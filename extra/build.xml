@@ -46,7 +46,7 @@
 	
     <import file="jboss.xml" />
 
-    <property name="jar.extclasspath" value="lib/bcmail-jdk${java.ver}.jar lib/bcprov-jdk${java.ver}.jar lib/log4j-1.2.7.jar"/>
+    <property name="jar.extclasspath" value="lib/bcmail-jdk${java.ver}.jar lib/bcprov-jdk${java.ver}.jar lib/log4j.jar"/>
 
     <path id="ext.classpath">
         <fileset dir="lib/ext" includes="*.jar" />
