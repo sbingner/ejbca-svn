@@ -157,7 +157,7 @@ public class TestExtRAMessages extends TestCase {
 	public static ExtRAPKCS12Request genExtRAPKCS12Request(long requestId, String username, boolean store){
 	   return new ExtRAPKCS12Request(requestId,username, "CN=PKCS12REQ", "RFC822NAME=PKCS12Request@test.com",
 			                           "PKCS12Request@test.com", null, "EMPTY", "ENDUSER", 
-			                           "AdminCA1","foo123",ExtRAPKCS12Request.KEYALG_RSA,1024, store);
+			                           "AdminCA1","foo123",ExtRAPKCS12Request.KEYALG_RSA, "1024", store);
     }
 	
 	public static ExtRAEditUserRequest genExtRAEditUserRequest(long requestId, String username){
@@ -241,7 +241,7 @@ public class TestExtRAMessages extends TestCase {
 		assertTrue(submessage.getCAName().equals("AdminCA1"));
 		assertTrue(submessage.getPassword().equals("foo123"));
 		assertTrue(submessage.getKeyAlg() == ExtRAPKCS12Request.KEYALG_RSA);
-		assertTrue(submessage.getKeySize() == 1024);
+		assertTrue(submessage.getKeySpec().equals("1024"));
 		assertFalse(submessage.getStoreKeys());
 	}
 

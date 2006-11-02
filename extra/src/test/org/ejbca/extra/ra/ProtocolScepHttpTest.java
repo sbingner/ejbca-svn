@@ -32,6 +32,7 @@ import java.security.SignatureException;
 import java.security.cert.CRLException;
 import java.security.cert.CertStore;
 import java.security.cert.CertStoreException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
@@ -60,6 +61,7 @@ import org.bouncycastle.cms.SignerId;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
 import org.bouncycastle.util.encoders.Base64;
+import org.ejbca.core.model.ca.catoken.CATokenConstants;
 import org.ejbca.core.protocol.ResponseStatus;
 import org.ejbca.core.protocol.ScepRequestMessage;
 import org.ejbca.util.CertTools;
@@ -72,7 +74,7 @@ import com.meterware.httpunit.WebRequest;
 import com.meterware.httpunit.WebResponse;
 
 /** Tests http pages of ocsp and scep
- * @version $Id: ProtocolScepHttpTest.java,v 1.4 2006-09-29 14:33:49 anatom Exp $
+ * @version $Id: ProtocolScepHttpTest.java,v 1.5 2006-11-02 07:55:18 anatom Exp $
  **/
 public class ProtocolScepHttpTest extends TestCase {
     private static Logger log = Logger.getLogger(ProtocolScepHttpTest.class);
@@ -112,7 +114,7 @@ public class ProtocolScepHttpTest extends TestCase {
         HttpUnitOptions.setExceptionsThrownOnErrorStatus(false);
 
 		if (keys == null) {
-			keys = KeyTools.genKeys(512);
+			keys = KeyTools.genKeys("512", CATokenConstants.KEYALGORITHM_RSA);
 		}
 
       /* ctx = getInitialContext();
@@ -268,7 +270,7 @@ public class ProtocolScepHttpTest extends TestCase {
         
     }*/
 
-    private byte[] genScepRequest(String digestoid) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidAlgorithmParameterException, CertStoreException, IOException, CMSException {
+    private byte[] genScepRequest(String digestoid) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidAlgorithmParameterException, CertStoreException, IOException, CMSException, CertificateEncodingException, IllegalStateException {
         ScepRequestGenerator gen = new ScepRequestGenerator();
         gen.setKeys(keys);
         gen.setDigestOid(digestoid);

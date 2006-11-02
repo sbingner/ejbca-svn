@@ -15,6 +15,7 @@ package org.ejbca.extra.caservice;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.rmi.RemoteException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -61,6 +62,7 @@ import org.ejbca.core.model.ca.SignRequestException;
 import org.ejbca.core.model.ca.SignRequestSignatureException;
 import org.ejbca.core.model.ca.caadmin.CADoesntExistsException;
 import org.ejbca.core.model.ca.caadmin.CAInfo;
+import org.ejbca.core.model.ca.catoken.CATokenConstants;
 import org.ejbca.core.model.ca.crl.RevokedCertInfo;
 import org.ejbca.core.model.ca.store.CertificateInfo;
 import org.ejbca.core.model.hardtoken.profiles.EIDProfile;
@@ -96,7 +98,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.14 2006-09-29 08:06:52 herrvendil Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.15 2006-11-02 07:55:19 anatom Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -698,13 +700,17 @@ public class ExtRACAProcess extends RACAProcess {
                    ext);
     }
 
-	private KeyPair generateKeys(ExtRAPKCS12Request submessage) throws NoSuchAlgorithmException, NoSuchProviderException {
+	private KeyPair generateKeys(ExtRAPKCS12Request submessage) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
 		KeyPair retval = null;
+		String keyalg = null;
 		if(submessage.getKeyAlg() == ExtRAPKCS12Request.KEYALG_RSA){
-			retval = KeyTools.genKeys(submessage.getKeySize());
-		}else{
+			keyalg = CATokenConstants.KEYALGORITHM_RSA;
+		} else if(submessage.getKeyAlg() == ExtRAPKCS12Request.KEYALG_ECDSA){
+				keyalg = CATokenConstants.KEYALGORITHM_ECDSA;
+		} else {
 			throw new NoSuchAlgorithmException("Wrong Key Algorithm specified.");
 		}
+		retval = KeyTools.genKeys(submessage.getKeySpec(), keyalg);
 
 		return retval;
 	}

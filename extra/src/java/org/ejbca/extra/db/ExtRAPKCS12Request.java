@@ -17,7 +17,7 @@ package org.ejbca.extra.db;
  * Ext RA PKCS12 Reguest sub message used when the CA should generate a keystore.
  * 
  * @author philip
- * $Id: ExtRAPKCS12Request.java,v 1.1 2006-07-31 13:13:06 herrvendil Exp $
+ * $Id: ExtRAPKCS12Request.java,v 1.2 2006-11-02 07:55:19 anatom Exp $
  */
 public class ExtRAPKCS12Request extends ExtRARequest {
 
@@ -30,13 +30,19 @@ public class ExtRAPKCS12Request extends ExtRARequest {
 	 * Constant specifying the generated key shoulg be RSA
 	 */
 	public static final int KEYALG_RSA = 1;
+	/**
+	 * Constant specifying the generated key shoulg be ECDSA
+	 */
+	public static final int KEYALG_ECDSA = 2;
 	
 	// Field constants
 	private static final String PASSWORD              = "PASSWORD";
 	private static final String KEYALG                = "KEYALG";
-	private static final String KEYSIZE               = "KEYSIZE";
+	private static final String KEYSPEC               = "KEYSPEC";
 	private static final String STOREKEYS             = "STOREKEYS";
-	
+
+	/** Kept for upgrade purposes 3.3 -> 3.4 */
+	private static final String KEYSIZE               = "KEYSIZE";
 	
 	
 	private static final long serialVersionUID = 1L;
@@ -47,13 +53,13 @@ public class ExtRAPKCS12Request extends ExtRARequest {
 	public ExtRAPKCS12Request(long requestId, String username, String subjectDN, String subjectAltName, 
             String email, String subjectDirectoryAttributes, 
             String endEntityProfileName, String certificateProfileName,
-            String cAName, String password, int keyAlg, int keySize, boolean storeKeys){
+            String cAName, String password, int keyAlg, String keySpec, boolean storeKeys){
         super(requestId, username, subjectDN, subjectAltName, email, subjectDirectoryAttributes, endEntityProfileName, certificateProfileName,cAName);
 		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
 		data.put(VERSION, new Float(LATEST_VERSION));
 		data.put(PASSWORD, password);
 		data.put(KEYALG, new Integer(keyAlg));
-		data.put(KEYSIZE, new Integer(keySize));
+		data.put(KEYSPEC, keySpec);
 		data.put(STOREKEYS, new Boolean(storeKeys));
 	}
 
@@ -91,8 +97,13 @@ public class ExtRAPKCS12Request extends ExtRARequest {
 	/**
 	 * Returns the keyalg (One of the KEYALG_ constants) used in this request.
 	 */	
-	public int getKeySize(){
-		return ((Integer) data.get(KEYSIZE)).intValue();
+	public String getKeySpec(){
+		String ret = (String) data.get(KEYSPEC);
+		if (ret == null) {
+			// It may be an old message, then we will handle it anyway by reading the old property
+			ret = ((Integer) data.get(KEYSIZE)).toString();
+		}
+		return ret;
 	}
 	
 	public void upgrade() {

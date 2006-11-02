@@ -378,7 +378,7 @@ public class ExtRATestClient {
             
 			submessages.addSubMessage(new ExtRAPKCS12Request(requestId,username, "CN=PKCS12REQ", "RFC822NAME=PKCS12Request@test.com",
                     "PKCS12Request@test.com", null, "EMPTY", "ENDUSER", 
-                    "AdminCA1","foo123",ExtRAPKCS12Request.KEYALG_RSA,1024, true)); 
+                    "AdminCA1","foo123",ExtRAPKCS12Request.KEYALG_RSA, "1024", true)); 
 			
 			
 			return requestId;
