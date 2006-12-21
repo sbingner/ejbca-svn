@@ -65,7 +65,7 @@ import org.hibernate.SessionFactory;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.3 2006-09-29 13:44:54 anatom Exp $
+ * @version $Id: ScepRAServlet.java,v 1.4 2006-12-21 14:27:58 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
@@ -239,7 +239,7 @@ public class ScepRAServlet extends HttpServlet {
                     return;
                 }
                 // Send back Scep response, PKCS#7 which contains the end entity's certificate (or failure)
-                RequestHelper.sendBinaryBytes(reply, response, "application/x-pki-message");
+                RequestHelper.sendBinaryBytes(reply, response, "application/x-pki-message", null);
             } else if (operation.equals("GetCACert")) {
                 log.debug("Got SCEP cert request for CA '" + message + "'");
             
