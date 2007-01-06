@@ -43,7 +43,7 @@ import org.ejbca.util.CertTools;
  * 
  * 
  * @author philip
- * $Id: TestRAApi.java,v 1.7 2006-08-17 11:22:45 anatom Exp $
+ * $Id: TestRAApi.java,v 1.8 2007-01-06 14:45:53 anatom Exp $
  */
 
 public class TestRAApi extends TestCase {
@@ -108,7 +108,7 @@ public class TestRAApi extends TestCase {
 		assertTrue(resp.isSuccessful() == true);
 		assertNotNull(resp.getKeyStore("foo123"));
 		KeyStore ks = resp.getKeyStore("foo123");
-		String alias = (String) ks.aliases().nextElement();
+		String alias = ks.aliases().nextElement();
 		
 		assertTrue(((X509Certificate) resp.getKeyStore("foo123").getCertificate(alias)).getSubjectDN().toString().equals("CN=PKCS12REQ"));
 			
