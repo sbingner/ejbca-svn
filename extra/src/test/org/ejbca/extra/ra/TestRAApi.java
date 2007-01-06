@@ -14,11 +14,17 @@ package org.ejbca.extra.ra;
 
 import java.math.BigInteger;
 import java.security.KeyStore;
+import java.security.cert.CertStore;
 import java.security.cert.X509Certificate;
+import java.util.Collection;
 import java.util.Iterator;
 
 import junit.framework.TestCase;
 
+import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.SignerId;
+import org.bouncycastle.cms.SignerInformation;
+import org.bouncycastle.cms.SignerInformationStore;
 import org.ejbca.extra.db.Constants;
 import org.ejbca.extra.db.ExtRACardRenewalRequest;
 import org.ejbca.extra.db.ExtRAPKCS10Response;
@@ -43,7 +49,7 @@ import org.ejbca.util.CertTools;
  * 
  * 
  * @author philip
- * $Id: TestRAApi.java,v 1.8 2007-01-06 14:45:53 anatom Exp $
+ * $Id: TestRAApi.java,v 1.9 2007-01-06 15:54:11 anatom Exp $
  */
 
 public class TestRAApi extends TestCase {
@@ -78,15 +84,44 @@ public class TestRAApi extends TestCase {
 		assertTrue(resp.isSuccessful() == true);		
 		assertTrue(resp.getCertificate().getSubjectDN().toString().equals("CN=PKCS10REQ"));
 		firstCertificate = resp.getCertificate();
-		
-		
+		assertNotNull(firstCertificate);
+		// Check the pkcs7 response
+		byte[] pkcs7 = resp.getCertificateAsPKCS7();
+		assertNotNull(pkcs7);
+        CMSSignedData s = new CMSSignedData(pkcs7);
+        // The signer, i.e. the CA, check it's the right CA
+        SignerInformationStore signers = s.getSignerInfos();
+        Collection col = signers.getSigners();
+        assertTrue(col.size() > 0);
+        Iterator siter = col.iterator();
+        SignerInformation signerInfo = (SignerInformation)siter.next();
+        SignerId sinfo = signerInfo.getSID();
+        // Check that the signer is the expected CA
+        assertEquals(CertTools.stringToBCDNString(firstCertificate.getIssuerDN().getName()), CertTools.stringToBCDNString(sinfo.getIssuerAsString()));
+        CertStore certstore = s.getCertificatesAndCRLs("Collection","BC");
+        Collection certs = certstore.getCertificates(null);
+        assertEquals(certs.size(), 2);                	
+        Iterator it = certs.iterator();
+        boolean found = false;
+        while (it.hasNext()) {
+            X509Certificate retcert = (X509Certificate)it.next();
+            if (retcert.getSubjectDN().equals(firstCertificate.getSubjectDN())) {
+            	found = true;
+            }
+        }
+        assertTrue(found);
+
 	    resp = (ExtRAPKCS10Response) iter.next();
 		assertTrue(resp.getRequestId() == 101);
 		assertTrue(resp.isSuccessful() == true);		
 		assertTrue(resp.getCertificate().getSubjectDN().toString().equals("CN=PKCS10REQ"));
 		secondCertificate = resp.getCertificate();
+		assertNotNull(secondCertificate);
+		pkcs7 = resp.getCertificateAsPKCS7();
+		assertNotNull(pkcs7);
 	
 	}
+
 	
 	public void test02GenerateSimplePKCS12Request() throws Exception {
 		
@@ -459,8 +494,7 @@ public class TestRAApi extends TestCase {
         // TODO: make a successful message, but user status must be set to new then
 	}
 	
-	
-	
+		
 	
 	private Message waitForUser(String user) throws InterruptedException{
 		int waittime = 30; // Wait a maximum of 30 seconds

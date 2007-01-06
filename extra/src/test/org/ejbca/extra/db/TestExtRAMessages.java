@@ -187,7 +187,7 @@ public class TestExtRAMessages extends TestCase {
 	}
 	
 	static ExtRAPKCS10Response genExtRAPKCS10Response() throws Exception {
-	  return new ExtRAPKCS10Response(4,true, "PKCS10RESFAILINFO", Constants.getUserCert());
+	  return new ExtRAPKCS10Response(4,true, "PKCS10RESFAILINFO", Constants.getUserCert(), null);
     }
 	
 	static ExtRAPKCS12Response genExtRAPKCS12Response() throws Exception{

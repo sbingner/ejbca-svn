@@ -24,38 +24,50 @@ import org.bouncycastle.util.encoders.Base64;
 import org.ejbca.util.CertTools;
 
 /**
- * Class used as response to a ExtRA PKCS 10Sub Message response. If request was succesful then will the resposne
+ * Class used as response to a ExtRA PKCS 10Sub Message response. If request was succesful then will the response
  * contain the generated certificate.
+ * 
  * @author philip
- * $Id: ExtRAPKCS10Response.java,v 1.1 2006-07-31 13:13:07 herrvendil Exp $
+ * $Id: ExtRAPKCS10Response.java,v 1.2 2007-01-06 15:54:11 anatom Exp $
  */
 
 public class ExtRAPKCS10Response extends ExtRAResponse {
 
 	private static final Log log = LogFactory.getLog(ExtRAPKCS10Response.class);
 	
-	public static final float LATEST_VERSION = (float) 1.0;
+	public static final float LATEST_VERSION = (float) 2.0;
 	
-	static final int CLASS_TYPE = 5; // Must be uniqu to all submessage classes
+	static final int CLASS_TYPE = 5; // Must be unique to all submessage classes
 		// Field constants
 	private static final String CERTIFICATE           = "CERTIFICATE";		
+	private static final String PKCS7                 = "PKCS7";		
 	
 	private static final long serialVersionUID = 1L;
 	
 	
 	/**
 	 * Default constructor that should be used.
+	 * 
+	 * @param requestId
+	 * @param success
+	 * @param failinfo
+	 * @param certificate the generated certificate, or null if request failed.
+	 * @param pkcs7 the generated certificate in a pkcs7 signed by the CA andincluding the certificate chain, or null if request or pkcs7 generation failed.
 	 *  
 	 */
-	public ExtRAPKCS10Response(long requestId, boolean success, String failinfo, X509Certificate certificate){
+	public ExtRAPKCS10Response(long requestId, boolean success, String failinfo, X509Certificate certificate, byte[] pkcs7) {
         super(requestId, success, failinfo);
         try {
     		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
     		data.put(VERSION, new Float(LATEST_VERSION));
-    		if(certificate != null){
+    		if(certificate != null) {
 			  String certstring = new String(Base64.encode(certificate.getEncoded()));
 			  data.put(CERTIFICATE, certstring);
     		}  
+    		if (pkcs7 != null) {
+    			String pkcs7str = new String(Base64.encode(pkcs7));
+    			data.put(PKCS7, pkcs7str);
+    		}
 		} catch (CertificateEncodingException e) {
 			log.error("Certificate encoding failed" , e);
 		}
@@ -81,6 +93,18 @@ public class ExtRAPKCS10Response extends ExtRAResponse {
 	    return cert;
 	}
 	
+	/**
+	 * Returns the generated certifcate, in PKCS7, signed by the CA, and including the CA certificate chain.
+	 */
+	public byte[] getCertificateAsPKCS7(){
+		byte[] ret = null;
+		String str = (String)data.get(PKCS7);
+		if (str != null) {
+			ret = Base64.decode(str.getBytes());
+		}
+		return ret;
+	}
+
 	public void upgrade() {
 		
 		

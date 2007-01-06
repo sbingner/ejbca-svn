@@ -98,7 +98,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.16 2007-01-06 14:44:56 anatom Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.17 2007-01-06 15:54:11 anatom Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -222,7 +222,7 @@ public class ExtRACAProcess extends RACAProcess {
 			if(errormessage == null){
 				return processExtRAPKCS10Request(admin, (ExtRAPKCS10Request) submessage);
 			}else{
-				return new ExtRAPKCS10Response(((ExtRARequest) submessage).getRequestId(),false, errormessage,null);
+				return new ExtRAPKCS10Response(((ExtRARequest) submessage).getRequestId(), false, errormessage, null, null);
 			}
 		}
 		if(submessage instanceof ExtRAPKCS12Request){
@@ -280,11 +280,12 @@ public class ExtRACAProcess extends RACAProcess {
 	      PKCS10RequestMessage pkcs10 =RequestHelper.genPKCS10RequestMessageFromPEM(submessage.getPKCS10().getBytes());
 	      
 	      X509Certificate cert = (X509Certificate) getSignSession().createCertificate(admin,submessage.getUsername(),"foo123", pkcs10.getRequestPublicKey());
-	      retval = new ExtRAPKCS10Response(submessage.getRequestId(),true,null,cert);
+	      byte[] pkcs7 = getSignSession().createPKCS7(admin, cert, true);
+	      retval = new ExtRAPKCS10Response(submessage.getRequestId(),true,null,cert,pkcs7);
 	      
 		}catch(Exception e){
 			log.error("Error processing ExtRAPKCS10Requset : ", e);
-			retval = new ExtRAPKCS10Response(submessage.getRequestId(),false,e.getMessage(),null);
+			retval = new ExtRAPKCS10Response(submessage.getRequestId(),false,e.getMessage(),null,null);
 		}
 		
 		return retval;

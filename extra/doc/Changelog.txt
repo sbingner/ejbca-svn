@@ -1,6 +1,7 @@
 3.4.0
 -----
 - Updated BC jars to 1.35 to match EJBCA 3.4
+- ECA-388: Possibility to retrieve PKCS7 response in ExtRA API PKCS10 request
 
 3.3.0
 -----
