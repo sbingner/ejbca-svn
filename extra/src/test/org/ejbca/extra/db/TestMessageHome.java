@@ -34,6 +34,8 @@ public class TestMessageHome extends TestCase {
             setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect").
             setProperty("hibernate.connection.driver_class", "com.mysql.jdbc.Driver").
             setProperty("hibernate.connection.url", "jdbc:mysql://localhost/messages").
+//            setProperty("hibernate.connection.driver_class", "org.postgresql.Driver").
+//            setProperty("hibernate.connection.url", "jdbc:postgresql://127.0.0.1/extra").
             setProperty("hibernate.connection.username", "test").
             setProperty("hibernate.connection.password", "foo123").
             setProperty("hibernate.connection.autocommit", "true").
@@ -153,15 +155,15 @@ public class TestMessageHome extends TestCase {
 	public void test04GetNextWaitingUser() {
 		Message msg = msghome.getNextWaitingMessage();
 		
-		assertTrue(msg.getMessageid().equals("test1"));
-		assertTrue(msg.getStatus().equals(Message.STATUS_INPROCESS));
+		assertEquals("test1", msg.getMessageid());
+		assertEquals(Message.STATUS_INPROCESS, msg.getStatus());
 		
 		msg = msghome.findByMessageId("test1");
-		assertTrue(msg.getStatus().equals(Message.STATUS_INPROCESS));
+		assertEquals(Message.STATUS_INPROCESS, msg.getStatus());
         msg.setStatus(Message.STATUS_PROCESSED);
 		
 		msg = msghome.getNextWaitingMessage();
-		assertTrue(msg.getMessageid().equals("test2"));
+		assertEquals("test2", msg.getMessageid());
 		
 	}
 

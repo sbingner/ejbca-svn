@@ -19,9 +19,15 @@ $Id $
       <jndi-name>RAMessageDS</jndi-name>
 
       <connection-url>jdbc:mysql://127.0.0.1/messages?autoReconnect=true</connection-url>
+      <!-- 
+      <connection-url>jdbc:postgresql://127.0.0.1/extra</connection-url>
+      -->
 
       <!-- The driver class -->
       <driver-class>com.mysql.jdbc.Driver</driver-class>
+      <!-- 
+      <driver-class>org.postgresql.Driver</driver-class>
+      -->
 
       <!-- The login and password -->
       <user-name>test</user-name>
