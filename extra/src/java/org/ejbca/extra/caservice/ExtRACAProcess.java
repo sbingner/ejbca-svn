@@ -98,7 +98,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.15 2006-11-02 07:55:19 anatom Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.16 2007-01-06 14:44:56 anatom Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -200,7 +200,7 @@ public class ExtRACAProcess extends RACAProcess {
 						msg.setSubMessages(respSubMsg);
 						msgHome.update(msg);
 					} catch (Exception e) {
-						 log.error("Erro generating response message with Messageid : " + msg.getMessageid(),e);
+						 log.error("Error generating response message with Messageid : " + msg.getMessageid(),e);
 					}
 					
 				}
