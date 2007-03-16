@@ -76,6 +76,7 @@ import org.ejbca.core.model.ra.UserDataConstants;
 import org.ejbca.core.model.ra.UserDataVO;
 import org.ejbca.core.protocol.IResponseMessage;
 import org.ejbca.core.protocol.PKCS10RequestMessage;
+import org.ejbca.core.protocol.X509ResponseMessage;
 import org.ejbca.extra.db.ExtRACardRenewalRequest;
 import org.ejbca.extra.db.ExtRACardRenewalResponse;
 import org.ejbca.extra.db.ExtRAEditUserRequest;
@@ -98,7 +99,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.17 2007-01-06 15:54:11 anatom Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.18 2007-03-16 14:55:26 anatom Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -271,18 +272,20 @@ public class ExtRACAProcess extends RACAProcess {
 	private ISubMessage processExtRAPKCS10Request(Admin admin, ExtRAPKCS10Request submessage) {
 		log.debug("Processing ExtRAPKCS10Request");
 		ExtRAPKCS10Response retval = null;
-		try{
+		try {
+	      // Create a PKCS10
+	      PKCS10RequestMessage pkcs10 = RequestHelper.genPKCS10RequestMessageFromPEM(submessage.getPKCS10().getBytes());
+	      String password = pkcs10.getPassword();
+	      if (password == null) {
+	    	  password = "foo123";
+	      }
           UserDataVO userdata = generateUserDataVO(admin, submessage);
-		  userdata.setPassword("foo123");
+		  userdata.setPassword(password);
 	      storeUserData(admin, userdata,false,UserDataConstants.STATUS_INPROCESS );
 	      
-	      // Create a PKCS10
-	      PKCS10RequestMessage pkcs10 =RequestHelper.genPKCS10RequestMessageFromPEM(submessage.getPKCS10().getBytes());
-	      
-	      X509Certificate cert = (X509Certificate) getSignSession().createCertificate(admin,submessage.getUsername(),"foo123", pkcs10.getRequestPublicKey());
+	      X509Certificate cert = (X509Certificate) getSignSession().createCertificate(admin,submessage.getUsername(),password, pkcs10.getRequestPublicKey());
 	      byte[] pkcs7 = getSignSession().createPKCS7(admin, cert, true);
 	      retval = new ExtRAPKCS10Response(submessage.getRequestId(),true,null,cert,pkcs7);
-	      
 		}catch(Exception e){
 			log.error("Error processing ExtRAPKCS10Requset : ", e);
 			retval = new ExtRAPKCS10Response(submessage.getRequestId(),false,e.getMessage(),null,null);
@@ -672,7 +675,7 @@ public class ExtRACAProcess extends RACAProcess {
         X509Certificate cert=null;
 		req.setUsername(username);
         req.setPassword(password);
-        IResponseMessage resp = signsession.createCertificate(administrator,req,Class.forName("org.ejbca.core.protocol.X509ResponseMessage"));
+        IResponseMessage resp = signsession.createCertificate(administrator,req,Class.forName(X509ResponseMessage.class.getName()));
         cert = CertTools.getCertfromByteArray(resp.getResponseMessage());
         return cert;
     } //pkcs10CertReq
