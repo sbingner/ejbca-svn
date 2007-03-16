@@ -83,13 +83,13 @@
     <!-- =================================================================== -->
     <!-- Build ALL                                                           -->
     <!-- =================================================================== -->
-    <target name="help" >
+    <target name="help" description="Shows some help">
         <echo>
 ---------- ${app.version} Help ----------
  compile                 : Compiles and builds ext-raclient.jar  (Default)   	        	
  ra-ca-jbossservice      : Builds racaservice.jar    
- deploy-keystore         : Copies the ra ca service keystore to appserver
- deploy-ra-caservice     : Deploys the ra ca service to app server
+ deploy-keystore         : Copies the ra ca service keystore to EJBCA app server
+ deploy-ra-caservice     : Deploys the ra ca service to EJBCA app server
       </echo>
     </target>
     <!-- =================================================================== -->
@@ -116,7 +116,7 @@
     <!-- =================================================================== -->
     <!-- Clean ALL                                                           -->
     <!-- =================================================================== -->
-    <target name="clean">
+    <target name="clean" description="Cleans the build">
         <!-- Delete the ${build} and ${dist.dir} directory trees -->
         <delete dir="${build}" />
         <delete dir="${dist.dir}" />
@@ -129,7 +129,7 @@
     <!-- =================================================================== -->
     <!-- Compile java sources                                                -->
     <!-- =================================================================== -->
-    <target name="compile" depends="init">
+    <target name="compile" depends="init" description="Compiles and builds ext-raclient.jar">
         <javac destdir="${build}" debug="on" includeantruntime="no" encoding="iso8859-1">
             <classpath refid="compile.classpath" />
             <src path="${src.java}" />
@@ -315,20 +315,20 @@
     <!-- ======================================================================= -->
     <!-- Deploy Ext RA CA Service jar to JBoss                                               -->
     <!-- ======================================================================= -->
-    <target name="deploy-ra-caservice" depends="ra-ca-jbossservice">
+    <target name="deploy-ra-caservice" depends="ra-ca-jbossservice" description="Deploys the ra ca service to EJBCA app server">
         <antcall target="j2ee:deploy-ra-caservice" />
     </target>
 	
     <!-- ======================================================================= -->
     <!-- Deploy Ext RA CA Service keystore to JBoss                                               -->
     <!-- ======================================================================= -->
-    <target name="deploy-keystore" >
+    <target name="deploy-keystore" description="Copies the ra ca service keystore to EJBCA app server">
         <antcall target="j2ee:configure" />
     </target>
 	
 	
 
-    <target name="test:compile" depends="compile" description="compile JUnit testcases">
+    <target name="test:compile" depends="compile">
         <mkdir dir="${test.dir}" />
         <javac srcdir="${test.src.dir}" destdir="${test.dir}" debug="on" includeantruntime="no" encoding="iso8859-1">
             <classpath refid="test.compile.classpath" />

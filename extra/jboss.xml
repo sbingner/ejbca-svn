@@ -11,7 +11,7 @@
 	<property name="keystore.file" value="conf/keystore/extrakeystore.p12"/>
 
 	
-	<target name="j2ee:check" description="Check a few configuration settings">
+	<target name="j2ee:check">
         <!--
             we could have a dedicated jboss for ejbca, so give users a chance to override
             otherwise, try to pick the one from environment if it exists
@@ -24,7 +24,7 @@
 
 
 
-	<target name="j2ee:configure" depends="j2ee:check" description="Configure the J2EE server with appropriate settings">
+	<target name="j2ee:configure" depends="j2ee:check">
         <available file="./keystore/extrakeystore.p12" property="extraserver.keystore.found"/>
         <fail message="The Ext RA keystore could not be found in 'keystore/extrakeystore.p12'" unless="extraserver.keystore.found"/>
 		<copy file="keystore/extrakeystore.p12" tofile="${jboss.server.home.dir}/${keystore.file}"/>
@@ -32,7 +32,7 @@
 
 
 	
-	<target name="j2ee:deploy-ra-caservice" description="Deploy the Ext ra ca service jar application" depends="j2ee:check">
+	<target name="j2ee:deploy-ra-caservice" depends="j2ee:check">
 		<copy todir="${jboss.farm.dir}" file="${extracajbossservicejar}"/>
 		<copy todir="${jboss.farm.dir}" file="${extrajbosshibernitehar}"/>
 		<copy todir="${jboss.farm.dir}">
