@@ -18,6 +18,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bouncycastle.util.encoders.Base64;
@@ -28,7 +29,7 @@ import org.ejbca.util.CertTools;
  * contain the generated certificate.
  * 
  * @author philip
- * $Id: ExtRAPKCS10Response.java,v 1.2 2007-01-06 15:54:11 anatom Exp $
+ * $Id: ExtRAPKCS10Response.java,v 1.3 2007-03-29 15:13:10 anatom Exp $
  */
 
 public class ExtRAPKCS10Response extends ExtRAResponse {
@@ -86,7 +87,10 @@ public class ExtRAPKCS10Response extends ExtRAResponse {
 		CertificateFactory cf = CertTools.getCertificateFactory();
 	    X509Certificate cert = null;
 		try {
-			cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(Base64.decode(((String) data.get(CERTIFICATE)).getBytes())));
+			String certStr = (String) data.get(CERTIFICATE);
+			if (StringUtils.isNotEmpty(certStr)) {
+				cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(Base64.decode(certStr.getBytes())));				
+			}
 		} catch (CertificateException e) {
 			log.error("Error decoding certificate ", e);
 		}

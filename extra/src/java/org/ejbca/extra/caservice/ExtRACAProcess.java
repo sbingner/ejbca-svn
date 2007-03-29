@@ -54,6 +54,8 @@ import org.ejbca.core.ejb.keyrecovery.IKeyRecoverySessionLocalHome;
 import org.ejbca.core.ejb.ra.raadmin.IRaAdminSessionLocal;
 import org.ejbca.core.ejb.ra.raadmin.IRaAdminSessionLocalHome;
 import org.ejbca.core.model.SecConst;
+import org.ejbca.core.model.approval.ApprovalException;
+import org.ejbca.core.model.approval.WaitingForApprovalException;
 import org.ejbca.core.model.authorization.AuthorizationDeniedException;
 import org.ejbca.core.model.ca.AuthLoginException;
 import org.ejbca.core.model.ca.AuthStatusException;
@@ -99,7 +101,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.18 2007-03-16 14:55:26 anatom Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.19 2007-03-29 15:13:11 anatom Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -193,13 +195,24 @@ public class ExtRACAProcess extends RACAProcess {
 					try {
 						respSubMsg = generateResponseSubMessage(submgs.getSignerCert());
 						Iterator iter = submgs.getSubMessages().iterator();
+						boolean somethingprocessed = false;
 						while(iter.hasNext()){
-							respSubMsg.addSubMessage(processSubMessage(getAdmin(submgs), (ISubMessage) iter.next(), errormessage));
+							ISubMessage respMsg = processSubMessage(getAdmin(submgs), (ISubMessage) iter.next(), errormessage);
+							if (respMsg != null) {
+								// if the response message is null here, we will ignore this message, 
+								// it means that we should not do anything with it this round 
+								respSubMsg.addSubMessage(respMsg);
+								somethingprocessed = true;
+							}
 						}
-						
-						msg.setStatus(Message.STATUS_PROCESSED);
-						msg.setSubMessages(respSubMsg);
-						msgHome.update(msg);
+						if (somethingprocessed) {
+							msg.setStatus(Message.STATUS_PROCESSED);
+							msg.setSubMessages(respSubMsg);
+						} else {
+							log.info("Nothing processed for msg with messageId: "+msg.getMessageid()+", leaving it in the queue");
+							msg.setStatus(Message.STATUS_WAITING);
+						}
+						msgHome.update(msg);							
 					} catch (Exception e) {
 						 log.error("Error generating response message with Messageid : " + msg.getMessageid(),e);
 					}
@@ -213,10 +226,12 @@ public class ExtRACAProcess extends RACAProcess {
 	
 	
 	/**
-	 * Method generating a reponse to a given sub request
+	 * Method generating a reponse to a given sub request, or null of the message should be left in the queue to be tried the next time
+	 * 
 	 * @param admin the administrator (signer for signed requests, internal user othervise) performing the action
 	 * @param submessage the request submessage
-	 * @return a response, contains failinfo if anything went wrong
+	 * @param errormessage message of an error response to be created
+	 * @return a response, contains failinfo if anything went wrong, or null if the message should not be processed now and should be left in the queue, this can be used to handle approvals.
 	 */
 	private ISubMessage processSubMessage(Admin admin, ISubMessage submessage, String errormessage) {
 		if(submessage instanceof ExtRAPKCS10Request){
@@ -279,15 +294,28 @@ public class ExtRACAProcess extends RACAProcess {
 	      if (password == null) {
 	    	  password = "foo123";
 	      }
-          UserDataVO userdata = generateUserDataVO(admin, submessage);
-		  userdata.setPassword(password);
-	      storeUserData(admin, userdata,false,UserDataConstants.STATUS_INPROCESS );
-	      
+	      if (submessage.createOrEditUser()) {
+	          UserDataVO userdata = generateUserDataVO(admin, submessage);
+	          userdata.setPassword(password);
+	          log.info("Creating/editing user: "+userdata.getUsername()+", with dn: "+userdata.getDN());
+	    	  // See if the user already exists, if it exists and have status NEW or INPROCESS we will not try to change it
+	    	  // This way we can use approvals. When a requets first comes in, it is put for approval. When it is approved, 
+	    	  // we will not try to change it again, because it is ready to be processed 
+	          storeUserData(admin, userdata,false,UserDataConstants.STATUS_INPROCESS );	    		  
+	      }
 	      X509Certificate cert = (X509Certificate) getSignSession().createCertificate(admin,submessage.getUsername(),password, pkcs10.getRequestPublicKey());
 	      byte[] pkcs7 = getSignSession().createPKCS7(admin, cert, true);
 	      retval = new ExtRAPKCS10Response(submessage.getRequestId(),true,null,cert,pkcs7);
+		} catch (ApprovalException ae) {
+			// there might be an already saved approval for this user or a new approval will be created, 
+			// so catch the exception thrown when this is the case and let the method return null to leave the message in the queue to be tried the next round.
+			log.info("ApprovalException: "+ae.getMessage());
+		} catch (WaitingForApprovalException wae) {
+			// there might be an already saved approval for this user or a new approval will be created, 
+			// so catch the exception thrown when this is the case and let the method return null to leave the message in the queue to be tried the next round.
+			log.info("WaitingForApprovalException: "+wae.getMessage());
 		}catch(Exception e){
-			log.error("Error processing ExtRAPKCS10Requset : ", e);
+			log.error("Error processing ExtRAPKCS10Request: ", e);
 			retval = new ExtRAPKCS10Response(submessage.getRequestId(),false,e.getMessage(),null,null);
 		}
 		

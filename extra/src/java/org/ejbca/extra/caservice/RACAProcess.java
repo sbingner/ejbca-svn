@@ -21,12 +21,18 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 
 import org.apache.log4j.Logger;
+import org.ejbca.core.ejb.approval.IApprovalSessionLocal;
+import org.ejbca.core.ejb.approval.IApprovalSessionLocalHome;
 import org.ejbca.core.ejb.ra.IUserAdminSessionLocal;
 import org.ejbca.core.ejb.ra.IUserAdminSessionLocalHome;
+import org.ejbca.core.model.approval.ApprovalDataVO;
 import org.ejbca.core.model.approval.ApprovalException;
 import org.ejbca.core.model.approval.WaitingForApprovalException;
+import org.ejbca.core.model.approval.approvalrequests.AddEndEntityApprovalRequest;
+import org.ejbca.core.model.approval.approvalrequests.EditEndEntityApprovalRequest;
 import org.ejbca.core.model.authorization.AuthorizationDeniedException;
 import org.ejbca.core.model.log.Admin;
+import org.ejbca.core.model.ra.UserDataConstants;
 import org.ejbca.core.model.ra.UserDataVO;
 import org.ejbca.core.model.ra.raadmin.UserDoesntFullfillEndEntityProfile;
 import org.ejbca.extra.db.Message;
@@ -44,16 +50,16 @@ import org.ejbca.util.query.Query;
  * Contains help methods for storing users in database for approvals.
  * 
  * @author Philip Vendil
- * $Id: RACAProcess.java,v 1.5 2006-08-12 17:15:50 anatom Exp $
+ * $Id: RACAProcess.java,v 1.6 2007-03-29 15:13:11 anatom Exp $
  */
 
 public abstract class RACAProcess {
 
 	private static Logger log = Logger.getLogger(RACAProcess.class);
 	
-	protected IUserAdminSessionLocal usersession = null;
-	
-	protected Properties properties = null;
+	private IUserAdminSessionLocal usersession = null;
+	private IApprovalSessionLocal approvalsession = null;
+	private Properties properties = null;
 	
 	
 	/**
@@ -106,46 +112,59 @@ public abstract class RACAProcess {
 	
 	/**
 	 * Help method used to store userdata in userdatabase with given status, that is
-	 * waiting for user to be reviewed.
+	 * waiting for user to be reviewed. This methid handles approval as well.
+	 * 
 	 * @throws UserDoesntFullfillEndEntityProfile 
 	 * @throws AuthorizationDeniedException 
 	 * @throws FinderException 
 	 * @throws DuplicateKeyException 
 	 * @throws WaitingForApprovalException 
-	 * @throws ApprovalException 
+	 * @throws ApprovalException
+	 * @throws Exception 
 	 * 
 	 */
-	protected void storeUserData(Admin admin, UserDataVO userdata, boolean clearpwd, int status) throws AuthorizationDeniedException, UserDoesntFullfillEndEntityProfile, DuplicateKeyException, FinderException, ApprovalException, WaitingForApprovalException{
+	protected void storeUserData(Admin admin, UserDataVO userdata, boolean clearpwd, int status) throws AuthorizationDeniedException, UserDoesntFullfillEndEntityProfile, DuplicateKeyException, FinderException, ApprovalException, WaitingForApprovalException, Exception {
 		log.debug(">storeUserData() username : " + userdata.getUsername());
-		
+
+        // First we will look to see if there is an existing approval request pending for this user
+		// If there is an existing reject, we will fail
+		EditEndEntityApprovalRequest ear = new EditEndEntityApprovalRequest(userdata, clearpwd, userdata, admin,null,1,userdata.getCAId(),userdata.getEndEntityProfileId());
+        AddEndEntityApprovalRequest aar = new AddEndEntityApprovalRequest(userdata,clearpwd,admin,null,1,userdata.getCAId(),userdata.getEndEntityProfileId());
+        ApprovalDataVO vo = getApprovalSession().findNonExpiredApprovalRequest(admin, ear.generateApprovalId());
+        if (vo == null) {
+            vo = getApprovalSession().findNonExpiredApprovalRequest(admin, aar.generateApprovalId());        	
+        }
+        if (vo != null) {
+        	log.debug("Found an exiting approval request with status: :"+vo.getStatus());
+        }
+        if ( (vo != null) && ((vo.getStatus() == ApprovalDataVO.STATUS_REJECTED) || (vo.getStatus() == ApprovalDataVO.STATUS_EXECUTIONDENIED)) ) {
+        	// Our request have been rejected so we fail
+        	throw new Exception("Approval request was rejected.");
+        }
+		// If there is an request waiting for approval we don't have to go on and try to add the user
+        if ( (vo != null) && (vo.getStatus() == ApprovalDataVO.STATUS_WAITINGFORAPPROVAL) ) {
+        	// Our request have been rejected so we fail
+        	throw new ApprovalException("There is already an existing approval request pending.");
+        }
+        
 		// Check if user exists
-			if(getUserAdminSession().findUser(admin, userdata.getUsername()) != null){
-				log.debug("User " + userdata.getUsername() + " exists, update the userdata." );
+		UserDataVO oldData = getUserAdminSession().findUser(admin, userdata.getUsername());
+		if (oldData != null) {
+			log.debug("User '"+userdata.getUsername()+"' already exist, edit user.");
+			if ( (oldData.getStatus() == UserDataConstants.STATUS_INPROCESS) || (oldData.getStatus() == UserDataConstants.STATUS_NEW) ) {
+				log.info("User '"+userdata.getUsername()+"' have status NEW or INPROCESS, we will NOT edit it");
+			} else {
 				userdata.setStatus(status);
-				getUserAdminSession().changeUser(admin,userdata,clearpwd);
-			}else{
-				log.debug(" New User " + userdata.getUsername() + ", adding userdata." );
-				getUserAdminSession().addUser(admin,userdata,clearpwd);
-				getUserAdminSession().setUserStatus(admin,userdata.getUsername(), status);
+				getUserAdminSession().changeUser(admin,userdata,clearpwd);			  
 			}
-	
+		} else {
+			log.debug("User '"+userdata.getUsername()+"' does not exist, add user.");
+			getUserAdminSession().addUser(admin,userdata,clearpwd);
+			getUserAdminSession().setUserStatus(admin,userdata.getUsername(), status);
+		}
 		log.debug("<storeUserData()");
 	}
 	
-	/**
-	 * Help method that returns the next user that have been reviewed.
-	 * Direclty after it have been retrieved, the users status is set to INPROCESS
-	 * to avoid problems with concurrent processes.
-	 * 
-	 * @return the UserDataVO of the next user to generate answer for or null if no 
-	 * reweived user exists.
-	 */
-	protected UserDataVO getNextReviewedUser(){
-		//log.debug("getNextReviewedUser() caid : " + cAId + " endentityprofileid : " + endEntityProfileId);
-		//return userdatahome.getNextProcessedUser(cAId, endEntityProfileId);
-		return null;
-	}
-
 	protected void storeMessageInRA(Message msg){
 		log.debug(">storeMessageInRA() MessageId : " + msg.getMessageid());
 		getMessageHome().update(msg);
@@ -157,13 +176,26 @@ public abstract class RACAProcess {
 			if(usersession == null){
 				Context context = new InitialContext();
 				usersession = ((IUserAdminSessionLocalHome) javax.rmi.PortableRemoteObject.narrow(context.lookup(
-				"UserAdminSessionLocal"), IUserAdminSessionLocalHome.class)).create();   
+						IUserAdminSessionLocalHome.JNDI_NAME), IUserAdminSessionLocalHome.class)).create();   
 			}
 		}catch(Exception e)	{
 			log.error("Error instancing User Admin Session Bean",e);
 			throw new EJBException(e);
 		}
 		return usersession;
+	}
+	private IApprovalSessionLocal getApprovalSession() {
+		try{
+			if(approvalsession == null){
+				Context context = new InitialContext();
+				approvalsession = ((IApprovalSessionLocalHome) javax.rmi.PortableRemoteObject.narrow(context.lookup(
+						IApprovalSessionLocalHome.JNDI_NAME), IApprovalSessionLocalHome.class)).create();   
+			}
+		}catch(Exception e)	{
+			log.error("Error instancing Approval Session Bean",e);
+			throw new EJBException(e);
+		}
+		return approvalsession;
 	}
 	
 }

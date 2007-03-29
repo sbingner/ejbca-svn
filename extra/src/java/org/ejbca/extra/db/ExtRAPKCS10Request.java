@@ -12,21 +12,24 @@
  *************************************************************************/
 package org.ejbca.extra.db;
 
+import org.apache.commons.lang.BooleanUtils;
+
 
 /**
  * Ext RA Requset SubMessage when requesting using a PKCS10 and expecting a PKCS10 Response containing a certifcate. 
  * @author philip
- * $Id: ExtRAPKCS10Request.java,v 1.1 2006-07-31 13:13:06 herrvendil Exp $
+ * $Id: ExtRAPKCS10Request.java,v 1.2 2007-03-29 15:13:10 anatom Exp $
  */
 
 public class ExtRAPKCS10Request extends ExtRARequest {
 
-	public static final float LATEST_VERSION = (float) 1.0;
+	public static final float LATEST_VERSION = (float) 2.0;
 	
 	static final int CLASS_TYPE = 2;
 	
 	// Field constants
 	private static final String PKCS10              = "PKCS10";
+	private static final String CREATEOREDITEUSER   = "CREATEOREDITEUSER";
 	
 	
 	
@@ -44,6 +47,7 @@ public class ExtRAPKCS10Request extends ExtRARequest {
 		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
 		data.put(VERSION, new Float(LATEST_VERSION));
 		data.put(PKCS10, pkcs10);
+		data.put(CREATEOREDITEUSER, "true");
 	}
 
 	/**
@@ -58,10 +62,26 @@ public class ExtRAPKCS10Request extends ExtRARequest {
 	
 	/**
 	 * Returns the PKCS10 used in this request.
-	 * @return
+	 * @return String with base64 encoded pkcs10 request
 	 */
 	public String getPKCS10(){
 		return (String) data.get(PKCS10);
+	}
+	/**
+	 * Returns the CREATEUSER used in this request, and converts it to boolean
+	 * @return true or false
+	 */
+	public boolean createOrEditUser(){
+		String ret = (String)data.get(CREATEOREDITEUSER);
+		return BooleanUtils.toBoolean(ret);
+	}
+	/**
+	 * Sets the CREATEUSER used in this request
+	 * @return true or false
+	 */
+	public void setCreateOrEditUser(boolean createUser){
+		String create = BooleanUtils.toStringTrueFalse(createUser);
+		data.put(CREATEOREDITEUSER, create);
 	}
 	
 	public void upgrade() {

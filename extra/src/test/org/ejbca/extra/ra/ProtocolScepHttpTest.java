@@ -67,14 +67,10 @@ import org.ejbca.core.protocol.ScepRequestMessage;
 import org.ejbca.util.CertTools;
 import org.ejbca.util.KeyTools;
 
-import com.meterware.httpunit.GetMethodWebRequest;
 import com.meterware.httpunit.HttpUnitOptions;
-import com.meterware.httpunit.WebConversation;
-import com.meterware.httpunit.WebRequest;
-import com.meterware.httpunit.WebResponse;
 
 /** Tests http pages of ocsp and scep
- * @version $Id: ProtocolScepHttpTest.java,v 1.5 2006-11-02 07:55:18 anatom Exp $
+ * @version $Id: ProtocolScepHttpTest.java,v 1.6 2007-03-29 15:13:40 anatom Exp $
  **/
 public class ProtocolScepHttpTest extends TestCase {
     private static Logger log = Logger.getLogger(ProtocolScepHttpTest.class);
@@ -85,6 +81,7 @@ public class ProtocolScepHttpTest extends TestCase {
 
 
     private static X509Certificate cacert = null;
+    private static X509Certificate racert = null;
     private static KeyPair keys = null;
     
     private String transId = null;
@@ -109,39 +106,12 @@ public class ProtocolScepHttpTest extends TestCase {
     protected void setUp() throws Exception {
         log.debug(">setUp()");
 
-
         // We want to get error responses without exceptions
         HttpUnitOptions.setExceptionsThrownOnErrorStatus(false);
 
 		if (keys == null) {
 			keys = KeyTools.genKeys("512", CATokenConstants.KEYALGORITHM_RSA);
 		}
-
-      /* ctx = getInitialContext();
-        Object obj = ctx.lookup("CAAdminSession");
-        ICAAdminSessionHome cahome = (ICAAdminSessionHome) javax.rmi.PortableRemoteObject.narrow(obj, ICAAdminSessionHome.class);
-        ICAAdminSessionRemote casession = cahome.create();
-        Collection caids = casession.getAvailableCAs(admin);
-        Iterator iter = caids.iterator();
-        if (iter.hasNext()) {
-            caid = ((Integer) iter.next()).intValue();
-        } else {
-            assertTrue("No active CA! Must have at least one active CA to run tests!", false);
-        }
-        CAInfo cainfo = casession.getCAInfo(admin, caid);
-        caname = cainfo.getName();
-        Collection certs = cainfo.getCertificateChain();
-        if (certs.size() > 0) {
-            Iterator certiter = certs.iterator();
-            X509Certificate cert = (X509Certificate) certiter.next();
-            // Make sure we have a BC certificate
-            cacert = CertTools.getCertfromByteArray(cert.getEncoded());
-        } else {
-            log.error("NO CACERT for caid " + caid);
-        }*/
-       /* obj = ctx.lookup("UserAdminSession");
-        IUserAdminSessionHome userhome = (IUserAdminSessionHome) javax.rmi.PortableRemoteObject.narrow(obj, IUserAdminSessionHome.class);
-        usersession = userhome.create();*/
 
         log.debug("<setUp()");
     }
@@ -150,13 +120,6 @@ public class ProtocolScepHttpTest extends TestCase {
     }
 
     /*
-    private Context getInitialContext() throws NamingException {
-        log.debug(">getInitialContext");
-        Context ctx = new javax.naming.InitialContext();
-        log.debug("<getInitialContext");
-        return ctx;
-    } */
- 
     public void test01Access() throws Exception {
         WebConversation wc = new WebConversation();
         // Hit scep, gives a 400: Bad Request
@@ -164,17 +127,28 @@ public class ProtocolScepHttpTest extends TestCase {
         WebResponse response = wc.getResponse(request);
         assertEquals("Response code", 400, response.getResponseCode());
     }
-  
+
+    // GetCACert and GetCACertChain behaves the same if it is an RA that responde
     public void test02ScepGetCACert() throws Exception {
-        log.debug(">test07ScepGetCACert()");
-        String reqUrl = httpReqPath + '/' + resourceScepNoCA+"?operation=GetCACert&message=test";
+        log.debug(">test02ScepGetCACert()");
+    	scepGetCACertChain("GetCACert", "application/x-x509-ca-ra-cert");    	
+        log.debug(">test02ScepGetCACert()");
+    }
+*/
+    public void test03ScepGetCACertChain() throws Exception {
+        log.debug(">test03ScepGetCACertChain()");
+    	scepGetCACertChain("GetCACertChain", "application/x-x509-ca-ra-cert");    	
+        log.debug(">test03ScepGetCACertChain()");
+    }
+    private void scepGetCACertChain(String method, String mimetype) throws Exception {
+        String reqUrl = httpReqPath + '/' + resourceScepNoCA+"?operation="+method+"&message=test";
         URL url = new URL(reqUrl);
         HttpURLConnection con = (HttpURLConnection)url.openConnection();
         con.setRequestMethod("GET");
         con.getDoOutput();
         con.connect();
         assertEquals("Response code", 200, con.getResponseCode());
-        assertEquals("Content-Type", "application/x-x509-ca-cert", con.getContentType());
+        assertEquals("Content-Type", mimetype, con.getContentType());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         // This works for small requests, and SCEP requests are small enough
         InputStream in = con.getInputStream();
@@ -188,105 +162,205 @@ public class ProtocolScepHttpTest extends TestCase {
         byte[] respBytes = baos.toByteArray();
         assertNotNull("Response can not be null.", respBytes);
         assertTrue(respBytes.length > 0);
-        cacert = CertTools.getCertfromByteArray(respBytes);
-        // Check that we got the right cert back
-        assertEquals("CN=test", cacert.getSubjectDN().getName());
-        log.debug(">test07ScepGetCACert()");
-    }
-
-    public void test03ScepRequestOKSHA1() throws Exception {
-        log.debug(">test03ScepRequestOKSHA1()");
-        // find a CA create a user and
-        // send SCEP req to server and get good response with cert
-
         
-        byte[] msgBytes = genScepRequest(CMSSignedGenerator.DIGEST_SHA1);
+        CMSSignedData s = new CMSSignedData(respBytes);
+        assertNotNull(s);
+        SignerInformationStore signers = s.getSignerInfos();
+        Collection col = signers.getSigners();
+        assertTrue(col.size() == 0);
+        CertStore certstore = s.getCertificatesAndCRLs("Collection","BC");
+        Collection certs = certstore.getCertificates(null);
+        assertEquals(certs.size(), 2);	                	
+        Iterator it = certs.iterator();
+        cacert = (X509Certificate)it.next();
+        System.out.println("Got cert with DN: "+ cacert.getSubjectDN().getName());
+        assertEquals("CN=ScepTest", cacert.getSubjectDN().getName());
+        racert = (X509Certificate)it.next();
+        System.out.println("Got cert with DN: "+ racert.getSubjectDN().getName());
+        assertEquals("CN=scepraserver,O=PrimeKey,C=SE", racert.getSubjectDN().getName());
+    }
+    /*
+    public void test04ScepGetCACaps() throws Exception {
+        log.debug(">test04ScepGetCACaps()");
+        String reqUrl = httpReqPath + '/' + resourceScep+"?operation=GetCACaps&message=test";
+        URL url = new URL(reqUrl);
+        HttpURLConnection con = (HttpURLConnection)url.openConnection();
+        con.setRequestMethod("GET");
+        con.getDoOutput();
+        con.connect();
+        assertEquals("Response code", 200, con.getResponseCode());
+        assertEquals("Content-Type", "text/plain", con.getContentType());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        // This works for small requests, and SCEP requests are small enough
+        InputStream in = con.getInputStream();
+        int b = in.read();
+        while (b != -1) {
+            baos.write(b);
+            b = in.read();
+        }
+        baos.flush();
+        in.close();
+        byte[] respBytes = baos.toByteArray();
+        assertNotNull("Response can not be null.", respBytes);
+        assertTrue(respBytes.length > 0);
+        assertEquals(new String(respBytes), "POSTPKIOperation\nSHA-1");
+        log.debug(">test04ScepGetCACaps()");
+    }
+    */
+
+    // This test will send a request and expect back a pending response.
+    // It will then start polling the RA waiting for a real reply.
+    // When polling it will accept a pending or a success reply
+    public void test05ScepRequestOKSHA1() throws Exception {
+        log.debug(">test05ScepRequestOKSHA1()");
+        // send SCEP req to RA server and get pending request, until the request is processed on the CA
+        // Then we will get a certificate response back    
+        ScepRequestGenerator gen = new ScepRequestGenerator();
+        byte[] msgBytes = genScepRequest(gen, CMSSignedGenerator.DIGEST_SHA1);
         // Send message with GET
         byte[] retMsg = sendScep(false, msgBytes, false);
         assertNotNull(retMsg);
-        checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=sceptest", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, true, ResponseStatus.PENDING);
-        log.debug("<test03ScepRequestOKSHA1()");
-    }
-
-    public void test04ScepRequestOKMD5() throws Exception {
-        log.debug(">test04ScepRequestOKMD5()");
-        // find a CA create a user and
-        // send SCEP req to server and get good response with cert
-        
-        byte[] msgBytes = genScepRequest(CMSSignedGenerator.DIGEST_MD5);
-        // Send message with GET
-        byte[] retMsg = sendScep(false, msgBytes, false);
-        assertNotNull(retMsg);
-        checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=sceptest", senderNonce, transId, false, CMSSignedGenerator.DIGEST_MD5, true, ResponseStatus.PENDING);
-        log.debug("<test04ScepRequestOKMD5()");
-    }
-
-    public void test05ScepRequestPostOK() throws Exception {
-        log.debug(">test05ScepRequestPostOK()");
-        // find a CA, create a user and
-        // send SCEP req to server and get good response with cert
-        
-        byte[] msgBytes = genScepRequest(CMSSignedGenerator.DIGEST_SHA1);
-        // Send message with GET
-        byte[] retMsg = sendScep(true, msgBytes, false);
-        assertNotNull(retMsg);
-        checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=sceptest", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, true, ResponseStatus.PENDING);
-        log.debug(">test05ScepRequestPostOK()");
-    }
-
-
-
-
-
- 
-    public void test99CleanUp() throws Exception {
-        // remove user
-        //usersession.deleteUser(admin,"sceptest");
-        log.debug("deleted user: sceptest");
+        checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=scepraserver", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, false, ResponseStatus.PENDING);
+        // Send GetCertInitial and wait for a certificate response, you will probably get PENDING reply several times
+        int keeprunning = 0;
+        boolean processed = false;
+        while ( (keeprunning < 5) && !processed) {
+        	Thread.sleep(15000); // wait 15 seconds between polls
+            msgBytes = genScepGetCertInitial(gen, CMSSignedGenerator.DIGEST_SHA1);
+            // Send message with GET
+            retMsg = sendScep(false, msgBytes, false);
+            assertNotNull(retMsg);
+            if (isScepResponseMessageOfType(retMsg, ResponseStatus.PENDING)) {
+            	System.out.println("Received a PENDING message");
+                checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=scepraserver", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, false, ResponseStatus.PENDING);            	
+            } else {            	
+            	System.out.println("Received a SUCCESS message");
+                checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=scepraserver", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, false, ResponseStatus.SUCCESS);
+                processed = true;
+            }
+            keeprunning++;
+        }
+        assertTrue(processed);
+        log.debug("<test05ScepRequestOKSHA1()");
     }
     
+    /*
+    // This test will send a request and expect back a pending response.
+    // It will then start polling the RA waiting for a real reply.
+    // When polling it will accept a pending or a success reply
+    public void test06ScepRequestOKSHA1PostNoCA() throws Exception {
+        log.debug(">test05ScepRequestOKSHA1()");
+        // send SCEP req to RA server and get pending request, until the request is processed on the CA
+        // Then we will get a certificate response back    
+        ScepRequestGenerator gen = new ScepRequestGenerator();
+        byte[] msgBytes = genScepRequest(gen, CMSSignedGenerator.DIGEST_SHA1);
+        // Send message with POST
+        byte[] retMsg = sendScep(true, msgBytes, true);
+        assertNotNull(retMsg);
+        checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=scepraserver", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, true, ResponseStatus.PENDING);
+        // Send GetCertInitial and wait for a certificate response, you will probably get PENDING reply several times
+        int keeprunning = 0;
+        boolean processed = false;
+        while ( (keeprunning < 5) && !processed) {
+        	Thread.sleep(5000); // wait 5 seconds between polls
+            msgBytes = genScepGetCertInitial(gen, CMSSignedGenerator.DIGEST_SHA1);
+            // Send message with GET
+            retMsg = sendScep(true, msgBytes, true);
+            assertNotNull(retMsg);
+            if (isScepResponseMessageOfType(retMsg, ResponseStatus.PENDING)) {
+                checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=scepraserver", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, true, ResponseStatus.PENDING);            	
+            } else {            	
+                checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=scepraserver", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, true, ResponseStatus.SUCCESS);
+                processed = true;
+            }
+            keeprunning++;
+        }
+        assertTrue(processed);
+        log.debug("<test05ScepRequestOKSHA1()");
+    }
+*/
+    //
     //
     // Private helper methods
     //
- /*   private void createScepUser() throws RemoteException, AuthorizationDeniedException, FinderException, UserDoesntFullfillEndEntityProfile {
-        // Make user that we know...
-        boolean userExists = false;
-        try {
-            usersession.addUser(admin,"sceptest","foo123","C=SE,O=PrimeKey,CN=sceptest",null,"ocsptest@anatom.se",false,SecConst.EMPTY_ENDENTITYPROFILE,SecConst.CERTPROFILE_FIXED_ENDUSER,SecConst.USER_ENDUSER,SecConst.TOKEN_SOFT_PEM,0,caid);
-            log.debug("created user: sceptest, foo123, C=SE, O=PrimeKey, CN=sceptest");
-        } catch (RemoteException re) {
-            if (re.detail instanceof DuplicateKeyException) {
-                userExists = true;
-            }
-        } catch (DuplicateKeyException dke) {
-            userExists = true;
-        }
-
-        if (userExists) {
-            log.debug("User sceptest already exists.");
-            usersession.setUserStatus(admin,"sceptest",UserDataConstants.STATUS_NEW);
-            log.debug("Reset status to NEW");
-        }
-        
-    }*/
-
-    private byte[] genScepRequest(String digestoid) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidAlgorithmParameterException, CertStoreException, IOException, CMSException, CertificateEncodingException, IllegalStateException {
-        ScepRequestGenerator gen = new ScepRequestGenerator();
+    //
+    
+    private byte[] genScepRequest(ScepRequestGenerator gen, String digestoid) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidAlgorithmParameterException, CertStoreException, IOException, CMSException, CertificateEncodingException, IllegalStateException {
         gen.setKeys(keys);
         gen.setDigestOid(digestoid);
         byte[] msgBytes = null;
-        msgBytes = gen.generateCertReq("C=SE, O=PrimeKey, CN=sceptest", "foo123", cacert);                    
+        String dn = "C=SE, O=PrimeKey, CN=sceptest";
+        msgBytes = gen.generateCertReq(dn, "foo123", racert);                    
         assertNotNull(msgBytes);
         transId = gen.getTransactionId();
         assertNotNull(transId);
         byte[] idBytes = Base64.decode(transId.getBytes());
-        assertTrue(idBytes.length == 16);
+        assertEquals(16, idBytes.length);
         senderNonce = gen.getSenderNonce();
         byte[] nonceBytes = Base64.decode(senderNonce.getBytes());
-        assertTrue(nonceBytes.length == 16); 
+        assertEquals(16, nonceBytes.length); 
+        return msgBytes;
+    }
+
+    private byte[] genScepGetCertInitial(ScepRequestGenerator gen, String digestoid) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidAlgorithmParameterException, CertStoreException, IOException, CMSException, CertificateEncodingException, IllegalStateException {
+        gen.setKeys(keys);
+        gen.setDigestOid(digestoid);
+        byte[] msgBytes = null;
+        String dn = "C=SE, O=PrimeKey, CN=sceptest"; // must be same as when the request was generated
+        msgBytes = gen.generateGetCertInitial(dn, racert);                    
+        assertNotNull(msgBytes);
+        transId = gen.getTransactionId();
+        assertNotNull(transId);
+        byte[] idBytes = Base64.decode(transId.getBytes());
+        assertEquals(16, idBytes.length);
+        senderNonce = gen.getSenderNonce();
+        byte[] nonceBytes = Base64.decode(senderNonce.getBytes());
+        assertEquals(16, nonceBytes.length); 
         return msgBytes;
     }
     
+    private boolean isScepResponseMessageOfType(byte[] retMsg, ResponseStatus extectedResponseStatus) throws CMSException, NoSuchAlgorithmException, NoSuchProviderException {
+        //
+        // Parse response message
+        //
+        CMSSignedData s = new CMSSignedData(retMsg);
+        // The signer, i.e. the CA, check it's the right CA
+        SignerInformationStore signers = s.getSignerInfos();
+        Collection col = signers.getSigners();
+        assertTrue(col.size() > 0);
+        Iterator iter = col.iterator();
+        SignerInformation signerInfo = (SignerInformation)iter.next();
+        SignerId sinfo = signerInfo.getSID();
+        // Check that the signer is the expected CA
+        assertEquals(CertTools.stringToBCDNString(racert.getIssuerDN().getName()), CertTools.stringToBCDNString(sinfo.getIssuerAsString()));
+        // Verify the signature
+        boolean ret = signerInfo.verify(racert.getPublicKey(), "BC");
+        assertTrue(ret);
+        // Get authenticated attributes
+        AttributeTable tab = signerInfo.getSignedAttributes();        
+        // --Fail info
+        Attribute attr = tab.get(new DERObjectIdentifier(ScepRequestMessage.id_failInfo));
+        // --Message type
+        attr = tab.get(new DERObjectIdentifier(ScepRequestMessage.id_messageType));
+        assertNotNull(attr);
+        ASN1Set values = attr.getAttrValues();
+        assertEquals(values.size(), 1);
+        DERString str = DERPrintableString.getInstance((values.getObjectAt(0)));
+        String messageType = str.getString();
+        assertEquals("3", messageType);
+        // --Success status
+        attr = tab.get(new DERObjectIdentifier(ScepRequestMessage.id_pkiStatus));
+        assertNotNull(attr);
+        values = attr.getAttrValues();
+        assertEquals(values.size(), 1);
+        str = DERPrintableString.getInstance((values.getObjectAt(0)));
+        String responsestatus =  str.getString();
+        if (extectedResponseStatus.getValue().equals(responsestatus)) {
+        	return true;
+        }
+        return false;
+    }
+
     private void checkScepResponse(byte[] retMsg, String userDN, String senderNonce, String transId, boolean crlRep, String digestOid, boolean noca, ResponseStatus extectedResponseStatus) throws CMSException, NoSuchProviderException, NoSuchAlgorithmException, CertStoreException, InvalidKeyException, CertificateException, SignatureException, CRLException {
         //
         // Parse response message
@@ -302,9 +376,10 @@ public class ProtocolScepHttpTest extends TestCase {
         assertEquals(signerInfo.getDigestAlgOID(), digestOid);
         SignerId sinfo = signerInfo.getSID();
         // Check that the signer is the expected CA
-        assertEquals(CertTools.stringToBCDNString("CN=test"), CertTools.stringToBCDNString(sinfo.getIssuerAsString()));
+        assertEquals(CertTools.stringToBCDNString(racert.getIssuerDN().getName()), CertTools.stringToBCDNString(sinfo.getIssuerAsString()));
         // Verify the signature
-        signerInfo.verify(cacert.getPublicKey(), "BC");
+        boolean ret = signerInfo.verify(racert.getPublicKey(), "BC");
+        assertTrue(ret);
         // Get authenticated attributes
         AttributeTable tab = signerInfo.getSignedAttributes();        
         // --Fail info
@@ -420,6 +495,8 @@ public class ProtocolScepHttpTest extends TestCase {
                     if (mysubjectdn.equals(subjectdn)) {
                         // issued certificate
                         assertEquals(CertTools.stringToBCDNString("C=SE,O=PrimeKey,CN=sceptest"), subjectdn);
+                        System.out.println(retcert);
+                        System.out.println(cacert);
                         retcert.verify(cacert.getPublicKey());
                         assertTrue(checkKeys(keys.getPrivate(), retcert.getPublicKey()));
                         verified = true;

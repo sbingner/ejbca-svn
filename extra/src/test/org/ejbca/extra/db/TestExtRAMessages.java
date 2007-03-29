@@ -20,14 +20,6 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.ejbca.extra.db.ExtRAEditUserRequest;
-import org.ejbca.extra.db.ExtRAKeyRecoveryRequest;
-import org.ejbca.extra.db.ExtRAPKCS10Request;
-import org.ejbca.extra.db.ExtRAPKCS10Response;
-import org.ejbca.extra.db.ExtRAPKCS12Request;
-import org.ejbca.extra.db.ExtRAPKCS12Response;
-import org.ejbca.extra.db.ISubMessage;
-import org.ejbca.extra.db.SubMessages;
 import org.ejbca.util.CertTools;
 
 public class TestExtRAMessages extends TestCase {
@@ -148,11 +140,21 @@ public class TestExtRAMessages extends TestCase {
 	}
 	
 	
+	public static ExtRAPKCS10Request genExtRAPKCS10Request(long requestId, String username, String pkcs10, boolean createUser){
+		ExtRAPKCS10Request req = new ExtRAPKCS10Request(requestId,username, "CN=PKCS10REQ", "RFC822NAME=PKCS10Request@test.com",
+				                           "PKCS10Request@test.com", null, "EMPTY", "ENDUSER", 
+				                           "AdminCA1",pkcs10);
+		req.setCreateOrEditUser(createUser);
+		return req;
+		}
 	public static ExtRAPKCS10Request genExtRAPKCS10Request(long requestId, String username, String pkcs10){
-	   return new ExtRAPKCS10Request(requestId,username, "CN=PKCS10REQ", "RFC822NAME=PKCS10Request@test.com",
-			                           "PKCS10Request@test.com", null, "EMPTY", "ENDUSER", 
-			                           "AdminCA1",pkcs10);
+	   return genExtRAPKCS10Request(requestId, username, pkcs10, true);
 	}
+	public static ExtRAEditUserRequest genExtRAPKCS10UserRequest(long requestId, String username, String password){
+		   return new ExtRAEditUserRequest(requestId,username, "CN=PKCS10REQ", "RFC822NAME=PKCS10Request@test.com",
+				                           "PKCS10Request@test.com", null, "EMPTY", "ENDUSER", 
+				                           "AdminCA1",password,10, 1, "USERGENERATED", null);
+	    }
 	
 	public static ExtRAPKCS12Request genExtRAPKCS12Request(long requestId, String username, boolean store){
 	   return new ExtRAPKCS12Request(requestId,username, "CN=PKCS12REQ", "RFC822NAME=PKCS12Request@test.com",
@@ -165,6 +167,7 @@ public class TestExtRAMessages extends TestCase {
 				                           "PKCS12Request@test.com", null, "EMPTY", "ENDUSER", 
 				                           "AdminCA1","foo123",10, 1, "USERGENERATED", null);
 	    }
+	
 	
 	public static ExtRAKeyRecoveryRequest genExtRAKeyRecoveryRequest(long requestId, String username, boolean orgCert, X509Certificate cert){
 		if(cert == null){

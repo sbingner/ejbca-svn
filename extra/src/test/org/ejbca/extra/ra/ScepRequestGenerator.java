@@ -134,6 +134,28 @@ public class ScepRequestGenerator {
         return msg;        
     }
     
+    public byte[] generateGetCertInitial(String dn, X509Certificate ca) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, CertStoreException, IOException, CMSException  {
+        this.cacert = ca;
+        this.reqdn = dn;
+
+        // pkcsGetCertInitial issuerAndSubject ::= { 
+        //	    issuer "the certificate authority issuer name" 
+        //	    subject "the requester subject name as given in PKCS#10" 
+        //	} 
+        ASN1EncodableVector vec = new ASN1EncodableVector();
+        vec.add(new DERUTF8String(ca.getIssuerDN().getName()));
+        vec.add(new DERUTF8String(dn));
+        DERSequence seq = new DERSequence(vec);
+        
+        // The self signed certificate has already been generated when the request message was created
+        // Create self signed cert, validity 1 day
+        //cert = CertTools.genSelfCert(reqdn,24*60*60*1000,null,keys.getPrivate(),keys.getPublic(),CATokenConstants.SIGALG_SHA1_WITH_RSA,false);
+        
+        // wrap message in pkcs#7
+        byte[] msg = wrap(seq.getEncoded(), "20");
+        return msg;        
+    }
+    
     private CMSEnvelopedData envelope(CMSProcessable envThis) throws NoSuchAlgorithmException, NoSuchProviderException, CMSException {
         CMSEnvelopedDataGenerator edGen = new CMSEnvelopedDataGenerator();
         // Envelope the CMS message

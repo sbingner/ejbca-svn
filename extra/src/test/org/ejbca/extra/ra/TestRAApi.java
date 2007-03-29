@@ -13,7 +13,13 @@
 package org.ejbca.extra.ra;
 
 import java.math.BigInteger;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
 import java.security.cert.CertStore;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
@@ -21,10 +27,17 @@ import java.util.Iterator;
 
 import junit.framework.TestCase;
 
+import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.DERSet;
+import org.bouncycastle.asn1.DERUTF8String;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.SignerId;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
+import org.bouncycastle.jce.PKCS10CertificationRequest;
+import org.ejbca.core.model.ca.catoken.CATokenConstants;
 import org.ejbca.extra.db.Constants;
 import org.ejbca.extra.db.ExtRACardRenewalRequest;
 import org.ejbca.extra.db.ExtRAPKCS10Response;
@@ -37,6 +50,7 @@ import org.ejbca.extra.db.TestExtRAMessages;
 import org.ejbca.extra.db.TestMessageHome;
 import org.ejbca.util.Base64;
 import org.ejbca.util.CertTools;
+import org.ejbca.util.KeyTools;
 
 
 /**
@@ -44,12 +58,10 @@ import org.ejbca.util.CertTools;
  * sent messages that should be pulled and processed by the CA.
  * 
  * The following requirements should be set in order to run the tests.
- * 
- * TODO
- * 
+ * - Externan RA CA-service installed on EJBCA machine
  * 
  * @author philip
- * $Id: TestRAApi.java,v 1.9 2007-01-06 15:54:11 anatom Exp $
+ * @version $Id: TestRAApi.java,v 1.10 2007-03-29 15:13:40 anatom Exp $
  */
 
 public class TestRAApi extends TestCase {
@@ -62,8 +74,9 @@ public class TestRAApi extends TestCase {
 	private static X509Certificate firstCertificate = null;
 	private static X509Certificate secondCertificate = null;
 	
+	
 	public void test01GenerateSimplePKCS10Request() throws Exception {
-		
+
 		SubMessages smgs = new SubMessages(null,null,null);
 		smgs.addSubMessage(TestExtRAMessages.genExtRAPKCS10Request(100,"SimplePKCS10Test1", Constants.pkcs10_1));
 		smgs.addSubMessage(TestExtRAMessages.genExtRAPKCS10Request(101,"SimplePKCS10Test1", Constants.pkcs10_2));
@@ -119,12 +132,83 @@ public class TestRAApi extends TestCase {
 		assertNotNull(secondCertificate);
 		pkcs7 = resp.getCertificateAsPKCS7();
 		assertNotNull(pkcs7);
+		
+		// TODO: test with createUser = false
 	
+	}
+	
+	public void test02GenerateSimplePKCS10RequestNoCreateUser() throws Exception {
+
+		// First test with a user that does not exist or has status generated, when the user it not created the request will fail
+		SubMessages smgs = new SubMessages(null,null,null);
+		smgs.addSubMessage(TestExtRAMessages.genExtRAPKCS10Request(100,"SimplePKCS10Test1NoAdd", Constants.pkcs10_1, false));
+		TestMessageHome.msghome.create("SimplePKCS10Test1NoAdd", smgs);
+        Message msg = waitForUser("SimplePKCS10Test1NoAdd");
+		assertNotNull(msg);
+		SubMessages submessagesresp = msg.getSubMessages(null,null,null);
+		assertTrue(submessagesresp.getSubMessages().size() == 1);		
+		Iterator iter =  submessagesresp.getSubMessages().iterator();
+		ExtRAPKCS10Response resp = (ExtRAPKCS10Response) iter.next();
+		assertTrue(resp.getRequestId() == 100);
+		assertTrue(resp.isSuccessful() == false);
+		
+		// if we create the user first, with correct status, the requets shoudl be ok
+		smgs = new SubMessages(null,null,null);
+		smgs.addSubMessage(TestExtRAMessages.genExtRAPKCS10UserRequest(101,"SimplePKCS10Test1NoAdd", "foo123"));
+		TestMessageHome.msghome.create("SimplePKCS10Test1NoAdd", smgs);		
+        msg = waitForUser("SimplePKCS10Test1NoAdd");
+		assertNotNull(msg);
+		submessagesresp = msg.getSubMessages(null,null,null);
+		assertTrue("Number of submessages " + submessagesresp.getSubMessages().size(), submessagesresp.getSubMessages().size() == 1);
+		ExtRAResponse editresp = (ExtRAResponse) submessagesresp.getSubMessages().iterator().next();
+		assertTrue("Wrong Request ID" + editresp.getRequestId(), editresp.getRequestId() == 101);
+		assertTrue(editresp.isSuccessful() == true);
+
+		// Create a new request, now it should be ok
+		smgs = new SubMessages(null,null,null);
+		smgs.addSubMessage(TestExtRAMessages.genExtRAPKCS10Request(102,"SimplePKCS10Test1NoAdd", Constants.pkcs10_1, false));
+		TestMessageHome.msghome.create("SimplePKCS10Test1NoAdd", smgs);		
+        msg = waitForUser("SimplePKCS10Test1NoAdd");
+		assertNotNull(msg);
+		submessagesresp = msg.getSubMessages(null,null,null);
+		assertTrue(submessagesresp.getSubMessages().size() == 1);
+		iter =  submessagesresp.getSubMessages().iterator();
+		resp = (ExtRAPKCS10Response) iter.next();
+		assertTrue(resp.getRequestId() == 102);
+		assertTrue(resp.isSuccessful() == true);		
+		assertTrue(resp.getCertificate().getSubjectDN().toString().equals("CN=PKCS10REQ"));
+		firstCertificate = resp.getCertificate();
+		assertNotNull(firstCertificate);
+		// Check the pkcs7 response
+		byte[] pkcs7 = resp.getCertificateAsPKCS7();
+		assertNotNull(pkcs7);
+        CMSSignedData s = new CMSSignedData(pkcs7);
+        // The signer, i.e. the CA, check it's the right CA
+        SignerInformationStore signers = s.getSignerInfos();
+        Collection col = signers.getSigners();
+        assertTrue(col.size() > 0);
+        Iterator siter = col.iterator();
+        SignerInformation signerInfo = (SignerInformation)siter.next();
+        SignerId sinfo = signerInfo.getSID();
+        // Check that the signer is the expected CA
+        assertEquals(CertTools.stringToBCDNString(firstCertificate.getIssuerDN().getName()), CertTools.stringToBCDNString(sinfo.getIssuerAsString()));
+        CertStore certstore = s.getCertificatesAndCRLs("Collection","BC");
+        Collection certs = certstore.getCertificates(null);
+        assertEquals(certs.size(), 2);                	
+        Iterator it = certs.iterator();
+        boolean found = false;
+        while (it.hasNext()) {
+            X509Certificate retcert = (X509Certificate)it.next();
+            if (retcert.getSubjectDN().equals(firstCertificate.getSubjectDN())) {
+            	found = true;
+            }
+        }
+        assertTrue(found);
+
 	}
 
 	
-	public void test02GenerateSimplePKCS12Request() throws Exception {
-		
+	public void test03GenerateSimplePKCS12Request() throws Exception {		
 		SubMessages smgs = new SubMessages(null,null,null);
 		smgs.addSubMessage(TestExtRAMessages.genExtRAPKCS12Request(200,"SimplePKCS12Test1", false));
 		
@@ -151,8 +235,7 @@ public class TestRAApi extends TestCase {
 		
 	}
 	
-	public void test03GenerateSimpleKeyRecoveryRequest() throws Exception {
-		
+	public void test04GenerateSimpleKeyRecoveryRequest() throws Exception {
 		// First generate keystore
 		SubMessages smgs = new SubMessages(null,null,null);
 		smgs.addSubMessage(TestExtRAMessages.genExtRAPKCS12Request(300,"SimpleKeyRecTest", true));
@@ -225,8 +308,7 @@ public class TestRAApi extends TestCase {
 		
 	}
 	
-	public void test04GenerateSimpleRevokationRequest() throws Exception {
-		
+	public void test05GenerateSimpleRevokationRequest() throws Exception {
 		// revoke first certificate
 		SubMessages smgs = new SubMessages(null,null,null);
 		smgs.addSubMessage(new ExtRARevocationRequest(10, CertTools.getIssuerDN(firstCertificate), firstCertificate.getSerialNumber(), ExtRARevocationRequest.REVOKATION_REASON_UNSPECIFIED));
@@ -358,9 +440,9 @@ public class TestRAApi extends TestCase {
         assertEquals(resp8.getFailInfo(), "User not found from issuer/serno: issuer='CN=ffo558444,O=338qqwaa,C=qq', serno=123");
 	}
 	
-	public void test05GenerateSimpleEditUserRequest() throws Exception {
+	public void test06GenerateSimpleEditUserRequest() throws Exception {
 		
-		// revoke first certificate
+		// edit a user
 		SubMessages smgs = new SubMessages(null,null,null);
 		smgs.addSubMessage(TestExtRAMessages.genExtRAEditUserRequest(11,"SimpleEditUserTest"));
 		
@@ -379,9 +461,8 @@ public class TestRAApi extends TestCase {
 		assertTrue(resp.isSuccessful() == true);
 	}	
 	
-	public void test06GenerateComplexRequest() throws Exception {
+	public void test07GenerateComplexRequest() throws Exception {
 		
-
 		SubMessages smgs = new SubMessages(null,null,null);
 		smgs.addSubMessage(TestExtRAMessages.genExtRAPKCS10Request(1,"ComplexReq", Constants.pkcs10_1));
 		smgs.addSubMessage(TestExtRAMessages.genExtRAPKCS12Request(2,"ComplexReq", false));
@@ -410,11 +491,9 @@ public class TestRAApi extends TestCase {
 		assertTrue(resp3.isSuccessful() == true);
 	}
 	
-	public void test06GenerateLotsOfRequest() throws Exception {
+	public void test08GenerateLotsOfRequest() throws Exception {
 		
 		int numberOfRequests = 10;
-		
-		
 		
 		for(int i=0; i< numberOfRequests; i++){
 		  SubMessages smgs = new SubMessages(null,null,null);
@@ -435,7 +514,7 @@ public class TestRAApi extends TestCase {
 		
 	} 
 	
-	public void test07GenerateSimpleCardRenewalRequest() throws Exception {
+	public void test09GenerateSimpleCardRenewalRequest() throws Exception {
 		
 		// First fail message
 		SubMessages smgs = new SubMessages(null,null,null);
@@ -489,12 +568,11 @@ public class TestRAApi extends TestCase {
         resp = (ExtRAResponse) submessagesresp.getSubMessages().iterator().next();
         assertTrue("Wrong Request ID" + resp.getRequestId(), resp.getRequestId() == 12);
         assertTrue(resp.isSuccessful() == false);
-        assertEquals(resp.getFailInfo(), "User status must be new for SimplePKCS10Test1");
+        assertEquals(resp.getFailInfo(), "User status must be new for SimplePKCS10Test1NoAdd");
         
         // TODO: make a successful message, but user status must be set to new then
 	}
 	
-		
 	
 	private Message waitForUser(String user) throws InterruptedException{
 		int waittime = 30; // Wait a maximum of 30 seconds
@@ -518,5 +596,31 @@ public class TestRAApi extends TestCase {
 		
 		return msg;
 	}
+
+    public byte[] generatePKCS10Req(String dn, String password) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidAlgorithmParameterException {
+        // Generate keys
+    	KeyPair keys = KeyTools.genKeys("512", CATokenConstants.KEYALGORITHM_RSA);            
+
+        // Create challenge password attribute for PKCS10
+        // Attributes { ATTRIBUTE:IOSet } ::= SET OF Attribute{{ IOSet }}
+        //
+        // Attribute { ATTRIBUTE:IOSet } ::= SEQUENCE {
+        //    type    ATTRIBUTE.&id({IOSet}),
+        //    values  SET SIZE(1..MAX) OF ATTRIBUTE.&Type({IOSet}{\@type})
+        // }
+        ASN1EncodableVector vec = new ASN1EncodableVector();
+        vec.add(PKCSObjectIdentifiers.pkcs_9_at_challengePassword); 
+        ASN1EncodableVector values = new ASN1EncodableVector();
+        values.add(new DERUTF8String(password));
+        vec.add(new DERSet(values));
+        ASN1EncodableVector v = new ASN1EncodableVector();
+        v.add(new DERSequence(vec));
+        DERSet set = new DERSet(v);
+        // Create PKCS#10 certificate request
+        PKCS10CertificationRequest p10request = new PKCS10CertificationRequest("SHA1WithRSA",
+                CertTools.stringToBcX509Name(dn), keys.getPublic(), set, keys.getPrivate());
+        
+        return p10request.getEncoded();        
+    }
 
 }

@@ -26,9 +26,10 @@
         </init-param>
         <init-param>
             <param-name>sessionFactoryContext</param-name>
-            <param-value>java:/hibernate/SCEPRASessionFactory</param-value>
+            <param-value>java:/hibernate/RAMessageSessionFactory</param-value>
         </init-param>
     </servlet>
+    
     <servlet>
         <servlet-name>ScepRAServletNoCACert</servlet-name>
         <display-name>ScepRAServletNoCACert</display-name>
@@ -51,7 +52,7 @@
         </init-param>
         <init-param>
             <param-name>sessionFactoryContext</param-name>
-            <param-value>java:/hibernate/SCEPRASessionFactory</param-value>
+            <param-value>java:/hibernate/RAMessageSessionFactory</param-value>
         </init-param>
     </servlet>
 
@@ -67,9 +68,27 @@
 
 
    <env-entry>
-      <description><![CDATA[Default content encoding used to decode form posts]]></description>
-      <env-entry-name>contentEncoding</env-entry-name>
-      <env-entry-value>ISO-8859-1</env-entry-value>
+      <description><![CDATA[The Certificate profile used to register new SCEP users]]></description>
+      <env-entry-name>certificateProfile</env-entry-name>
+      <env-entry-value>ENDUSER</env-entry-value>
+      <env-entry-type>java.lang.String</env-entry-type>
+   </env-entry>
+   <env-entry>
+      <description><![CDATA[The End entity profile used to register new SCEP users]]></description>
+      <env-entry-name>entityProfile</env-entry-name>
+      <env-entry-value>EMPTY</env-entry-value>
+      <env-entry-type>java.lang.String</env-entry-type>
+   </env-entry>
+   <env-entry>
+      <description><![CDATA[The CA used to register new SCEP users]]></description>
+      <env-entry-name>defaultCA</env-entry-name>
+      <env-entry-value>ScepTest</env-entry-value>
+      <env-entry-type>java.lang.String</env-entry-type>
+   </env-entry>
+   <env-entry>
+      <description><![CDATA[Mapping a CAs issuer DN (as from the Admin-GUI), which will be received form the client to a CA name]]></description>
+      <env-entry-name>CN=ScepTest</env-entry-name>
+      <env-entry-value>ScepTest</env-entry-value>
       <env-entry-type>java.lang.String</env-entry-type>
    </env-entry>
 
