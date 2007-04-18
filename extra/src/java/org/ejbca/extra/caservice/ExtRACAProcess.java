@@ -101,7 +101,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.19 2007-03-29 15:13:11 anatom Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.20 2007-04-18 14:47:46 anatom Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -299,7 +299,7 @@ public class ExtRACAProcess extends RACAProcess {
 	          userdata.setPassword(password);
 	          log.info("Creating/editing user: "+userdata.getUsername()+", with dn: "+userdata.getDN());
 	    	  // See if the user already exists, if it exists and have status NEW or INPROCESS we will not try to change it
-	    	  // This way we can use approvals. When a requets first comes in, it is put for approval. When it is approved, 
+	    	  // This way we can use approvals. When a request first comes in, it is put for approval. When it is approved, 
 	    	  // we will not try to change it again, because it is ready to be processed 
 	          storeUserData(admin, userdata,false,UserDataConstants.STATUS_INPROCESS );	    		  
 	      }
@@ -315,6 +315,7 @@ public class ExtRACAProcess extends RACAProcess {
 			// so catch the exception thrown when this is the case and let the method return null to leave the message in the queue to be tried the next round.
 			log.info("WaitingForApprovalException: "+wae.getMessage());
 		}catch(Exception e){
+			// We should en up here if an approval is rejected, or some other error occur. We will then send back a failed message
 			log.error("Error processing ExtRAPKCS10Request: ", e);
 			retval = new ExtRAPKCS10Response(submessage.getRequestId(),false,e.getMessage(),null,null);
 		}

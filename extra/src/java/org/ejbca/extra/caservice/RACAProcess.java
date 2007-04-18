@@ -12,7 +12,9 @@
  *************************************************************************/
 package org.ejbca.extra.caservice;
 
-import java.util.Properties;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
 import javax.ejb.DuplicateKeyException;
 import javax.ejb.EJBException;
@@ -37,6 +39,8 @@ import org.ejbca.core.model.ra.UserDataVO;
 import org.ejbca.core.model.ra.raadmin.UserDoesntFullfillEndEntityProfile;
 import org.ejbca.extra.db.Message;
 import org.ejbca.extra.db.MessageHome;
+import org.ejbca.util.query.ApprovalMatch;
+import org.ejbca.util.query.BasicMatch;
 import org.ejbca.util.query.Query;
 
 
@@ -50,7 +54,7 @@ import org.ejbca.util.query.Query;
  * Contains help methods for storing users in database for approvals.
  * 
  * @author Philip Vendil
- * $Id: RACAProcess.java,v 1.6 2007-03-29 15:13:11 anatom Exp $
+ * $Id: RACAProcess.java,v 1.7 2007-04-18 14:47:46 anatom Exp $
  */
 
 public abstract class RACAProcess {
@@ -58,9 +62,7 @@ public abstract class RACAProcess {
 	private static Logger log = Logger.getLogger(RACAProcess.class);
 	
 	private IUserAdminSessionLocal usersession = null;
-	private IApprovalSessionLocal approvalsession = null;
-	private Properties properties = null;
-	
+	private IApprovalSessionLocal approvalsession = null;	
 	
 	/**
 	 * Method performin initialization, should be called directly after creation
@@ -126,32 +128,66 @@ public abstract class RACAProcess {
 	protected void storeUserData(Admin admin, UserDataVO userdata, boolean clearpwd, int status) throws AuthorizationDeniedException, UserDoesntFullfillEndEntityProfile, DuplicateKeyException, FinderException, ApprovalException, WaitingForApprovalException, Exception {
 		log.debug(">storeUserData() username : " + userdata.getUsername());
 
-        // First we will look to see if there is an existing approval request pending for this user
-		// If there is an existing reject, we will fail
+		// Check if user already exists
+		UserDataVO oldUserData = getUserAdminSession().findUser(admin, userdata.getUsername());
+
+        // First we will look to see if there is an existing approval request pending for this user within tha last hour
 		EditEndEntityApprovalRequest ear = new EditEndEntityApprovalRequest(userdata, clearpwd, userdata, admin,null,1,userdata.getCAId(),userdata.getEndEntityProfileId());
         AddEndEntityApprovalRequest aar = new AddEndEntityApprovalRequest(userdata,clearpwd,admin,null,1,userdata.getCAId(),userdata.getEndEntityProfileId());
-        ApprovalDataVO vo = getApprovalSession().findNonExpiredApprovalRequest(admin, ear.generateApprovalId());
-        if (vo == null) {
-            vo = getApprovalSession().findNonExpiredApprovalRequest(admin, aar.generateApprovalId());        	
+        int approvalid = aar.generateApprovalId();
+        if (oldUserData != null) {
+        	// a user already exists, so this is an edit entity request we are preparing
+        	log.debug("User already exist, we will look for an edit end entity request");
+        	approvalid = ear.generateApprovalId();
         }
-        if (vo != null) {
-        	log.debug("Found an exiting approval request with status: :"+vo.getStatus());
-        }
-        if ( (vo != null) && ((vo.getStatus() == ApprovalDataVO.STATUS_REJECTED) || (vo.getStatus() == ApprovalDataVO.STATUS_EXECUTIONDENIED)) ) {
-        	// Our request have been rejected so we fail
-        	throw new Exception("Approval request was rejected.");
-        }
+		Query query = new Query(Query.TYPE_APPROVALQUERY);		
+		query.add(ApprovalMatch.MATCH_WITH_APPROVALID, BasicMatch.MATCH_TYPE_EQUALS, Integer.toString(approvalid), Query.CONNECTOR_AND);
+		query.add(ApprovalMatch.MATCH_WITH_STATUS, BasicMatch.MATCH_TYPE_EQUALS, "" + ApprovalDataVO.STATUS_WAITINGFORAPPROVAL, Query.CONNECTOR_AND);
+		Date now = new Date();
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.HOUR_OF_DAY, -1);
+		query.add(cal.getTime(), now);
+		List approvals = getApprovalSession().query(admin, query, 0, 25);
 		// If there is an request waiting for approval we don't have to go on and try to add the user
-        if ( (vo != null) && (vo.getStatus() == ApprovalDataVO.STATUS_WAITINGFORAPPROVAL) ) {
-        	// Our request have been rejected so we fail
-        	throw new ApprovalException("There is already an existing approval request pending.");
+        if (approvals.size() > 0) {
+        	log.debug("Found at least one waiting approval request for approvalid: "+approvalid);
+        	throw new ApprovalException("There is already an existing approval request pending for approvalid: "+approvalid);
         }
         
-		// Check if user exists
-		UserDataVO oldData = getUserAdminSession().findUser(admin, userdata.getUsername());
-		if (oldData != null) {
+		// If there is no waiting request which should be the most common, we check If there is an existing reject withing the last 30 minutes
+        // If there is a reject, we will cancel this request. A new request will then probably not be possible to create until 30 minutes have passed
+		query = new Query(Query.TYPE_APPROVALQUERY);		
+		query.add(ApprovalMatch.MATCH_WITH_APPROVALID, BasicMatch.MATCH_TYPE_EQUALS, Integer.toString(approvalid), Query.CONNECTOR_AND);
+		query.add(ApprovalMatch.MATCH_WITH_STATUS, BasicMatch.MATCH_TYPE_EQUALS, "" + ApprovalDataVO.STATUS_EXECUTIONDENIED, Query.CONNECTOR_AND);
+		cal = Calendar.getInstance();
+		cal.add(Calendar.MINUTE, -30);
+		query.add(cal.getTime(), now);
+		approvals = getApprovalSession().query(admin, query, 0, 25);
+		// If there is an request waiting for approval we don't have to go on and try to add the user
+        if (approvals.size() > 0) {
+        	log.debug("Found at least one rejected approval request for approvalid: "+approvalid);
+        	throw new Exception("Approval request was rejected for approvalid: "+approvalid);
+        }
+
+		// Check if it failed as well...
+		query = new Query(Query.TYPE_APPROVALQUERY);		
+		query.add(ApprovalMatch.MATCH_WITH_APPROVALID, BasicMatch.MATCH_TYPE_EQUALS, Integer.toString(approvalid), Query.CONNECTOR_AND);
+		query.add(ApprovalMatch.MATCH_WITH_STATUS, BasicMatch.MATCH_TYPE_EQUALS, "" + ApprovalDataVO.STATUS_EXECUTIONFAILED, Query.CONNECTOR_AND);
+		cal = Calendar.getInstance();
+		cal.add(Calendar.MINUTE, -30);
+		query.add(cal.getTime(), now);
+		approvals = getApprovalSession().query(admin, query, 0, 25);
+		// If there is an request waiting for approval we don't have to go on and try to add the user
+        if (approvals.size() > 0) {
+        	log.debug("Found at least one failed approval request for approvalid: "+approvalid);
+        	throw new Exception("Approval request execution failed for approvalid: "+approvalid);
+        }
+        
+		// Check if user already exists
+		oldUserData = getUserAdminSession().findUser(admin, userdata.getUsername());
+		if (oldUserData != null) {
 			log.debug("User '"+userdata.getUsername()+"' already exist, edit user.");
-			if ( (oldData.getStatus() == UserDataConstants.STATUS_INPROCESS) || (oldData.getStatus() == UserDataConstants.STATUS_NEW) ) {
+			if ( (oldUserData.getStatus() == UserDataConstants.STATUS_INPROCESS) || (oldUserData.getStatus() == UserDataConstants.STATUS_NEW) ) {
 				log.info("User '"+userdata.getUsername()+"' have status NEW or INPROCESS, we will NOT edit it");
 			} else {
 				userdata.setStatus(status);

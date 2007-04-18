@@ -67,10 +67,14 @@ import org.ejbca.core.protocol.ScepRequestMessage;
 import org.ejbca.util.CertTools;
 import org.ejbca.util.KeyTools;
 
+import com.meterware.httpunit.GetMethodWebRequest;
 import com.meterware.httpunit.HttpUnitOptions;
+import com.meterware.httpunit.WebConversation;
+import com.meterware.httpunit.WebRequest;
+import com.meterware.httpunit.WebResponse;
 
 /** Tests http pages of ocsp and scep
- * @version $Id: ProtocolScepHttpTest.java,v 1.6 2007-03-29 15:13:40 anatom Exp $
+ * @version $Id: ProtocolScepHttpTest.java,v 1.7 2007-04-18 14:47:46 anatom Exp $
  **/
 public class ProtocolScepHttpTest extends TestCase {
     private static Logger log = Logger.getLogger(ProtocolScepHttpTest.class);
@@ -119,7 +123,7 @@ public class ProtocolScepHttpTest extends TestCase {
     protected void tearDown() throws Exception {
     }
 
-    /*
+    
     public void test01Access() throws Exception {
         WebConversation wc = new WebConversation();
         // Hit scep, gives a 400: Bad Request
@@ -134,7 +138,7 @@ public class ProtocolScepHttpTest extends TestCase {
     	scepGetCACertChain("GetCACert", "application/x-x509-ca-ra-cert");    	
         log.debug(">test02ScepGetCACert()");
     }
-*/
+
     public void test03ScepGetCACertChain() throws Exception {
         log.debug(">test03ScepGetCACertChain()");
     	scepGetCACertChain("GetCACertChain", "application/x-x509-ca-ra-cert");    	
@@ -179,7 +183,7 @@ public class ProtocolScepHttpTest extends TestCase {
         System.out.println("Got cert with DN: "+ racert.getSubjectDN().getName());
         assertEquals("CN=scepraserver,O=PrimeKey,C=SE", racert.getSubjectDN().getName());
     }
-    /*
+    
     public void test04ScepGetCACaps() throws Exception {
         log.debug(">test04ScepGetCACaps()");
         String reqUrl = httpReqPath + '/' + resourceScep+"?operation=GetCACaps&message=test";
@@ -206,7 +210,7 @@ public class ProtocolScepHttpTest extends TestCase {
         assertEquals(new String(respBytes), "POSTPKIOperation\nSHA-1");
         log.debug(">test04ScepGetCACaps()");
     }
-    */
+    
 
     // This test will send a request and expect back a pending response.
     // It will then start polling the RA waiting for a real reply.
@@ -225,6 +229,7 @@ public class ProtocolScepHttpTest extends TestCase {
         int keeprunning = 0;
         boolean processed = false;
         while ( (keeprunning < 5) && !processed) {
+        	System.out.println("Waiting 15 secs...");
         	Thread.sleep(15000); // wait 15 seconds between polls
             msgBytes = genScepGetCertInitial(gen, CMSSignedGenerator.DIGEST_SHA1);
             // Send message with GET
@@ -244,7 +249,7 @@ public class ProtocolScepHttpTest extends TestCase {
         log.debug("<test05ScepRequestOKSHA1()");
     }
     
-    /*
+    
     // This test will send a request and expect back a pending response.
     // It will then start polling the RA waiting for a real reply.
     // When polling it will accept a pending or a success reply
@@ -278,7 +283,7 @@ public class ProtocolScepHttpTest extends TestCase {
         assertTrue(processed);
         log.debug("<test05ScepRequestOKSHA1()");
     }
-*/
+
     //
     //
     // Private helper methods
