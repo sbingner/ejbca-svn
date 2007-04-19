@@ -104,7 +104,7 @@
         <available file="${ejbca.home}/dist/ejbca-ejb.jar" property="ejbca.home.found"/>
         <fail message="Environment variable EJBCA_HOME haven't been set or EJBCA haven't been built" unless="ejbca.home.found"/>
         <echo>
----------- ${app.version} INITIALIZATION ----------
+---------- ${app.version} ----------
         	jboss.home             = ${jboss.home}
         	ejbca.home             = ${ejbca.home}
         	java.ver               = ${java.ver}        	
@@ -177,12 +177,9 @@
             <manifest>
                 <attribute name="Class-Path" value="
                 	bcmail-jdk${java.ver}.jar bcprov-jdk${java.ver}.jar log4j.jar                                                	
-                	antlr-2.7.5H3.jar jboss-cache.jar oscache-2.1.jar xml-apis.jar
-                	asm-attrs.jar dom4j-1.6.jar jacc-1_0-fr.jar jdbc2_0-stdext.jar
-                	asm.jar ehcache-1.1.jar jaxen-1.1-beta-4.jar jgroups-2.2.7.jar
-                	mysql-connector-java-3.1.12-bin.jar swarmcache-1.0rc2.jar
-                	cglib-2.1.jar hibernate3.jar jbossall-client.jar jta.jar 
-                	nekohtml.jar xerces_2_3_0.jar ejbca-util.jar
+                	asm-attrs.jar dom4j-1.6.jar asm.jar 
+                	mysql-connector-java-3.1.12-bin.jar 
+                	cglib-2.1.jar hibernate3.jar ejbca-util.jar
                 	commons-collections-2.1.1.jar commons-logging.jar commons-lang-2.0.jar"/>
                 <attribute name="Main-Class" value="org.ejbca.extra.ra.ExtRATestClient"/>
             </manifest>
@@ -200,25 +197,12 @@
         <copy todir="${client-jars.dir}">
             <fileset dir="${lib}/ext">
                 <include name="antlr-2.7.5H3.jar" />
-                <include name="jboss-cache.jar" />
-                <include name="oscache-2.1.jar" />
-                <include name="xml-apis.jar" />
                 <include name="asm-attrs.jar" />
                 <include name="dom4j-1.6.jar" />
-                <include name="jacc-1_0-fr.jar" />
-                <include name="jdbc2_0-stdext.jar" />
                 <include name="asm.jar" />
-                <include name="ehcache-1.1.jar" />            	
-                <include name="jaxen-1.1-beta-4.jar" />
-                <include name="jgroups-2.2.7.jar" />
                 <include name="mysql-connector-java-3.1.12-bin.jar" />
-                <include name="swarmcache-1.0rc2.jar" />
                 <include name="cglib-2.1.jar" />
                 <include name="hibernate3.jar" />
-                <include name="jbossall-client.jar" />
-                <include name="jta.jar" />
-                <include name="nekohtml.jar" />
-                <include name="xerces_2_3_0.jar" />
             	<include name="ejbca-util.jar" />            	
             </fileset>
         </copy>
@@ -377,6 +361,9 @@
         </junitreport>
     </target>
     
+    <!-- ======================================================================= -->
+    <!-- Target for making a software release                                    -->
+    <!-- ======================================================================= -->	
 	<target name="ziprelease">
 		<antcall target="clean" />
         <input message="Version tag for zipfile (ex 3_2_1):" addproperty="extra.zipversion" /> 

@@ -1,35 +1,5 @@
 <?xml version="1.0"?>
-<project name="SCEPRAServer" default="help" basedir=".">
-
-	<property name="app.name" value="scepraserver" />
-    <property name="app.name.cap" value="SCEPRAServer" />
-	<property name="app.version" value="${app.name.cap} 3.4" />
-	
-    <property environment="env" />
-    <property name="ejbca.home" value="${env.EJBCA_HOME}" />
-	
-    <!-- Give user a chance to override without editing this file
-       (and without typing -D each time it compiles it).
-       First it checks your home directory for ejbca.properties
-       net it checks the properties file here. -->
-    <property file="${user.home}/${app.name}.properties" />
-	<property name="java.ver" value="15" />
-
-    <!-- set global properties for this build -->
-    <property name="src" value="./src" />
-	<property name="tmp" value="./tmp" />
-    <property name="bin" value="./${tmp}/bin" />
-    <property name="build" value="${bin}/classes" />
-    <property name="lib" value="lib" />
-
-    <property name="src.java" value="${src}/java" />
-    <property name="src.db" value="${src}/db" />
-    <property name="src.test" value="${src}/test" />
-    
-    <property name="test.dir" value="${bin}/junit" />
-    <property name="test.src.dir" location="${src}/test" />
-    <property name="dist.dir" location="dist" />
-    <property name="apidoc" value="./doc/api" />
+<project name="SCEPRAServer" default="scepraserver" basedir=".">
 
 	<property name="scepraserver.src" value="${src}/web" />
 	<property name="scepraserver.name" value="scepraserver.war" />
@@ -40,89 +10,12 @@
     <property name="sceprajbosshibernate.build" value="${tmp}/${sceprajbosshibernate.name}" />
     <property name="sceprajbosshibernatehar" value="${dist.dir}/${sceprajbosshibernate.name}" />		
 	
-	<!-- Import ant targets for the application server deployment -->
-    <import file="scepjboss.xml" />
-
-    <property name="jar.extclasspath" value="lib/bcmail-jdk${java.ver}.jar lib/bcprov-jdk${java.ver}.jar lib/log4j.jar"/>
-
-    <path id="ext.classpath">
-        <fileset dir="lib/ext" includes="*.jar" />
-    </path>
-	
-    <path id="compile.classpath">
-        <path refid="ext.classpath" />
-        <fileset dir="lib" includes="*.jar" excludes="bc*.jar"/>
-        <fileset dir="lib" includes="bcmail-jdk${java.ver}.jar"/>
-    	<fileset dir="lib" includes="bcprov-jdk${java.ver}.jar"/>
-        <path refid="j2ee.classpath" />
-        <path refid="ejbca.classpath" /> 
-    </path>
-
-    <path id="j2ee.classpath">
-        <fileset dir="${jboss.home}/client">
-            <include name="jbossall-client.jar" />
-            <include name="jboss-j2ee.jar" />
-        </fileset>
-    </path>
-	
-    <path id="ejbca.classpath">
-        <fileset dir="${ejbca.home}/dist">
-            <include name="ejbca-ejb.jar" />
-        </fileset>
-    </path>
-
-    <path id="test.compile.classpath">
-        <path refid="compile.classpath" />
-        <path location="${build}" />
-    </path>
-
-
-    <!-- =================================================================== -->
-    <!-- Build ALL                                                           -->
-    <!-- =================================================================== -->
-    <target name="help" >
-        <echo>
----------- ${app.version} Help ----------
- scepraserver           : Builds the scep ra server scepraserver.war
- deployscepraserver     : Deploys the scep ra server to app server         	
-      </echo>
-    </target>
-    <!-- =================================================================== -->
-    <!-- Create the time stamp and build directory -->
-    <!-- =================================================================== -->
-    <target name="init" depends="j2ee:check">
-        <available file="${ejbca.home}/dist/ejbca-ejb.jar" property="ejbca.home.found"/>
-        <fail message="Environment variable EJBCA_HOME haven't been set or EJBCA haven't been built" unless="ejbca.home.found"/>
-        <echo>
----------- ${app.version} INITIALIZATION ----------
-        	jboss.home             = ${jboss.home}
-        	ejbca.home             = ${ejbca.home}
-        	java.ver               = ${java.ver}        	
-      </echo>
-        <!-- Create the time stamp -->
-        <tstamp/>
-        <!-- Create the build directory structure used by compile -->
-        <mkdir dir="${build}"/>
-        <mkdir dir="${dist.dir}/${lib}"/>
-    </target>
-
-    <!-- =================================================================== -->
-    <!-- Clean ALL                                                           -->
-    <!-- =================================================================== -->
-    <target name="clean">
-        <!-- Delete the ${build} and ${dist.dir} directory trees -->
-        <delete dir="${build}" />
-        <delete dir="${dist.dir}" />
-        <delete dir="${apidoc}" />
-        <delete dir="${tmp}"/>
-    </target>
-
 
 
     <!-- =================================================================== -->
     <!-- Compile java sources                                                -->
     <!-- =================================================================== -->
-    <target name="compile" depends="init">
+    <target name="scepcompile" depends="init">
         <javac destdir="${build}" debug="on" includeantruntime="no" encoding="iso8859-1">
             <classpath refid="compile.classpath" />
             <src path="${src.java}" />
@@ -145,7 +38,7 @@
     <!-- =================================================================== -->
     <!-- Build SCEPRA Server part, this is the web RA on the external RA server -->
     <!-- =================================================================== -->
-    <target name="scepraserver" depends="compile, sceprajbosshibernate" description="Builds the scep ra server scepraserver.war">
+    <target name="scepraserver" depends="scepcompile, sceprajbosshibernate" description="Builds the scep ra server scepraserver.war">
         <war destfile="${scepraserverwar}" webxml="${tmp}/web.xml">
             <fileset dir="${scepraserver.src}" excludes="WEB-INF/web.xml" />
             <classes dir="${build}">
@@ -168,7 +61,7 @@
     <!-- =================================================================== -->
     <!-- Build SCEPRA hibernate configuration package                       -->
     <!-- =================================================================== -->
-    <target name="sceprajbosshibernate" depends="compile">
+    <target name="sceprajbosshibernate" depends="scepcompile">
         <mkdir dir="${sceprajbosshibernate.build}" />
     	<mkdir dir="${sceprajbosshibernate.build}/META-INF" />
         <copy todir="${sceprajbosshibernate.build}/META-INF">
@@ -200,9 +93,6 @@
     </target>
 	
 
-	
-	
-
     <!-- ======================================================================= -->
     <!-- Deploy SCEP RA Server war to JBoss                                               -->
     <!-- ======================================================================= -->
@@ -210,47 +100,10 @@
         <antcall target="j2ee:deployscepraserver" />
     </target>
 
+	
     <!-- ======================================================================= -->
     <!-- Below are targets for automated tests                                   -->
     <!-- ======================================================================= -->
-    <target name="test:compile" depends="compile">
-        <mkdir dir="${test.dir}" />
-        <javac srcdir="${test.src.dir}" destdir="${test.dir}" debug="on" includeantruntime="no" encoding="iso8859-1">
-            <classpath refid="test.compile.classpath" />
-        </javac>
-    	<copy todir="${test.dir}">
-            <fileset dir="${src.test}">
-                <include name="jndi.properties" />
-                <include name="log4j.properties" />
-            </fileset>   	
-    	</copy>
-    </target>
-
-    <target name="test:run" depends="test:compile" description="run JUnit testcases on all ExtRA">
-        <delete dir="${test.dir}/reports" />
-        <mkdir dir="${test.dir}/reports/html" />
-        <junit printsummary="yes" haltonfailure="no">
-            <classpath>
-                <path refid="test.compile.classpath" />
-                <path location="${test.dir}" />
-            	<path location="${src.db}" />
-            </classpath>
-            <formatter type="xml" />
-            <batchtest fork="yes" todir="${test.dir}/reports">
-                <fileset dir="${test.dir}">
-                    <include name="**/Test*" />
-                    <exclude name="**/TestRunner*" />
-                </fileset>
-            </batchtest>
-        </junit>
-        <junitreport todir="${test.dir}/reports">
-            <fileset dir="${test.dir}/reports">
-                <include name="TEST-*.xml" />
-            </fileset>
-            <report format="frames" todir="${test.dir}/reports/html" />
-        </junitreport>
-    </target>
-    
     <target name="test:runweb" depends="test:compile,j2ee:assert-run" description="run JUnit web testcases for SCEP">
         <delete dir="${test.dir}/web/reports" />
         <mkdir dir="${test.dir}/web/reports/html" />
