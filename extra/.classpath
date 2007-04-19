@@ -12,7 +12,6 @@
 	<classpathentry kind="lib" path="lib/log4j.jar"/>
 	<classpathentry kind="lib" path="lib/ext/servlet-2.3.jar"/>
 	<classpathentry kind="lib" path="lib/ext/hibernate3.jar"/>
-	<classpathentry kind="lib" path="lib/ext/httpunit.jar"/>
 	<classpathentry kind="lib" path="lib/ext/junit-3.8.1.jar"/>
 	<classpathentry kind="lib" path="lib/ext/dom4j-1.6.jar"/>
 	<classpathentry kind="lib" path="lib/ext/cglib-2.1.jar"/>
