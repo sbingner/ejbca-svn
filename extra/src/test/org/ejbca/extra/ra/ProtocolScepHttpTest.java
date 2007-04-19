@@ -67,14 +67,8 @@ import org.ejbca.core.protocol.ScepRequestMessage;
 import org.ejbca.util.CertTools;
 import org.ejbca.util.KeyTools;
 
-import com.meterware.httpunit.GetMethodWebRequest;
-import com.meterware.httpunit.HttpUnitOptions;
-import com.meterware.httpunit.WebConversation;
-import com.meterware.httpunit.WebRequest;
-import com.meterware.httpunit.WebResponse;
-
-/** Tests http pages of ocsp and scep
- * @version $Id: ProtocolScepHttpTest.java,v 1.7 2007-04-18 14:47:46 anatom Exp $
+/** Tests http pages of scep
+ * @version $Id: ProtocolScepHttpTest.java,v 1.8 2007-04-19 07:43:54 anatom Exp $
  **/
 public class ProtocolScepHttpTest extends TestCase {
     private static Logger log = Logger.getLogger(ProtocolScepHttpTest.class);
@@ -109,14 +103,9 @@ public class ProtocolScepHttpTest extends TestCase {
 
     protected void setUp() throws Exception {
         log.debug(">setUp()");
-
-        // We want to get error responses without exceptions
-        HttpUnitOptions.setExceptionsThrownOnErrorStatus(false);
-
 		if (keys == null) {
 			keys = KeyTools.genKeys("512", CATokenConstants.KEYALGORITHM_RSA);
 		}
-
         log.debug("<setUp()");
     }
 
@@ -124,14 +113,6 @@ public class ProtocolScepHttpTest extends TestCase {
     }
 
     
-    public void test01Access() throws Exception {
-        WebConversation wc = new WebConversation();
-        // Hit scep, gives a 400: Bad Request
-        WebRequest request = new GetMethodWebRequest(httpReqPath + '/' + resourceScep);
-        WebResponse response = wc.getResponse(request);
-        assertEquals("Response code", 400, response.getResponseCode());
-    }
-
     // GetCACert and GetCACertChain behaves the same if it is an RA that responde
     public void test02ScepGetCACert() throws Exception {
         log.debug(">test02ScepGetCACert()");
@@ -307,7 +288,7 @@ public class ProtocolScepHttpTest extends TestCase {
         return msgBytes;
     }
 
-    private byte[] genScepGetCertInitial(ScepRequestGenerator gen, String digestoid) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidAlgorithmParameterException, CertStoreException, IOException, CMSException, CertificateEncodingException, IllegalStateException {
+    private byte[] genScepGetCertInitial(ScepRequestGenerator gen, String digestoid) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, CertStoreException, IOException, CMSException, IllegalStateException {
         gen.setKeys(keys);
         gen.setDigestOid(digestoid);
         byte[] msgBytes = null;
