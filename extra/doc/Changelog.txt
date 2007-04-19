@@ -1,3 +1,7 @@
+3.4.2
+-----
+- ECA-464: Scep RA Server supporting the Scep polling RA mode
+
 3.4.0
 -----
 - Updated BC jars to 1.35 to match EJBCA 3.4
