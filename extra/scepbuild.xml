@@ -3,7 +3,7 @@
 
 	<property name="app.name" value="scepraserver" />
     <property name="app.name.cap" value="SCEPRAServer" />
-	<property name="app.version" value="${app.name.cap} 0.1 alpha" />
+	<property name="app.version" value="${app.name.cap} 3.4" />
 	
     <property environment="env" />
     <property name="ejbca.home" value="${env.EJBCA_HOME}" />
@@ -83,12 +83,8 @@
     <target name="help" >
         <echo>
 ---------- ${app.version} Help ----------
- scepraserver           : Builds scepraserver.war
- deployscepraserver     : Deploys the scep ra server to app server        	 
- deployscepracaservice  : Deploys the scep ra ca service to app server
-	
- sceprajbosshibernate   : Builds raserver hibernate configuration package
-        	
+ scepraserver           : Builds the scep ra server scepraserver.war
+ deployscepraserver     : Deploys the scep ra server to app server         	
       </echo>
     </target>
     <!-- =================================================================== -->
@@ -149,7 +145,7 @@
     <!-- =================================================================== -->
     <!-- Build SCEPRA Server part, this is the web RA on the external RA server -->
     <!-- =================================================================== -->
-    <target name="scepraserver" depends="compile, sceprajbosshibernate" description="build the war file">
+    <target name="scepraserver" depends="compile, sceprajbosshibernate" description="Builds the scep ra server scepraserver.war">
         <war destfile="${scepraserverwar}" webxml="${tmp}/web.xml">
             <fileset dir="${scepraserver.src}" excludes="WEB-INF/web.xml" />
             <classes dir="${build}">

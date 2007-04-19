@@ -3,7 +3,7 @@
 
 	<property name="app.name" value="extraserver" />
     <property name="app.name.cap" value="ExtRAServer" />
-	<property name="app.version" value="${app.name.cap} 0.1 " />
+	<property name="app.version" value="${app.name.cap} 3.4" />
 	
     <property environment="env" />
     <property name="ejbca.home" value="${env.EJBCA_HOME}" />
@@ -44,7 +44,10 @@
     <property name="extrajbosshibernite.build" value="${tmp}/${extrajbosshibernite.name}" />
     <property name="extrajbosshibernitehar" value="${dist.dir}/${extrajbosshibernite.name}" />		
 	
+	<!-- Import ant targets for the application server deployment -->
     <import file="jboss.xml" />
+	<!-- Import ant targets for the scep RA server -->
+    <import file="scepbuild.xml" />
 
     <property name="jar.extclasspath" value="lib/bcmail-jdk${java.ver}.jar lib/bcprov-jdk${java.ver}.jar lib/log4j.jar"/>
 
@@ -90,6 +93,8 @@
  ra-ca-jbossservice      : Builds racaservice.jar    
  deploy-keystore         : Copies the ra ca service keystore to EJBCA app server
  deploy-ra-caservice     : Deploys the ra ca service to EJBCA app server
+ deployscepraserver      : Deploys the scep ra server to app server         	
+ scepraserver            : Builds the scep ra server scepraserver.war
       </echo>
     </target>
     <!-- =================================================================== -->
