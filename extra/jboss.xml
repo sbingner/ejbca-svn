@@ -9,6 +9,7 @@
 	<property name="jboss.farm.dir" location="${jboss.server.home.dir}/${jboss.farm.name}"/>
 	<property name="jboss.deploy.dir" location="${jboss.server.home.dir}/deploy"/>
 	<property name="keystore.file" value="conf/keystore/extrakeystore.p12"/>
+	<property name="scepkeystore.file" value="conf/keystore/sceprakeystore.p12"/>
 
 	
 	<target name="j2ee:check">
@@ -45,7 +46,7 @@
 	<target name="j2ee:scepraconfigure" depends="j2ee:check">
         <available file="./keystore/sceprakeystore.p12" property="scepraserver.keystore.found"/>
         <fail message="The SCEP RA keystore could not be found in 'keystore/sceprakeystore.p12'" unless="scepraserver.keystore.found"/>
-		<copy file="keystore/sceprakeystore.p12" tofile="${jboss.server.home.dir}/${keystore.file}"/>
+		<copy file="keystore/sceprakeystore.p12" tofile="${jboss.server.home.dir}/${scepkeystore.file}"/>
 	</target>
 
 	<!-- Deploy the SCEP ra server war application -->

@@ -26,6 +26,11 @@
             dir="dist/client-jars">
         <include name="ext-raclient.jar" />
     </zipfileset>
+    <zipfileset id="commons.jar" 
+            prefix="WEB-INF/lib"
+            dir="lib">
+        <include name="commons-lang-2.0.jar" />
+    </zipfileset>
 
     <!-- =================================================================== -->
     <!-- Compile java sources                                                -->
@@ -58,6 +63,7 @@
             <zipfileset refid="bc.jar"/>
             <zipfileset refid="ejbca.jar"/>
             <zipfileset refid="extra.jar"/>
+            <zipfileset refid="commons.jar"/>
             <classes dir="${build}">
                 <exclude name="**/CVS/**" />
             	<include name="**/ra/*.class" />
