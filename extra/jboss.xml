@@ -52,7 +52,7 @@
 	<target name="j2ee:deployscepraserver" depends="j2ee:scepraconfigure">
     	<copy todir="${jboss.farm.dir}" file="${scepraserverwar}"/>  
 		
-		<copy todir="${jboss.farm.dir}" file="${sceprajbosshibernitehar}"/> 
+		<copy todir="${jboss.farm.dir}" file="${sceprajbosshibernatehar}"/> 
 		<copy todir="${jboss.farm.dir}">
           <fileset dir="src/appserver/jboss">
         	<include name="ramessage-ds.xml"/>
