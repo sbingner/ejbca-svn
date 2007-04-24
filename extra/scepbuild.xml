@@ -6,16 +6,31 @@
     <property name="scepraserver.build" value="${tmp}/${scepraserver.name}" />
     <property name="scepraserverwar" value="${dist.dir}/${scepraserver.name}" />
 	
-	<property name="sceprajbosshibernate.name" value="extrajbosshibernate.har" />
+	<property name="sceprajbosshibernate.name" value="sceprajbosshibernate.har" />
     <property name="sceprajbosshibernate.build" value="${tmp}/${sceprajbosshibernate.name}" />
     <property name="sceprajbosshibernatehar" value="${dist.dir}/${sceprajbosshibernate.name}" />		
 	
-
+    <zipfileset id="bc.jar" 
+            prefix="WEB-INF/lib"
+            dir="lib">
+        <include name="bcprov-jdk${java.ver}.jar" />
+        <include name="bcmail-jdk${java.ver}.jar" />
+    </zipfileset>
+    <zipfileset id="ejbca.jar" 
+            prefix="WEB-INF/lib"
+            dir="${ejbca.home}/dist/">
+        <include name="ejbca-util.jar" />
+    </zipfileset>
+    <zipfileset id="extra.jar" 
+            prefix="WEB-INF/lib"
+            dir="dist/client-jars">
+        <include name="ext-raclient.jar" />
+    </zipfileset>
 
     <!-- =================================================================== -->
     <!-- Compile java sources                                                -->
     <!-- =================================================================== -->
-    <target name="scepcompile" depends="init">
+    <target name="scepcompile" depends="compile">
         <javac destdir="${build}" debug="on" includeantruntime="no" encoding="iso8859-1">
             <classpath refid="compile.classpath" />
             <src path="${src.java}" />
@@ -40,7 +55,9 @@
     <!-- =================================================================== -->
     <target name="scepraserver" depends="scepcompile, sceprajbosshibernate" description="Builds the scep ra server scepraserver.war">
         <war destfile="${scepraserverwar}" webxml="${tmp}/web.xml">
-            <fileset dir="${scepraserver.src}" excludes="WEB-INF/web.xml" />
+            <zipfileset refid="bc.jar"/>
+            <zipfileset refid="ejbca.jar"/>
+            <zipfileset refid="extra.jar"/>
             <classes dir="${build}">
                 <exclude name="**/CVS/**" />
             	<include name="**/ra/*.class" />
