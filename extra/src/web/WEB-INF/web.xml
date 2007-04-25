@@ -14,7 +14,7 @@
         </init-param>
         <init-param>
             <param-name>keyStorePath</param-name>
-            <param-value>@jboss.conf.dir@/sceprakeystore.p12</param-value>
+            <param-value>@jboss.conf.dir@/keystore/sceprakeystore.p12</param-value>
         </init-param>
         <init-param>
             <param-name>keyStorePassword</param-name>
@@ -40,7 +40,7 @@
         </init-param>
         <init-param>
             <param-name>keyStorePath</param-name>
-            <param-value>@jboss.conf.dir@/sceprakeystore.p12</param-value>
+            <param-value>@jboss.conf.dir@/keystore/sceprakeystore.p12</param-value>
         </init-param>
         <init-param>
             <param-name>keyStorePassword</param-name>
