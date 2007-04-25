@@ -69,6 +69,7 @@ import org.ejbca.ui.web.RequestHelper;
 import org.ejbca.util.Base64;
 import org.ejbca.util.CertTools;
 import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 
 
 
@@ -81,7 +82,7 @@ import org.hibernate.SessionFactory;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.5 2007-03-29 15:13:10 anatom Exp $
+ * @version $Id: ScepRAServlet.java,v 1.6 2007-04-25 12:00:49 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
@@ -112,6 +113,8 @@ public class ScepRAServlet extends HttpServlet {
 
         try {
             // Install BouncyCastle provider
+            log.debug("Re-installing BC-provider");
+            CertTools.removeBCProvider();
             CertTools.installBCProvider();
             
             String keystorepath = getInitParameter("keyStorePath");
@@ -123,8 +126,8 @@ public class ScepRAServlet extends HttpServlet {
             String randomAlgorithm = "SHA1PRNG";
             randomSource = SecureRandom.getInstance(randomAlgorithm);
             
-            Context context = new InitialContext();
-            HibernateUtil.setSessionFactory(HibernateUtil.SESSIONFACTORY_RAMESSAGE, (SessionFactory) context.lookup(getInitParameter("sessionFactoryContext")),false);
+            SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+            HibernateUtil.setSessionFactory(HibernateUtil.SESSIONFACTORY_RAMESSAGE, sessionFactory,false);
 
             certificateProfile = ServiceLocator.getInstance().getString("java:comp/env/certificateProfile");            
             entityProfile = ServiceLocator.getInstance().getString("java:comp/env/entityProfile");            
