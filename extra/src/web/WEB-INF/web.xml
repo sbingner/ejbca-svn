@@ -24,10 +24,6 @@
             <param-name>cryptProvider</param-name>
             <param-value>BC</param-value>
         </init-param>
-        <init-param>
-            <param-name>sessionFactoryContext</param-name>
-            <param-value>java:/hibernate/RAMessageSessionFactory</param-value>
-        </init-param>
     </servlet>
     
     <servlet>
@@ -49,10 +45,6 @@
         <init-param>
             <param-name>cryptProvider</param-name>
             <param-value>BC</param-value>
-        </init-param>
-        <init-param>
-            <param-name>sessionFactoryContext</param-name>
-            <param-value>java:/hibernate/RAMessageSessionFactory</param-value>
         </init-param>
     </servlet>
 

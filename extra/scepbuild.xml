@@ -23,7 +23,7 @@
     </zipfileset>
     <zipfileset id="extra.jar" 
             prefix="WEB-INF/lib"
-            dir="dist/client-jars">
+            dir="${dist.dir}/client-jars">
         <include name="ext-raclient.jar" />
     </zipfileset>
     <zipfileset id="commons.jar" 
@@ -66,9 +66,12 @@
             <zipfileset refid="commons.jar"/>
             <classes dir="${build}">
                 <exclude name="**/CVS/**" />
-            	<include name="**/ra/*.class" />
+            	<include name="**/ra/ScepRAServer.class" />
             	<include name="**/util/*.class" />
          	</classes>
+        	<classes dir="${src}/db">
+        	    <include name="hibernate-cfg.xml"/>
+        	</classes>
         </war>
     </target>
     

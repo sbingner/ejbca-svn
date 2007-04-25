@@ -3,7 +3,7 @@
 		"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
 		"http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
-    <session-factory name="java:hibernate/SessionFactory">
+    <session-factory name="java:/RAMessageSessionFactory">
         <property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
         <!-- 
         org.postgresql.Driver
