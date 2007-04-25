@@ -101,7 +101,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.20 2007-04-18 14:47:46 anatom Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.21 2007-04-25 13:16:35 anatom Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -871,10 +871,11 @@ public class ExtRACAProcess extends RACAProcess {
 	}
 
 	private int getCAId(Admin admin, String cAName) throws EjbcaException, ClassCastException, CreateException, NamingException {
-		int retval = getCAAdminSession().getCAInfo(admin,cAName).getCAId();
-		if(retval == 0){
+		CAInfo info = getCAAdminSession().getCAInfo(admin,cAName);
+		if(info == null){
 			throw new EjbcaException("Error CA " + cAName + " doesn't exists.");
 		}
+		int retval = info.getCAId();
 		return retval;
 	}
 	
