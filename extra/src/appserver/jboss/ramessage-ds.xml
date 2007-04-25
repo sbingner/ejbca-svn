@@ -63,8 +63,9 @@ $Id $
       -->
 
       <!-- Whether to check all statements are closed when the connection is returned to the pool,
-           this is a debugging feature that should be turned off in production -->
+           this is a debugging feature that should be turned off in production 
       <track-statements/>
+      -->
 
    </local-tx-datasource>
 
