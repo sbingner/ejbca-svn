@@ -9,11 +9,11 @@
         org.postgresql.Driver
          -->
         <property name="hibernate.connection.password">foo123</property>
+        <property name="hibernate.connection.username">test</property>
         <property name="hibernate.connection.url">jdbc:mysql://localhost/messages</property>
         <!-- 
         jdbc:postgresql://127.0.0.1/messages
          -->
-        <property name="hibernate.connection.username">test</property>
         <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
         <!-- 
         org.hibernate.dialect.PostgreSQLDialect

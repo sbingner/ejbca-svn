@@ -58,7 +58,7 @@
     <!-- =================================================================== -->
     <!-- Build SCEPRA Server part, this is the web RA on the external RA server -->
     <!-- =================================================================== -->
-    <target name="scepraserver" depends="scepcompile, sceprajbosshibernate" description="Builds the scep ra server scepraserver.war">
+    <target name="scepraserver" depends="scepcompile" description="Builds the scep ra server scepraserver.war">
         <war destfile="${scepraserverwar}" webxml="${tmp}/web.xml">
             <zipfileset refid="bc.jar"/>
             <zipfileset refid="ejbca.jar"/>
@@ -70,55 +70,12 @@
             	<include name="**/util/*.class" />
          	</classes>
         	<classes dir="${src}/db">
-        	    <include name="hibernate-cfg.xml"/>
+        	    <include name="hibernate.cfg.xml"/>
         	</classes>
         </war>
     </target>
-    
-    <!-- =================================================================== -->
-    <!-- Build Javadoc part                                                  -->
-    <!-- =================================================================== -->
-    <target name="javadoc" depends="">
-        <mkdir dir="${apidoc}" />
-        <javadoc packagenames="org.ejbca.extra.*" maxmemory="256m" sourcepath="${src.java}" destdir="${apidoc}" extdirs="${lib}" author="true" version="true" use="true" windowtitle="EJBCA API" bottom="Copyright &#169; 2005 PrimeKey Solutions AB.">
-        </javadoc>
-    </target>
-	
-    <!-- =================================================================== -->
-    <!-- Build SCEPRA hibernate configuration package                       -->
-    <!-- =================================================================== -->
-    <target name="sceprajbosshibernate" depends="scepcompile">
-        <mkdir dir="${sceprajbosshibernate.build}" />
-    	<mkdir dir="${sceprajbosshibernate.build}/META-INF" />
-        <copy todir="${sceprajbosshibernate.build}/META-INF">
-            <fileset dir="${src}/appserver/jboss">
-                <include name="hibernate-service.xml" />
-            </fileset>
-        </copy>
-    	<mkdir dir="${sceprajbosshibernate.build}/org/ejbca/extra/db" />
-        <copy todir="${sceprajbosshibernate.build}/org/ejbca/extra/db">
-            <fileset dir="${src.db}">
-                <include name="Message.hbm.xml" />
-            </fileset>
-        </copy>
-        <copy todir="${sceprajbosshibernate.build}/org/ejbca/extra/db">
-            <fileset dir="${build}/org/ejbca/extra/db">
-                <include name="*.class" />
-            </fileset>
-        </copy>
-        <copy todir="${sceprajbosshibernate.build}">
-            <fileset dir="${lib}">
-               <include name="commons-collections-2.1.1.jar" />
-            </fileset>
-        </copy>    	
-        <jar basedir="${sceprajbosshibernate.build}" jarfile="${sceprajbosshibernatehar}">
-            <manifest>
-                <attribute name="Class-Path" value="" />
-            </manifest>
-        </jar>
-    </target>
-	
 
+	
     <!-- ======================================================================= -->
     <!-- Deploy SCEP RA Server war to JBoss                                               -->
     <!-- ======================================================================= -->

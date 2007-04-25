@@ -31,8 +31,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
@@ -82,7 +80,7 @@ import org.hibernate.cfg.Configuration;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.6 2007-04-25 12:00:49 anatom Exp $
+ * @version $Id: ScepRAServlet.java,v 1.7 2007-04-25 12:47:08 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
