@@ -368,7 +368,7 @@
 		<antcall target="clean" />
         <input message="Version tag for zipfile (ex 3_2_1):" addproperty="extra.zipversion" /> 
 		<zip destfile="../extra_${extra.zipversion}.zip">
-		    <zipfileset dir="." prefix="extra" filemode="600" dirmode="700"> 
+		    <zipfileset dir="." prefix="extra_${extra.zipversion}" filemode="600" dirmode="700"> 
 		    	<include name="**/**" />
 		    	<exclude name="**/CVS/**" />
 		    	<exclude name="dist/**" />
