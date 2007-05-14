@@ -18,7 +18,7 @@ $Id $
       <!-- Datasources are not available outside the virtual machine -->
       <jndi-name>RAMessageDS</jndi-name>
 
-      <connection-url>jdbc:mysql://127.0.0.1/messages?autoReconnect=true</connection-url>
+      <connection-url>jdbc:mysql://127.0.0.1/messages</connection-url>
       <!-- 
       <connection-url>jdbc:postgresql://127.0.0.1/extra</connection-url>
       -->
