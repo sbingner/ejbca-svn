@@ -29,6 +29,7 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 import javax.ejb.CreateException;
@@ -101,7 +102,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.21 2007-04-25 13:16:35 anatom Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.22 2007-05-15 08:37:37 anatom Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -160,9 +161,26 @@ public class ExtRACAProcess extends RACAProcess {
 		}				
 		
 		Message msg = null;
+		String lastMessageId = null;
 	   do{	
 	     msg = msgHome.getNextWaitingMessage();
-	     if(msg != null){
+	     // A small section that makes sure we don't loop too quickly over the same message, if we are leaving it in the queue
+	     // Check if we are trying to process the same messageId as the last time. If this is the case increase a counter that counts to 5 before
+	     // we try to process the message again, and sleep for 1 second
+	     // If it is not the same messageId, re-set counter to 0 and process the message immediately.
+	     if (msg != null) {
+		     String id = msg.getMessageid();
+		     if (StringUtils.equals(id, lastMessageId)) {
+		    	 log.debug("The same message was in the queue, putting back and exiting from the current loop");
+		    	 // Re-set status to waiting so we will process it the next time the service is run
+		    	 msg.setStatus(Message.STATUS_WAITING);
+		    	 msgHome.update(msg);							
+		    	 msg = null;
+		     }
+		     lastMessageId = id;	    	 
+	     }
+	     
+	     if (msg != null) {
 	    	  String errormessage = null;
 	    	  SubMessages submgs = null;
 	    	  try {
@@ -211,6 +229,8 @@ public class ExtRACAProcess extends RACAProcess {
 						} else {
 							log.info("Nothing processed for msg with messageId: "+msg.getMessageid()+", leaving it in the queue");
 							msg.setStatus(Message.STATUS_WAITING);
+							// Update create time, so that we will process the next message instead of this again the next round in the loop
+							msg.setCreatetime((new Date()).getTime());
 						}
 						msgHome.update(msg);							
 					} catch (Exception e) {
