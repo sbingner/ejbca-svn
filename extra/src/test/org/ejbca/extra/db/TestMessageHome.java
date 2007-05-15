@@ -27,7 +27,7 @@ import org.hibernate.cfg.Configuration;
 
 public class TestMessageHome extends TestCase {
 
-	public static MessageHome msghome = new MessageHome(MessageHome.MESSAGETYPE_EXTRA);
+	public static final MessageHome msghome = new MessageHome(MessageHome.MESSAGETYPE_EXTRA);
 
     static {
         Configuration dbconfig = new Configuration().

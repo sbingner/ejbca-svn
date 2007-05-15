@@ -30,7 +30,7 @@ import org.ejbca.util.KeyTools;
  * Class containing constans common for unit tests.
  * 
  * @author Philip Vendil
- * $Id: Constants.java,v 1.1 2006-07-31 13:13:09 herrvendil Exp $
+ * $Id: Constants.java,v 1.2 2007-05-15 12:59:28 anatom Exp $
  */
 public class Constants {
 	
@@ -107,7 +107,7 @@ public class Constants {
 			+"q6Y2mFTmc2afDFzxkHvHOoMf9tnj7KwjZEuqGckUCbKqvk1MX/9cB3KLo9t+wqCW"
 			+"jk+w4V4pCK643qQ=").getBytes());
 	
-	public static String pkcs10_1 = 
+	public static final String pkcs10_1 = 
 			 "MIIBkzCB/QIBADBUMQswCQYDVQQGEwJTRTETMBEGA1UECBMKU29tZS1TdGF0ZTEh"
 			+"MB8GA1UEChMYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMQ0wCwYDVQQDEwRUZXN0"
 			+"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDczgi13kcTGTMmOdMU/QzvH6JV"
@@ -118,7 +118,7 @@ public class Constants {
 			+"5HLSLB1a6KvktiVSKB0nmAmDU28xXLWWwkA7/68J6DvAipk00bHdxuEJ4+Mg8UJ0"
 			+"Mr+aXDlmZUfghzlB70dDUy/Np/YJVb8=";
 	
-	public static String pkcs10_2 = 
+	public static final String pkcs10_2 = 
 		"-----BEGIN CERTIFICATE REQUEST-----\n"
 		+"MIIBkzCB/QIBADBUMQswCQYDVQQGEwJzZTETMBEGA1UECBMKU29tZS1TdGF0ZTEh\n"
 		+"MB8GA1UEChMYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMQ0wCwYDVQQDEwRURVNU\n"
@@ -131,7 +131,7 @@ public class Constants {
 		+"PfoNI8s9NXa/fIfqp56llOPzDy3OcHc=\n"
 		+"-----END CERTIFICATE REQUEST-----";
 
-	public static X509Certificate getUserCert() throws CertificateException, NoSuchProviderException{
+	public static final X509Certificate getUserCert() throws CertificateException, NoSuchProviderException{
 		CertificateFactory cf = CertificateFactory.getInstance("X.509", "BC");
 		return (X509Certificate)cf.generateCertificate(new ByteArrayInputStream(certtestuser));
 	}

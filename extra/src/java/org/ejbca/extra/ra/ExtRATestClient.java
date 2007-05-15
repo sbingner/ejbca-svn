@@ -74,7 +74,7 @@ public class ExtRATestClient {
 	
 	protected Random random = new Random();		
 	
-    protected static String pkcs10_1 = 
+    protected static final String pkcs10_1 = 
 		 "MIIBkzCB/QIBADBUMQswCQYDVQQGEwJTRTETMBEGA1UECBMKU29tZS1TdGF0ZTEh"
 		+"MB8GA1UEChMYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMQ0wCwYDVQQDEwRUZXN0"
 		+"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDczgi13kcTGTMmOdMU/QzvH6JV"
