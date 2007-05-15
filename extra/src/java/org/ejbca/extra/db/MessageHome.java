@@ -29,11 +29,12 @@ import org.hibernate.criterion.Restrictions;
  * Home object for domain model class Message.
  * @see org.ejbca.extra.db.Message
  * @author Hibernate Tools
+ * @version $Id: MessageHome.java,v 1.2 2007-05-15 12:57:59 anatom Exp $
  */
 public class MessageHome {
 
-	public static Integer MESSAGETYPE_EXTRA = new Integer(1);
-	public static Integer MESSAGETYPE_SCEPRA = new Integer(2);
+	public static final Integer MESSAGETYPE_EXTRA = Integer.valueOf(1);
+	public static final Integer MESSAGETYPE_SCEPRA = Integer.valueOf(2);
 
 	
     private static final Log log = LogFactory.getLog(MessageHome.class);

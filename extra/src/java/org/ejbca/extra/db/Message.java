@@ -27,9 +27,9 @@ public class Message  implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;
 	// Constants
-	public static final Integer STATUS_WAITING   = new Integer(1);
-	public static final Integer STATUS_INPROCESS = new Integer(2);
-	public static final Integer STATUS_PROCESSED = new Integer(3);
+	public static final Integer STATUS_WAITING   = Integer.valueOf(1);
+	public static final Integer STATUS_INPROCESS = Integer.valueOf(2);
+	public static final Integer STATUS_PROCESSED = Integer.valueOf(3);
 
     // Fields    
 
@@ -130,7 +130,9 @@ public class Message  implements java.io.Serializable {
         if (this == other) return true;
         if ( !(other instanceof Message) ) return false;
 
-        if(((Message) other).getUniqueId() == this.uniqueId ) return true;
+        String id = ((Message)other).getUniqueId();
+        if ( (id != null) && (this.uniqueId != null) && id.equals(this.uniqueId) ) return true;
+        if ( (id == null) && (this.uniqueId == null) ) return true;
         return false;
     }
 

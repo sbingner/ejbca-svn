@@ -30,7 +30,7 @@ import org.bouncycastle.util.encoders.Base64;
 /**
  * Class used 
  * 
- * $Id: SubMessages.java,v 1.1 2006-07-31 13:13:06 herrvendil Exp $
+ * $Id: SubMessages.java,v 1.2 2007-05-15 12:57:58 anatom Exp $
  * @author Philip Vendil
  */
 public class SubMessages {
@@ -155,8 +155,8 @@ public class SubMessages {
 			java.io.ByteArrayOutputStream baos2 = new java.io.ByteArrayOutputStream();
 			
 			java.beans.XMLEncoder encoder = new java.beans.XMLEncoder(baos2);
-			encoder.writeObject(new Boolean(isSigned));
-			encoder.writeObject(new Boolean(isEncrypted));
+			encoder.writeObject(Boolean.valueOf(isSigned));
+			encoder.writeObject(Boolean.valueOf(isEncrypted));
 			encoder.writeObject(new String(Base64.encode(messagedata)));
 			encoder.close();
 			retval =baos2.toString("UTF8");	

@@ -17,7 +17,7 @@ import org.ejbca.core.model.UpgradeableDataHashMap;
 /**
  * Abstact base class of the ExtRA Sub Message response. all Ext RA responses should inherit this class.
  * @author philip
- * $Id: ExtRAResponse.java,v 1.2 2006-08-08 17:04:41 anatom Exp $
+ * $Id: ExtRAResponse.java,v 1.3 2007-05-15 12:57:59 anatom Exp $
  */
 
 public class ExtRAResponse extends UpgradeableDataHashMap implements ISubMessage {
@@ -43,10 +43,10 @@ public class ExtRAResponse extends UpgradeableDataHashMap implements ISubMessage
 	 * @param failinfo the failure information or null, if it was a success
 	 */
 	public ExtRAResponse(long requestId, boolean success, String failinfo){
-		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
-		data.put(VERSION, new Float(LATEST_VERSION));
-        data.put(REQUESTID, new Long(requestId));
-        data.put(SUCCESS, new Boolean(success));
+		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
+		data.put(VERSION, Float.valueOf(LATEST_VERSION));
+        data.put(REQUESTID, Long.valueOf(requestId));
+        data.put(SUCCESS, Boolean.valueOf(success));
         data.put(FAILINFO, failinfo);        
 	}
 

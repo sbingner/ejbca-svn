@@ -18,7 +18,7 @@ import org.apache.commons.lang.BooleanUtils;
 /**
  * Ext RA Requset SubMessage when requesting using a PKCS10 and expecting a PKCS10 Response containing a certifcate. 
  * @author philip
- * $Id: ExtRAPKCS10Request.java,v 1.2 2007-03-29 15:13:10 anatom Exp $
+ * $Id: ExtRAPKCS10Request.java,v 1.3 2007-05-15 12:57:59 anatom Exp $
  */
 
 public class ExtRAPKCS10Request extends ExtRARequest {
@@ -44,8 +44,8 @@ public class ExtRAPKCS10Request extends ExtRARequest {
             String endEntityProfileName, String certificateProfileName,
             String cAName, String pkcs10){
         super(requestId, username, subjectDN, subjectAltName, email, subjectDirectoryAttributes, endEntityProfileName, certificateProfileName,cAName);
-		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
-		data.put(VERSION, new Float(LATEST_VERSION));
+		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
+		data.put(VERSION, Float.valueOf(LATEST_VERSION));
 		data.put(PKCS10, pkcs10);
 		data.put(CREATEOREDITEUSER, "true");
 	}

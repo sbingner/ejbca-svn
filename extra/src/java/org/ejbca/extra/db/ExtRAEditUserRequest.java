@@ -17,7 +17,7 @@ package org.ejbca.extra.db;
  * Ext RA PKCS12 Reguest sub message used when the CA should generate a keystore.
  * 
  * @author philip
- * $Id: ExtRAEditUserRequest.java,v 1.1 2006-07-31 13:13:07 herrvendil Exp $
+ * $Id: ExtRAEditUserRequest.java,v 1.2 2007-05-15 12:58:00 anatom Exp $
  */
 public class ExtRAEditUserRequest extends ExtRARequest {
 
@@ -53,11 +53,11 @@ public class ExtRAEditUserRequest extends ExtRARequest {
             String email, String subjectDirectoryAttributes, String endEntityProfileName, String certificateProfileName,
             String cAName, String password, int status, int type, String tokenname, String hardtokenissuername){
         super(requestId, username, subjectDN, subjectAltName, email, subjectDirectoryAttributes, endEntityProfileName, certificateProfileName,cAName);
-		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
-		data.put(VERSION, new Float(LATEST_VERSION));
+		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
+		data.put(VERSION, Float.valueOf(LATEST_VERSION));
 		data.put(PASSWORD, password);
-		data.put(STATUS, new Integer(status));
-		data.put(TYPE, new Integer(type));
+		data.put(STATUS, Integer.valueOf(status));
+		data.put(TYPE, Integer.valueOf(type));
 		data.put(TOKENNAME, tokenname);
 		data.put(ISSUERNAME, hardtokenissuername);		
 	}

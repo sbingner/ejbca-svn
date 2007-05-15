@@ -29,7 +29,7 @@ import org.ejbca.util.CertTools;
  * contain the generated certificate.
  * 
  * @author philip
- * $Id: ExtRAPKCS10Response.java,v 1.3 2007-03-29 15:13:10 anatom Exp $
+ * $Id: ExtRAPKCS10Response.java,v 1.4 2007-05-15 12:58:00 anatom Exp $
  */
 
 public class ExtRAPKCS10Response extends ExtRAResponse {
@@ -59,8 +59,8 @@ public class ExtRAPKCS10Response extends ExtRAResponse {
 	public ExtRAPKCS10Response(long requestId, boolean success, String failinfo, X509Certificate certificate, byte[] pkcs7) {
         super(requestId, success, failinfo);
         try {
-    		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
-    		data.put(VERSION, new Float(LATEST_VERSION));
+    		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
+    		data.put(VERSION, Float.valueOf(LATEST_VERSION));
     		if(certificate != null) {
 			  String certstring = new String(Base64.encode(certificate.getEncoded()));
 			  data.put(CERTIFICATE, certstring);

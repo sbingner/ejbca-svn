@@ -28,7 +28,7 @@ import org.ejbca.util.CertTools;
  * Class used as response to a ExtRA Card renewal Message response. If request was succesful then will the response
  * contain the generated certificates.
  * @author tomas
- * @version $Id: ExtRACardRenewalResponse.java,v 1.2 2006-08-15 17:49:25 anatom Exp $
+ * @version $Id: ExtRACardRenewalResponse.java,v 1.3 2007-05-15 12:57:58 anatom Exp $
  */
 
 public class ExtRACardRenewalResponse extends ExtRAResponse {
@@ -52,8 +52,8 @@ public class ExtRACardRenewalResponse extends ExtRAResponse {
 	public ExtRACardRenewalResponse(long requestId, boolean success, String failinfo, X509Certificate authcert, X509Certificate signcert){
         super(requestId, success, failinfo);
         try {
-    		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
-    		data.put(VERSION, new Float(LATEST_VERSION));
+    		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
+    		data.put(VERSION, Float.valueOf(LATEST_VERSION));
     		if(authcert != null){
 			  String certstring = new String(Base64.encode(authcert.getEncoded()));
 			  data.put(AUTHCERT, certstring);

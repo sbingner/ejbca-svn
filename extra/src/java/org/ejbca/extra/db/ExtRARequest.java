@@ -17,7 +17,7 @@ import org.ejbca.core.model.UpgradeableDataHashMap;
 /**
  * Abstact base class of the ExtRA Sub Message requsest. all ExtRA request should inherit this class.
  * @author philip
- * $Id: ExtRARequest.java,v 1.1 2006-07-31 13:13:06 herrvendil Exp $
+ * $Id: ExtRARequest.java,v 1.2 2007-05-15 12:57:59 anatom Exp $
  */
 
 public abstract class ExtRARequest extends UpgradeableDataHashMap implements ISubMessage {
@@ -46,7 +46,7 @@ public abstract class ExtRARequest extends UpgradeableDataHashMap implements ISu
 			            String email, String subjectDirectoryAttributes, 
                         String endEntityProfileName, String certificateProfileName,
 			            String cAName){
-        data.put(REQUESTID, new Long(requestId));
+        data.put(REQUESTID, Long.valueOf(requestId));
         data.put(USERNAME, username);
         data.put(SUBJECTDN, subjectDN);
         data.put(SUBJECTALTNAME, subjectAltName);

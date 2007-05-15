@@ -21,7 +21,7 @@ import java.math.BigInteger;
  * Parameters inhereited from the base class ExtRARequset is ignored.
  * 
  * @author philip
- * $Id: ExtRAKeyRecoveryRequest.java,v 1.1 2006-07-31 13:13:07 herrvendil Exp $
+ * $Id: ExtRAKeyRecoveryRequest.java,v 1.2 2007-05-15 12:57:59 anatom Exp $
  */
 public class ExtRAKeyRecoveryRequest extends ExtRARequest {
 
@@ -48,12 +48,12 @@ public class ExtRAKeyRecoveryRequest extends ExtRARequest {
 	 * Constructor that should be used when the original certificate should be returned in keystore
 	 */
 	public ExtRAKeyRecoveryRequest(long requestId, String username,  String password,  String issuerdn, BigInteger certificatesn){    
-		data.put(REQUESTID, new Long(requestId));
-		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
-		data.put(VERSION, new Float(LATEST_VERSION));
+		data.put(REQUESTID, Long.valueOf(requestId));
+		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
+		data.put(VERSION, Float.valueOf(LATEST_VERSION));
 		data.put(USERNAME, username);
 		data.put(PASSWORD, password);
-		data.put(REUSECERTIFICATE, new Boolean(true));
+		data.put(REUSECERTIFICATE, Boolean.valueOf(true));
 		data.put(ISSUERDN, issuerdn);
 		data.put(CERTIFICATESN, certificatesn);
 	}
@@ -65,10 +65,10 @@ public class ExtRAKeyRecoveryRequest extends ExtRARequest {
             String email, String subjectDirectoryAttributes, String endEntityProfileName, String certificateProfileName,
             String cAName, String password, String issuerdn, BigInteger certificatesn){
         super(requestId, username, subjectDN, subjectAltName, email, subjectDirectoryAttributes, endEntityProfileName, certificateProfileName,cAName);
-		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
-		data.put(VERSION, new Float(LATEST_VERSION));
+		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
+		data.put(VERSION, Float.valueOf(LATEST_VERSION));
 		data.put(PASSWORD, password);
-		data.put(REUSECERTIFICATE, new Boolean(false));
+		data.put(REUSECERTIFICATE, Boolean.valueOf(false));
 		data.put(ISSUERDN, issuerdn);
 		data.put(CERTIFICATESN, certificatesn);
 	}

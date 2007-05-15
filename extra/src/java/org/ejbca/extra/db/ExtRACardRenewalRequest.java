@@ -27,7 +27,7 @@ import org.ejbca.util.CertTools;
  * Parameters inherited from the base class ExtRARequset is ignored.
  * 
  * @author tomas
- * @version $Id: ExtRACardRenewalRequest.java,v 1.3 2006-08-16 10:24:19 anatom Exp $
+ * @version $Id: ExtRACardRenewalRequest.java,v 1.4 2007-05-15 12:57:58 anatom Exp $
  */
 public class ExtRACardRenewalRequest extends ExtRARequest {
 	private static final Log log = LogFactory.getLog(ExtRACardRenewalRequest.class);
@@ -56,9 +56,9 @@ public class ExtRACardRenewalRequest extends ExtRARequest {
 	 * Constructor revoking a specific certificate.
 	 */
 	public ExtRACardRenewalRequest(long requestId, String authcert, String signcert, String authreq, String signreq){    
-		data.put(REQUESTID, new Long(requestId));
-		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
-		data.put(VERSION, new Float(LATEST_VERSION));
+		data.put(REQUESTID, Long.valueOf(requestId));
+		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
+		data.put(VERSION, Float.valueOf(LATEST_VERSION));
         
 		data.put(AUTHCERT, authcert);
 		data.put(SIGNCERT, signcert);
@@ -74,9 +74,9 @@ public class ExtRACardRenewalRequest extends ExtRARequest {
 	 * Constructor revoking a specific certificate.
 	 */
 	public ExtRACardRenewalRequest(long requestId, String authcert, String signcert, String authreq, String signreq, int authProfile, int signProfile, int authCA, int signCA){    
-		data.put(REQUESTID, new Long(requestId));
-		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
-		data.put(VERSION, new Float(LATEST_VERSION));
+		data.put(REQUESTID, Long.valueOf(requestId));
+		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
+		data.put(VERSION, Float.valueOf(LATEST_VERSION));
         
 		data.put(AUTHCERT, authcert);
 		data.put(SIGNCERT, signcert);

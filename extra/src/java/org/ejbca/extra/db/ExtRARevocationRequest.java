@@ -20,7 +20,7 @@ import java.math.BigInteger;
  * Parameters inhereited from the base class ExtRARequset is ignored.
  * 
  * @author philip
- * $Id: ExtRARevocationRequest.java,v 1.2 2006-08-08 08:56:44 anatom Exp $
+ * $Id: ExtRARevocationRequest.java,v 1.3 2007-05-15 12:57:58 anatom Exp $
  */
 public class ExtRARevocationRequest extends ExtRARequest {
 
@@ -61,43 +61,43 @@ public class ExtRARevocationRequest extends ExtRARequest {
 	 * Constructor revoking a specific certificate.
 	 */
 	public ExtRARevocationRequest(long requestId, String issuerdn, BigInteger certificatesn, int revocationReason){    
-		data.put(REQUESTID, new Long(requestId));
-		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
-		data.put(VERSION, new Float(LATEST_VERSION));
+		data.put(REQUESTID, Long.valueOf(requestId));
+		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
+		data.put(VERSION, Float.valueOf(LATEST_VERSION));
 		data.put(ISSUERDN, issuerdn);
 		data.put(CERTIFICATESN, certificatesn);
         data.put(USERNAME, "");
-		data.put(REVOKATIONREASON, new Integer(revocationReason));
-		data.put(REVOKEALL, new Boolean(false));
-		data.put(REVOKEUSER, new Boolean(false));
+		data.put(REVOKATIONREASON, Integer.valueOf(revocationReason));
+		data.put(REVOKEALL, Boolean.valueOf(false));
+		data.put(REVOKEUSER, Boolean.valueOf(false));
 	}
 	/**
      * Constructor revoking a specific certificate, or optionally all certificates of the user owning this certificate, and optionally the user as well
 	 */
 	public ExtRARevocationRequest(long requestId, String issuerdn, BigInteger certificatesn, int revocationReason, boolean revokeuser, boolean revokeall){    
-		data.put(REQUESTID, new Long(requestId));
-		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
-		data.put(VERSION, new Float(LATEST_VERSION));
+		data.put(REQUESTID, Long.valueOf(requestId));
+		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
+		data.put(VERSION, Float.valueOf(LATEST_VERSION));
 		data.put(ISSUERDN, issuerdn);
 		data.put(CERTIFICATESN, certificatesn);
         data.put(USERNAME, "");
-		data.put(REVOKATIONREASON, new Integer(revocationReason));
-		data.put(REVOKEALL, new Boolean(revokeall));
-		data.put(REVOKEUSER, new Boolean(revokeuser));
+		data.put(REVOKATIONREASON, Integer.valueOf(revocationReason));
+		data.put(REVOKEALL, Boolean.valueOf(revokeall));
+		data.put(REVOKEUSER, Boolean.valueOf(revokeuser));
 	}
     /**
      * Constructor revoking all of a users certificates, and optionally the user as well
      */
     public ExtRARevocationRequest(long requestId, String username, int revocationReason, boolean revokeuser){    
-        data.put(REQUESTID, new Long(requestId));
-        data.put(CLASSTYPE, new Integer(CLASS_TYPE));
-        data.put(VERSION, new Float(LATEST_VERSION));
+        data.put(REQUESTID, Long.valueOf(requestId));
+        data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
+        data.put(VERSION, Float.valueOf(LATEST_VERSION));
         data.put(ISSUERDN, "");
         data.put(CERTIFICATESN, new BigInteger("-1"));
         data.put(USERNAME, username);
-        data.put(REVOKATIONREASON, new Integer(revocationReason));
-        data.put(REVOKEALL, new Boolean(true));
-        data.put(REVOKEUSER, new Boolean(revokeuser));
+        data.put(REVOKATIONREASON, Integer.valueOf(revocationReason));
+        data.put(REVOKEALL, Boolean.valueOf(true));
+        data.put(REVOKEUSER, Boolean.valueOf(revokeuser));
     }
 	
 
@@ -152,12 +152,12 @@ public class ExtRARevocationRequest extends ExtRARequest {
         if(Float.compare(LATEST_VERSION, getVersion()) != 0) {
             
             if(data.get(REVOKEALL) == null)
-                data.put(REVOKEALL, new Boolean(false));
+                data.put(REVOKEALL, Boolean.valueOf(false));
             if(data.get(REVOKEUSER) == null)
-                data.put(REVOKEUSER, new Boolean(false));
+                data.put(REVOKEUSER, Boolean.valueOf(false));
             if(data.get(USERNAME) == null)
                 data.put(USERNAME, "");
-			data.put(VERSION, new Float(LATEST_VERSION));
+			data.put(VERSION, Float.valueOf(LATEST_VERSION));
 		}
 		
 	}

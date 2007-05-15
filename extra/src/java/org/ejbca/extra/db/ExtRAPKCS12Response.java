@@ -25,7 +25,7 @@ import org.bouncycastle.util.encoders.Base64;
  * Class used as response to a ExtRA PKCS 12 or Key Recovery Sub Message response. If request was succesful then will the resposne
  * contain the generated keystore.
  * @author philip
- * $Id: ExtRAPKCS12Response.java,v 1.1 2006-07-31 13:13:06 herrvendil Exp $
+ * $Id: ExtRAPKCS12Response.java,v 1.2 2007-05-15 12:57:59 anatom Exp $
  */
 
 public class ExtRAPKCS12Response extends ExtRAResponse {
@@ -48,8 +48,8 @@ public class ExtRAPKCS12Response extends ExtRAResponse {
 	public ExtRAPKCS12Response(long requestId, boolean success, String failinfo, KeyStore pkcs12, String password){
         super(requestId, success, failinfo);
         try {
-    		data.put(CLASSTYPE, new Integer(CLASS_TYPE));
-    		data.put(VERSION, new Float(LATEST_VERSION));
+    		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
+    		data.put(VERSION, Float.valueOf(LATEST_VERSION));
     		if(pkcs12 != null){
         	  ByteArrayOutputStream baos = new ByteArrayOutputStream();
         	  pkcs12.store(baos, password.toCharArray());        
