@@ -135,7 +135,7 @@ public class ExtRATestClient {
 			   !securitylevel.equalsIgnoreCase(SECURITY_SIGNED) &&
 			   !securitylevel.equalsIgnoreCase(SECURITY_ENCRYPTED) &&
 			   !securitylevel.equalsIgnoreCase(SECURITY_SIGNEDENCRYPTED)){
-				throw new Exception("Invalid SecurityLevel.");
+				throw new Exception("Invalid SecurityLevel: "+securitylevel);
 			}
 			if(securitylevel.equalsIgnoreCase(SECURITY_SIGNED) || securitylevel.equalsIgnoreCase(SECURITY_SIGNEDENCRYPTED)){
 			  RAKeyStore rakeystore = new RAKeyStore(args[ARG_KEYSTOREPATH], args[ARG_PASSWORD]);			 

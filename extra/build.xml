@@ -175,7 +175,7 @@
 
         <jar basedir="${ext-raclient.build}" jarfile="${ext-raclientjar}">
             <manifest>
-                <attribute name="Class-Path" value="
+                <attribute name="Class-Path" value="jboss-j2ee.jar
                 	bcmail-jdk${java.ver}.jar bcprov-jdk${java.ver}.jar log4j.jar                                                	
                 	asm-attrs.jar dom4j-1.6.jar asm.jar 
                 	mysql-connector-java-3.1.12-bin.jar 
@@ -209,6 +209,11 @@
         <copy todir="${client-jars.dir}">
             <fileset dir="${ejbca.home}/dist/">
             	<include name="ejbca-util.jar" />            	
+            </fileset>
+        </copy>
+        <copy todir="${client-jars.dir}">
+            <fileset dir="${jboss.home}/client/">
+        	    <include name="jboss-j2ee.jar" />            	
             </fileset>
         </copy>
     </target>
