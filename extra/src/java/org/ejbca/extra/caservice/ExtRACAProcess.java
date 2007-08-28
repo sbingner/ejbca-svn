@@ -102,7 +102,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.22 2007-05-15 08:37:37 anatom Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.23 2007-08-28 12:01:15 anatom Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -140,6 +140,7 @@ public class ExtRACAProcess extends RACAProcess {
 		
 		try {
 			usekeyrecovery  = getRAAdminSession().loadGlobalConfiguration(internalUser).getEnableKeyRecovery();
+			log.debug("Key recovery enabled: "+ usekeyrecovery);
 		}  catch (Exception e) {
 			log.error("Error instansiating Session Beans: ",e);
 			throw new ConfigurationException("Error instansiating Session Beans: ",e);
