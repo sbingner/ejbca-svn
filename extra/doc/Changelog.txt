@@ -1,3 +1,9 @@
+3.5.0
+-----
+- ECA-494: Better default datasource for ScepRAServer in External RA
+- ECA-495: ScepRAServer in External RA will process the same message until it is approved
+- ECA-525: ExtRATestClient not working according to doc
+
 3.4.2
 -----
 - ECA-464: Scep RA Server supporting the Scep polling RA mode
