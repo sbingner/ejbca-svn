@@ -80,7 +80,7 @@ import org.hibernate.cfg.Configuration;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.8 2007-10-03 11:26:00 anatom Exp $
+ * @version $Id: ScepRAServlet.java,v 1.9 2007-10-03 13:50:57 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
@@ -218,6 +218,14 @@ public class ScepRAServlet extends HttpServlet {
             String alias = scepraks.getAlias();
         	log.debug("SCEP RA Keystore alias : " + alias);
             KeyStore raks = scepraks.getKeyStore();
+            Certificate[] chain = raks.getCertificateChain(alias);
+            X509Certificate cacert = null;
+            if (chain.length > 1) {
+            	// This should absolutely be more than one!
+                cacert = (X509Certificate)chain[1];            	
+            } else {
+            	log.error("Certificate chain in RA keystore is only 1 certificate long! This is en error, because there should also be CA certificates.");
+            }
             X509Certificate racert = (X509Certificate) raks.getCertificate(alias);
             PrivateKey rapriv = (PrivateKey) raks.getKey(alias, keystorepwd.toCharArray());
 
@@ -245,6 +253,7 @@ public class ScepRAServlet extends HttpServlet {
                 			ExtRAPKCS10Response resp = (ExtRAPKCS10Response) iter.next();
                 			// create proper ScepResponseMessage
                 			IResponseMessage ret = reqmsg.createResponseMessage(org.ejbca.core.protocol.ScepResponseMessage.class, reqmsg, racert, rapriv, rapriv, cryptProvider);
+                			ret.setCACert(cacert);
             				X509Certificate respCert = resp.getCertificate();
                 			if ( resp.isSuccessful() && (respCert != null) ) {
                 				ret.setCertificate(respCert);                					
@@ -319,7 +328,6 @@ public class ScepRAServlet extends HttpServlet {
                 // For example: "Content-Type:application/x-x509-ca-cert\n\n"<BER-encoded X509>
             	// IF we are not an RA, which in case we should return the same thing as GetCACertChain
                 log.info("Got SCEP cert request for CA '" + message + "'");
-                Certificate[] chain = raks.getCertificateChain(alias);
                 if (chain != null) {
                 	if (chain.length > 1) {
                 		// We are an RA, so return the same as GetCACertChain

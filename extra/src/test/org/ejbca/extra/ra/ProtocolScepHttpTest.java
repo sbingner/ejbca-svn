@@ -68,7 +68,7 @@ import org.ejbca.util.CertTools;
 import org.ejbca.util.KeyTools;
 
 /** Tests http pages of scep
- * @version $Id: ProtocolScepHttpTest.java,v 1.8 2007-04-19 07:43:54 anatom Exp $
+ * @version $Id: ProtocolScepHttpTest.java,v 1.9 2007-10-03 13:50:57 anatom Exp $
  **/
 public class ProtocolScepHttpTest extends TestCase {
     private static Logger log = Logger.getLogger(ProtocolScepHttpTest.class);
@@ -76,8 +76,11 @@ public class ProtocolScepHttpTest extends TestCase {
     private static final String httpReqPath = "http://127.0.0.1:8080";
     private static final String resourceScep = "/scepraserver/scep/pkiclient.exe";
     private static final String resourceScepNoCA = "/scepraserver/scep/noca/pkiclient.exe";
+    private static final String radn = "CN=Scep RA,O=Tomas Foo,C=SE";
+    private static final String cadn = "CN=Scep_test,O=Tomas Foo,C=SE";
+    private static final String rootcadn = "CN=Root_soft,O=Tomas Foo,C=SE";
 
-
+    private static X509Certificate rootcacert = null;
     private static X509Certificate cacert = null;
     private static X509Certificate racert = null;
     private static KeyPair keys = null;
@@ -155,14 +158,19 @@ public class ProtocolScepHttpTest extends TestCase {
         assertTrue(col.size() == 0);
         CertStore certstore = s.getCertificatesAndCRLs("Collection","BC");
         Collection certs = certstore.getCertificates(null);
-        assertEquals(certs.size(), 2);	                	
+        // Length two if the Scep RA server is signed directly by a Root CA
+        // Length three if the Scep RA server is signed by a CA which is signed by a Root CA
+        assertEquals(certs.size(), 3);	                	
         Iterator it = certs.iterator();
-        cacert = (X509Certificate)it.next();
-        System.out.println("Got cert with DN: "+ cacert.getSubjectDN().getName());
-        assertEquals("CN=ScepTest", cacert.getSubjectDN().getName());
         racert = (X509Certificate)it.next();
-        System.out.println("Got cert with DN: "+ racert.getSubjectDN().getName());
-        assertEquals("CN=scepraserver,O=PrimeKey,C=SE", racert.getSubjectDN().getName());
+        cacert = (X509Certificate)it.next();
+        rootcacert = (X509Certificate)it.next();
+        System.out.println("Got CA cert with DN: "+ cacert.getSubjectDN().getName());
+        assertEquals(cadn, cacert.getSubjectDN().getName());
+        System.out.println("Got Root CA cert with DN: "+ rootcacert.getSubjectDN().getName());
+        assertEquals(rootcadn, rootcacert.getSubjectDN().getName());
+        System.out.println("Got RA cert with DN: "+ racert.getSubjectDN().getName());
+        assertEquals(radn, racert.getSubjectDN().getName());
     }
     
     public void test04ScepGetCACaps() throws Exception {
@@ -205,7 +213,7 @@ public class ProtocolScepHttpTest extends TestCase {
         // Send message with GET
         byte[] retMsg = sendScep(false, msgBytes, false);
         assertNotNull(retMsg);
-        checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=scepraserver", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, false, ResponseStatus.PENDING);
+        checkScepResponse(retMsg, senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, false, ResponseStatus.PENDING);
         // Send GetCertInitial and wait for a certificate response, you will probably get PENDING reply several times
         int keeprunning = 0;
         boolean processed = false;
@@ -218,10 +226,10 @@ public class ProtocolScepHttpTest extends TestCase {
             assertNotNull(retMsg);
             if (isScepResponseMessageOfType(retMsg, ResponseStatus.PENDING)) {
             	System.out.println("Received a PENDING message");
-                checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=scepraserver", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, false, ResponseStatus.PENDING);            	
+                checkScepResponse(retMsg, senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, false, ResponseStatus.PENDING);            	
             } else {            	
             	System.out.println("Received a SUCCESS message");
-                checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=scepraserver", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, false, ResponseStatus.SUCCESS);
+                checkScepResponse(retMsg, senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, false, ResponseStatus.SUCCESS);
                 processed = true;
             }
             keeprunning++;
@@ -243,7 +251,7 @@ public class ProtocolScepHttpTest extends TestCase {
         // Send message with POST
         byte[] retMsg = sendScep(true, msgBytes, true);
         assertNotNull(retMsg);
-        checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=scepraserver", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, true, ResponseStatus.PENDING);
+        checkScepResponse(retMsg, senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, true, ResponseStatus.PENDING);
         // Send GetCertInitial and wait for a certificate response, you will probably get PENDING reply several times
         int keeprunning = 0;
         boolean processed = false;
@@ -254,9 +262,9 @@ public class ProtocolScepHttpTest extends TestCase {
             retMsg = sendScep(true, msgBytes, true);
             assertNotNull(retMsg);
             if (isScepResponseMessageOfType(retMsg, ResponseStatus.PENDING)) {
-                checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=scepraserver", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, true, ResponseStatus.PENDING);            	
+                checkScepResponse(retMsg, senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, true, ResponseStatus.PENDING);            	
             } else {            	
-                checkScepResponse(retMsg, "C=SE,O=PrimeKey,CN=scepraserver", senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, true, ResponseStatus.SUCCESS);
+                checkScepResponse(retMsg, senderNonce, transId, false, CMSSignedGenerator.DIGEST_SHA1, true, ResponseStatus.SUCCESS);
                 processed = true;
             }
             keeprunning++;
@@ -347,7 +355,7 @@ public class ProtocolScepHttpTest extends TestCase {
         return false;
     }
 
-    private void checkScepResponse(byte[] retMsg, String userDN, String senderNonce, String transId, boolean crlRep, String digestOid, boolean noca, ResponseStatus extectedResponseStatus) throws CMSException, NoSuchProviderException, NoSuchAlgorithmException, CertStoreException, InvalidKeyException, CertificateException, SignatureException, CRLException {
+    private void checkScepResponse(byte[] retMsg, String senderNonce, String transId, boolean crlRep, String digestOid, boolean noca, ResponseStatus extectedResponseStatus) throws CMSException, NoSuchProviderException, NoSuchAlgorithmException, CertStoreException, InvalidKeyException, CertificateException, SignatureException, CRLException {
         //
         // Parse response message
         //
@@ -456,6 +464,7 @@ public class ProtocolScepHttpTest extends TestCase {
             } else {
                 // We got a reply with a requested certificate 
                 Collection certs = certstore.getCertificates(null);
+                System.out.println("Got certificate reply with certchain of length: "+certs.size());
                 // EJBCA returns the issued cert and the CA cert (cisco vpn client requires that the ca cert is included)
                 if (noca) {
                     assertEquals(certs.size(), 1);	                	
@@ -467,9 +476,9 @@ public class ProtocolScepHttpTest extends TestCase {
                 boolean verified = false;
                 boolean gotcacert = false;
                 String mysubjectdn = CertTools.stringToBCDNString("C=SE,O=PrimeKey,CN=sceptest");
+                X509Certificate usercert = null;
                 while (it.hasNext()) {
                     X509Certificate retcert = (X509Certificate)it.next();
-                    System.out.println("Got cert with DN: "+ retcert.getSubjectDN().getName());
 //                    try {
 //                        FileOutputStream fos = new FileOutputStream("sceptest.der");
 //                        fos.write(retcert.getEncoded());
@@ -479,17 +488,21 @@ public class ProtocolScepHttpTest extends TestCase {
                     // check the returned certificate
                     String subjectdn = CertTools.stringToBCDNString(retcert.getSubjectDN().getName());
                     if (mysubjectdn.equals(subjectdn)) {
+                        System.out.println("Got user cert with DN: "+ retcert.getSubjectDN().getName());
                         // issued certificate
                         assertEquals(CertTools.stringToBCDNString("C=SE,O=PrimeKey,CN=sceptest"), subjectdn);
-                        System.out.println(retcert);
-                        System.out.println(cacert);
+                        //System.out.println(retcert);
+                        //System.out.println(cacert);
                         retcert.verify(cacert.getPublicKey());
                         assertTrue(checkKeys(keys.getPrivate(), retcert.getPublicKey()));
                         verified = true;
+                        usercert = retcert;
                     } else {
+                        System.out.println("Got CA cert with DN: "+ retcert.getSubjectDN().getName());
                         // ca certificate
-                        assertEquals(cacert.getSubjectDN().getName(), retcert.getIssuerDN().getName());
+                        assertEquals(cacert.getSubjectDN().getName(), retcert.getSubjectDN().getName());
                         gotcacert = true;
+                        usercert.verify(retcert.getPublicKey());
                     }
                 }
                 assertTrue(verified);
