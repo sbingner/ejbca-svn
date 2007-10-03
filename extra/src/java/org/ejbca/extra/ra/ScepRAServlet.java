@@ -80,7 +80,7 @@ import org.hibernate.cfg.Configuration;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.7 2007-04-25 12:47:08 anatom Exp $
+ * @version $Id: ScepRAServlet.java,v 1.8 2007-10-03 11:26:00 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
@@ -291,7 +291,7 @@ public class ScepRAServlet extends HttpServlet {
                         String caName = ServiceLocator.getInstance().getString("java:comp/env/"+issuerDN);
                         if (StringUtils.isEmpty(caName)) {
                         	caName = defaultCA;
-                        	log.debug("Did not find a CA name from issuerDN: "+issuerDN+", using the default CA '"+caName+"'");
+                        	log.info("Did not find a CA name from issuerDN: "+issuerDN+", using the default CA '"+caName+"'");
                         } else {
                         	log.debug("Found a CA name '"+caName+"' from issuerDN: "+issuerDN);
                         }
@@ -318,7 +318,7 @@ public class ScepRAServlet extends HttpServlet {
                 // The body of the response is a DER encoded binary X.509 certificate. 
                 // For example: "Content-Type:application/x-x509-ca-cert\n\n"<BER-encoded X509>
             	// IF we are not an RA, which in case we should return the same thing as GetCACertChain
-                log.debug("Got SCEP cert request for CA '" + message + "'");
+                log.info("Got SCEP cert request for CA '" + message + "'");
                 Certificate[] chain = raks.getCertificateChain(alias);
                 if (chain != null) {
                 	if (chain.length > 1) {
@@ -342,7 +342,7 @@ public class ScepRAServlet extends HttpServlet {
                 // The response for GetCACertChain is a certificates-only PKCS#7 
                 // SignedDatato carry the certificates to the end entity, with a 
                 // Content-Type of application/x-x509-ca-ra-cert-chain.
-                log.debug("Got SCEP cert chain request for CA '" + message + "'");
+                log.info("Got SCEP cert chain request for CA '" + message + "'");
                 getCACertChain(message, remoteAddr, response, alias, raks);
             } else if (operation.equals("GetCACaps")) {
                 // The response for GetCACaps is a <lf> separated list of capabilities
@@ -358,7 +358,7 @@ public class ScepRAServlet extends HttpServlet {
                                        authenticate an enrollment request for a new
                                        certificate.  
                  */
-                log.debug("Got SCEP CACaps request for CA '" + message + "'");
+                log.info("Got SCEP CACaps request for CA '" + message + "'");
                 response.setContentType("text/plain");
                 response.getOutputStream().print("POSTPKIOperation\nSHA-1");
             }	
