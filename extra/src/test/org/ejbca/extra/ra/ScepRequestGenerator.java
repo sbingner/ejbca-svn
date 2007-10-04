@@ -12,6 +12,7 @@
  *************************************************************************/
 package org.ejbca.extra.ra;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -27,11 +28,13 @@ import java.security.cert.CollectionCertStoreParameters;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Vector;
 
 import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.DERPrintableString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERSet;
@@ -41,6 +44,9 @@ import org.bouncycastle.asn1.cms.AttributeTable;
 import org.bouncycastle.asn1.cms.IssuerAndSerialNumber;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.smime.SMIMECapability;
+import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.asn1.x509.X509Extension;
+import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSEnvelopedDataGenerator;
@@ -114,17 +120,42 @@ public class ScepRequestGenerator {
         //    type    ATTRIBUTE.&id({IOSet}),
         //    values  SET SIZE(1..MAX) OF ATTRIBUTE.&Type({IOSet}{\@type})
         // }
-        ASN1EncodableVector vec = new ASN1EncodableVector();
-        vec.add(PKCSObjectIdentifiers.pkcs_9_at_challengePassword); 
-        ASN1EncodableVector values = new ASN1EncodableVector();
-        values.add(new DERUTF8String(password));
-        vec.add(new DERSet(values));
+        ASN1EncodableVector challpwdattr = new ASN1EncodableVector();
+        // Challenge password attribute
+        challpwdattr.add(PKCSObjectIdentifiers.pkcs_9_at_challengePassword); 
+        ASN1EncodableVector pwdvalues = new ASN1EncodableVector();
+        pwdvalues.add(new DERUTF8String(password));
+        challpwdattr.add(new DERSet(pwdvalues));
+        // Requested extensions attribute
+        ASN1EncodableVector extensionattr = new ASN1EncodableVector();
+        extensionattr.add(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest);
+        // AltNames
+        GeneralNames san = CertTools.getGeneralNamesFromAltName("dNSName=foo.bar.com,iPAddress=10.0.0.1");
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        DEROutputStream dOut = new DEROutputStream(bOut);
+        try {
+            dOut.writeObject(san);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("error encoding value: " + e);
+        }
+        // Extension request attribute is a set of X509Extensions
+        // ASN1EncodableVector x509extensions = new ASN1EncodableVector();
+        // An X509Extensions is a sequence of Extension which is a sequence of {oid, X509Extension}
+        ASN1EncodableVector extvalue = new ASN1EncodableVector();
+        Vector oidvec = new Vector();
+        oidvec.add(X509Extensions.SubjectAlternativeName);
+        Vector valuevec = new Vector();
+        valuevec.add(new X509Extension(false, new DEROctetString(bOut.toByteArray())));
+        X509Extensions exts = new X509Extensions(oidvec,valuevec);
+        extensionattr.add(new DERSet(exts));
+        // Complete the Attribute section of the request, the set (Attributes) contains two sequences (Attribute)
         ASN1EncodableVector v = new ASN1EncodableVector();
-        v.add(new DERSequence(vec));
-        DERSet set = new DERSet(v);
+        v.add(new DERSequence(challpwdattr));
+        v.add(new DERSequence(extensionattr));
+        DERSet attributes = new DERSet(v);
         // Create PKCS#10 certificate request
         p10request = new PKCS10CertificationRequest("SHA1WithRSA",
-                CertTools.stringToBcX509Name(reqdn), keys.getPublic(), set, keys.getPrivate());
+                CertTools.stringToBcX509Name(reqdn), keys.getPublic(), attributes, keys.getPrivate());
         
         // Create self signed cert, validity 1 day
         cert = CertTools.genSelfCert(reqdn,24*60*60*1000,null,keys.getPrivate(),keys.getPublic(),CATokenConstants.SIGALG_SHA1_WITH_RSA,false);

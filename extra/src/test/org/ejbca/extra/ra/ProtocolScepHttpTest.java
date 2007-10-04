@@ -68,7 +68,7 @@ import org.ejbca.util.CertTools;
 import org.ejbca.util.KeyTools;
 
 /** Tests http pages of scep
- * @version $Id: ProtocolScepHttpTest.java,v 1.9 2007-10-03 13:50:57 anatom Exp $
+ * @version $Id: ProtocolScepHttpTest.java,v 1.10 2007-10-04 13:25:13 anatom Exp $
  **/
 public class ProtocolScepHttpTest extends TestCase {
     private static Logger log = Logger.getLogger(ProtocolScepHttpTest.class);
@@ -355,7 +355,7 @@ public class ProtocolScepHttpTest extends TestCase {
         return false;
     }
 
-    private void checkScepResponse(byte[] retMsg, String senderNonce, String transId, boolean crlRep, String digestOid, boolean noca, ResponseStatus extectedResponseStatus) throws CMSException, NoSuchProviderException, NoSuchAlgorithmException, CertStoreException, InvalidKeyException, CertificateException, SignatureException, CRLException {
+    private void checkScepResponse(byte[] retMsg, String senderNonce, String transId, boolean crlRep, String digestOid, boolean noca, ResponseStatus extectedResponseStatus) throws CMSException, NoSuchProviderException, NoSuchAlgorithmException, CertStoreException, InvalidKeyException, CertificateException, SignatureException, CRLException, IOException {
         //
         // Parse response message
         //
@@ -496,6 +496,8 @@ public class ProtocolScepHttpTest extends TestCase {
                         retcert.verify(cacert.getPublicKey());
                         assertTrue(checkKeys(keys.getPrivate(), retcert.getPublicKey()));
                         verified = true;
+                        String altName = CertTools.getSubjectAlternativeName(retcert);
+                        assertEquals("iPAddress=10.0.0.1, dNSName=foo.bar.com", altName);
                         usercert = retcert;
                     } else {
                         System.out.println("Got CA cert with DN: "+ retcert.getSubjectDN().getName());

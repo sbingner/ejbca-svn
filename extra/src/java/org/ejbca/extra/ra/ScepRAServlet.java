@@ -29,6 +29,7 @@ import java.security.cert.CollectionCertStoreParameters;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.Iterator;
 
 import javax.servlet.ServletConfig;
@@ -40,6 +41,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1Set;
+import org.bouncycastle.asn1.DERObjectIdentifier;
+import org.bouncycastle.asn1.DERSet;
+import org.bouncycastle.asn1.pkcs.CertificationRequestInfo;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.x509.X509Extension;
+import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSProcessable;
 import org.bouncycastle.cms.CMSProcessableByteArray;
@@ -80,7 +89,7 @@ import org.hibernate.cfg.Configuration;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.9 2007-10-03 13:50:57 anatom Exp $
+ * @version $Id: ScepRAServlet.java,v 1.10 2007-10-04 13:25:13 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
@@ -304,10 +313,30 @@ public class ScepRAServlet extends HttpServlet {
                         } else {
                         	log.debug("Found a CA name '"+caName+"' from issuerDN: "+issuerDN);
                         }
+                        // Get altNames if we can find them
+                        CertificationRequestInfo info = p10.getCertificationRequestInfo();
+                        ASN1Set set = info.getAttributes();
+                        // The set of attributes contains a sequence of with type oid PKCSObjectIdentifiers.pkcs_9_at_extensionRequest
+                        Enumeration en = set.getObjects();
+                        String altNames = null;
+                        while (en.hasMoreElements()) {
+                        	ASN1Sequence seq = ASN1Sequence.getInstance(en.nextElement());
+                        	DERObjectIdentifier oid = (DERObjectIdentifier)seq.getObjectAt(0);
+                        	if (oid.equals(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest)) {
+                        		// The object at position 1 is a SET of x509extensions
+                        		DERSet s = (DERSet)seq.getObjectAt(1);
+                        		X509Extensions exts = X509Extensions.getInstance(s.getObjectAt(0));
+                        		X509Extension ext = exts.getExtension(X509Extensions.SubjectAlternativeName);
+                        		if (ext != null) {
+                        			altNames = CertTools.getAltNameStringFromExtension(ext);
+                        		}
+                        	}
+                        }
+
                         String pkcs10 = new String(Base64.encode(p10.getEncoded(), false));
                         
                     	// Create a pkcs10 request
-                		ExtRAPKCS10Request req = new ExtRAPKCS10Request(100,username, reqmsg.getRequestDN(), null, null, null, entityProfile, certificateProfile, caName, pkcs10);
+                		ExtRAPKCS10Request req = new ExtRAPKCS10Request(100,username, reqmsg.getRequestDN(), altNames, null, null, entityProfile, certificateProfile, caName, pkcs10);
                 		SubMessages submessages = new SubMessages();
                 		submessages.addSubMessage(req);
                 		msgHome.create(transId, submessages);
