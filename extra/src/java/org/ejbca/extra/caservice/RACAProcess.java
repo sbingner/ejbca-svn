@@ -54,7 +54,7 @@ import org.ejbca.util.query.Query;
  * Contains help methods for storing users in database for approvals.
  * 
  * @author Philip Vendil
- * $Id: RACAProcess.java,v 1.7 2007-04-18 14:47:46 anatom Exp $
+ * $Id: RACAProcess.java,v 1.8 2007-10-13 14:03:48 anatom Exp $
  */
 
 public abstract class RACAProcess {
@@ -63,9 +63,12 @@ public abstract class RACAProcess {
 	
 	private IUserAdminSessionLocal usersession = null;
 	private IApprovalSessionLocal approvalsession = null;	
-	
+
+	/** When adding users with approvals, this is a time limit if a user have been rejected, it can not be requested again within this time (minutes) */ 
+	private static final int APPROVAL_REJECT_TIMEOUT = -30;
+
 	/**
-	 * Method performin initialization, should be called directly after creation
+	 * Method performing initialization, should be called directly after creation
 	 * @throws ConfigurationException 
 	 */
 	public void init(IRACAService configuration) throws ConfigurationException {
@@ -160,7 +163,7 @@ public abstract class RACAProcess {
 		query.add(ApprovalMatch.MATCH_WITH_APPROVALID, BasicMatch.MATCH_TYPE_EQUALS, Integer.toString(approvalid), Query.CONNECTOR_AND);
 		query.add(ApprovalMatch.MATCH_WITH_STATUS, BasicMatch.MATCH_TYPE_EQUALS, "" + ApprovalDataVO.STATUS_EXECUTIONDENIED, Query.CONNECTOR_AND);
 		cal = Calendar.getInstance();
-		cal.add(Calendar.MINUTE, -30);
+		cal.add(Calendar.MINUTE, APPROVAL_REJECT_TIMEOUT);
 		query.add(cal.getTime(), now);
 		approvals = getApprovalSession().query(admin, query, 0, 25);
 		// If there is an request waiting for approval we don't have to go on and try to add the user
