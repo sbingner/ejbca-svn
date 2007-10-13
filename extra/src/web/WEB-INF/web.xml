@@ -9,10 +9,6 @@
         <display-name>ScepRAServlet</display-name>
         <servlet-class>org.ejbca.extra.ra.ScepRAServlet</servlet-class>
         <init-param>
-            <param-name>includeCACert</param-name>
-            <param-value>1</param-value>
-        </init-param>
-        <init-param>
             <param-name>keyStorePath</param-name>
             <param-value>@jboss.conf.dir@/keystore/sceprakeystore.p12</param-value>
         </init-param>
@@ -23,6 +19,10 @@
         <init-param>
             <param-name>cryptProvider</param-name>
             <param-value>BC</param-value>
+        </init-param>
+        <init-param>
+            <param-name>includeCACert</param-name>
+            <param-value>1</param-value>
         </init-param>
     </servlet>
     
@@ -31,10 +31,6 @@
         <display-name>ScepRAServletNoCACert</display-name>
         <servlet-class>org.ejbca.extra.ra.ScepRAServlet</servlet-class>
         <init-param>
-            <param-name>includeCACert</param-name>
-            <param-value>0</param-value>
-        </init-param>
-        <init-param>
             <param-name>keyStorePath</param-name>
             <param-value>@jboss.conf.dir@/keystore/sceprakeystore.p12</param-value>
         </init-param>
@@ -45,6 +41,10 @@
         <init-param>
             <param-name>cryptProvider</param-name>
             <param-value>BC</param-value>
+        </init-param>
+        <init-param>
+            <param-name>includeCACert</param-name>
+            <param-value>0</param-value>
         </init-param>
     </servlet>
 
@@ -59,6 +59,12 @@
 
 
 
+   <env-entry>
+      <description><![CDATA[Set to another value if the Scep RA should require a specific password in the SCEP request. Leave as 'none' to not require any password, i.e. allow anything.]]></description>
+      <env-entry-name>authPwd</env-entry-name>
+      <env-entry-value>none</env-entry-value>
+      <env-entry-type>java.lang.String</env-entry-type>
+   </env-entry>
    <env-entry>
       <description><![CDATA[The Certificate profile used to register new SCEP users]]></description>
       <env-entry-name>certificateProfile</env-entry-name>

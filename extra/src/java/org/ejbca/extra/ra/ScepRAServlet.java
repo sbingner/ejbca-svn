@@ -89,7 +89,7 @@ import org.hibernate.cfg.Configuration;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.10 2007-10-04 13:25:13 anatom Exp $
+ * @version $Id: ScepRAServlet.java,v 1.11 2007-10-13 13:23:46 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
@@ -104,9 +104,10 @@ public class ScepRAServlet extends HttpServlet {
 	private String keystorepwd;
 	private String cryptProvider;
 	private MessageHome msgHome = new MessageHome(MessageHome.MESSAGETYPE_SCEPRA);
-	String certificateProfile = "ENDUSER";
-	String entityProfile = "EMPTY";
-	String defaultCA = "ScepTest";
+	private String certificateProfile = "ENDUSER";
+	private String entityProfile = "EMPTY";
+	private String authPwd = "none";
+	private String defaultCA = "ScepTest";
 
     /**
      * Inits the SCEP servlet
@@ -138,6 +139,7 @@ public class ScepRAServlet extends HttpServlet {
 
             certificateProfile = ServiceLocator.getInstance().getString("java:comp/env/certificateProfile");            
             entityProfile = ServiceLocator.getInstance().getString("java:comp/env/entityProfile");            
+            authPwd = ServiceLocator.getInstance().getString("java:comp/env/authPwd");            
             defaultCA = ServiceLocator.getInstance().getString("java:comp/env/defaultCA");
             log.info("Using certificate profile: "+certificateProfile);
             log.info("Using entity profile: "+entityProfile);
@@ -253,7 +255,13 @@ public class ScepRAServlet extends HttpServlet {
                 String transId = reqmsg.getTransactionId();
                 if(reqmsg.getMessageType() == ScepRequestMessage.SCEP_TYPE_GETCERTINITIAL) {
                 	log.info("Received a GetCertInitial message from host: "+remoteAddr);
-                	Message msg = msgHome.findByMessageId(transId);
+                	Message msg = null;
+                	try {
+                		msg = msgHome.findByMessageId(transId);                		
+                	} catch (Exception e) {
+                		// TODO: internal resources
+                		log.info("Error looking for message with transId "+transId+" :", e);
+                	}
                 	if(msg != null) {
                 		if(msg.getStatus().equals(Message.STATUS_PROCESSED)) {
                 			log.debug("Request is processed with status: "+msg.getStatus());
@@ -303,6 +311,18 @@ public class ScepRAServlet extends HttpServlet {
                             throw new SignRequestException(msg);
                         }
                         log.info("Received a SCEP/PKCS10 request for user: "+username+", from host: "+remoteAddr);
+                        if (StringUtils.isNotEmpty(authPwd) && !StringUtils.equals(authPwd, "none")) {
+                        	log.debug("Requiring authPwd in order to precess SCEP requests");
+                        	String pwd = reqmsg.getPassword();
+                        	if (!StringUtils.equals(authPwd, pwd)) {
+                        		log.error("Wrong auth password received in SCEP request: "+pwd);
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Auth pwd missmatch");
+                                return;
+                        	}
+                        	log.debug("Request passed authPwd test.");
+                        } else {
+                        	log.debug("Not requiring authPwd in order to precess SCEP requests");                        	
+                        }
                         PKCS10CertificationRequest p10 = reqmsg.getCertificationRequest();
                         // Try to find the CA name from the issuerDN, if we can't find it (i.e. not defuined in web.xml) we use the default
                         String issuerDN = CertTools.stringToBCDNString(reqmsg.getIssuerDN());
