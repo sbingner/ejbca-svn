@@ -102,7 +102,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.23 2007-08-28 12:01:15 anatom Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.24 2007-11-08 09:51:18 anatom Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -827,7 +827,8 @@ public class ExtRACAProcess extends RACAProcess {
 			  while(iter.hasNext()){
 				X509Certificate cacert = (X509Certificate) iter.next();
 				CAInfo cainfo2 = getCAAdminSession().getCAInfo(admin,CertTools.stringToBCDNString(cacert.getSubjectDN().toString()).hashCode());
-				if(cainfo2.getStatus()==SecConst.CA_REVOKED){
+				// This CA may be an external CA, so we don't bother if we can not find it.
+				if ((cainfo2 != null) && (cainfo2.getStatus()==SecConst.CA_REVOKED) ) {
 					throw new ConfigurationException("CA " + cainfo2.getName() + " Have been revoked");
 				}
 			  }
