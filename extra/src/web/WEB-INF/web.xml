@@ -24,6 +24,8 @@
             <param-name>includeCACert</param-name>
             <param-value>1</param-value>
         </init-param>
+        
+        <load-on-startup>1</load-on-startup>
     </servlet>
     
     <servlet>
