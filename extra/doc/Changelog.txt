@@ -1,3 +1,9 @@
+3.5.2
+-----
+- [ECA-618] - External RA SCEP module should include ip and dns altNames from request
+- [ECA-626] - ExtRA, possible to require SCEP password
+- [ECA-646] - ExtRA CA service throws exception when RAIssuer is signed by external CA
+
 3.5.0
 -----
 - ECA-494: Better default datasource for ScepRAServer in External RA
