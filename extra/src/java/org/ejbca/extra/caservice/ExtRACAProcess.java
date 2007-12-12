@@ -102,7 +102,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.24 2007-11-08 09:51:18 anatom Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.25 2007-12-12 09:53:04 anatom Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -312,10 +312,13 @@ public class ExtRACAProcess extends RACAProcess {
 	      // Create a PKCS10
 	      PKCS10RequestMessage pkcs10 = RequestHelper.genPKCS10RequestMessageFromPEM(submessage.getPKCS10().getBytes());
 	      String password = pkcs10.getPassword();
-	      if (password == null) {
-	    	  password = "foo123";
-	      }
+	      
 	      if (submessage.createOrEditUser()) {
+	    	  // If we did not provide a password, set a default one
+		      if (StringUtils.isEmpty(password)) {
+		    	  log.debug("Empty password received, createOrEditUser=true so setting default password.");
+		    	  password = "foo123";
+		      }
 	          UserDataVO userdata = generateUserDataVO(admin, submessage);
 	          userdata.setPassword(password);
 	          log.info("Creating/editing user: "+userdata.getUsername()+", with dn: "+userdata.getDN());
@@ -324,9 +327,14 @@ public class ExtRACAProcess extends RACAProcess {
 	    	  // we will not try to change it again, because it is ready to be processed 
 	          storeUserData(admin, userdata,false,UserDataConstants.STATUS_INPROCESS );	    		  
 	      }
-	      X509Certificate cert = (X509Certificate) getSignSession().createCertificate(admin,submessage.getUsername(),password, pkcs10.getRequestPublicKey());
-	      byte[] pkcs7 = getSignSession().createPKCS7(admin, cert, true);
-	      retval = new ExtRAPKCS10Response(submessage.getRequestId(),true,null,cert,pkcs7);
+	      if (StringUtils.isNotEmpty(password)) {
+		      X509Certificate cert = (X509Certificate) getSignSession().createCertificate(admin,submessage.getUsername(),password, pkcs10.getRequestPublicKey());
+		      byte[] pkcs7 = getSignSession().createPKCS7(admin, cert, true);
+		      retval = new ExtRAPKCS10Response(submessage.getRequestId(),true,null,cert,pkcs7);	    	  
+	      } else {
+	    	  // Will be caught below and a fail response created
+	    	  throw new Exception("No challenge password received, can not use empty password for enrollment. Nothing processed.");
+	      }
 		} catch (ApprovalException ae) {
 			// there might be an already saved approval for this user or a new approval will be created, 
 			// so catch the exception thrown when this is the case and let the method return null to leave the message in the queue to be tried the next round.
@@ -336,7 +344,7 @@ public class ExtRACAProcess extends RACAProcess {
 			// so catch the exception thrown when this is the case and let the method return null to leave the message in the queue to be tried the next round.
 			log.info("WaitingForApprovalException: "+wae.getMessage());
 		}catch(Exception e){
-			// We should en up here if an approval is rejected, or some other error occur. We will then send back a failed message
+			// We should end up here if an approval is rejected, or some other error occur. We will then send back a failed message
 			log.error("Error processing ExtRAPKCS10Request: ", e);
 			retval = new ExtRAPKCS10Response(submessage.getRequestId(),false,e.getMessage(),null,null);
 		}

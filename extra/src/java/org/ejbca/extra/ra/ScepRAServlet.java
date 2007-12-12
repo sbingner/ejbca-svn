@@ -89,7 +89,7 @@ import org.hibernate.cfg.Configuration;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.11 2007-10-13 13:23:46 anatom Exp $
+ * @version $Id: ScepRAServlet.java,v 1.12 2007-12-12 09:53:05 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
@@ -108,6 +108,7 @@ public class ScepRAServlet extends HttpServlet {
 	private String entityProfile = "EMPTY";
 	private String authPwd = "none";
 	private String defaultCA = "ScepTest";
+	private boolean createOrEditUser = true; // Default value true, to work as the first deployment by default
 
     /**
      * Inits the SCEP servlet
@@ -141,10 +142,11 @@ public class ScepRAServlet extends HttpServlet {
             entityProfile = ServiceLocator.getInstance().getString("java:comp/env/entityProfile");            
             authPwd = ServiceLocator.getInstance().getString("java:comp/env/authPwd");            
             defaultCA = ServiceLocator.getInstance().getString("java:comp/env/defaultCA");
+            createOrEditUser = ServiceLocator.getInstance().getBoolean("java:comp/env/createOrEditUser");
             log.info("Using certificate profile: "+certificateProfile);
             log.info("Using entity profile: "+entityProfile);
             log.info("Using default CA: "+defaultCA);
-            
+            log.info("Create or edit user: "+createOrEditUser);            
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -357,6 +359,7 @@ public class ScepRAServlet extends HttpServlet {
                         
                     	// Create a pkcs10 request
                 		ExtRAPKCS10Request req = new ExtRAPKCS10Request(100,username, reqmsg.getRequestDN(), altNames, null, null, entityProfile, certificateProfile, caName, pkcs10);
+                		req.setCreateOrEditUser(createOrEditUser);
                 		SubMessages submessages = new SubMessages();
                 		submessages.addSubMessage(req);
                 		msgHome.create(transId, submessages);
