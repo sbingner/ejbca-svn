@@ -89,7 +89,7 @@ import org.hibernate.cfg.Configuration;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.12 2007-12-12 09:53:05 anatom Exp $
+ * @version $Id: ScepRAServlet.java,v 1.13 2007-12-13 10:17:32 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
@@ -245,8 +245,8 @@ public class ScepRAServlet extends HttpServlet {
         	
             if (operation.equals("PKIOperation")) {
                 byte[] scepmsg = Base64.decode(message.getBytes());
- 
-                // Read the message end get the cert, this also checksauthorization
+
+                // Read the message end get the cert, this also checks authorization
                 boolean includeCACert = true;
                 if (StringUtils.equals("0", getInitParameter("includeCACert"))) {
                 	includeCACert = false;
@@ -382,8 +382,8 @@ public class ScepRAServlet extends HttpServlet {
                 log.info("Got SCEP cert request for CA '" + message + "'");
                 if (chain != null) {
                 	if (chain.length > 1) {
-                		// We are an RA, so return the same as GetCACertChain
-                        getCACertChain(message, remoteAddr, response, alias, raks);
+                		// We are an RA, so return the same as GetCACertChain, but with other content type
+                        getCACertChain(message, remoteAddr, response, alias, raks, false);
                 	} else {
                     	// The CA certificate is no 0
                     	X509Certificate cert = (X509Certificate)chain[0];
@@ -403,7 +403,7 @@ public class ScepRAServlet extends HttpServlet {
                 // SignedDatato carry the certificates to the end entity, with a 
                 // Content-Type of application/x-x509-ca-ra-cert-chain.
                 log.info("Got SCEP cert chain request for CA '" + message + "'");
-                getCACertChain(message, remoteAddr, response, alias, raks);
+                getCACertChain(message, remoteAddr, response, alias, raks, true);
             } else if (operation.equals("GetCACaps")) {
                 // The response for GetCACaps is a <lf> separated list of capabilities
 
@@ -433,14 +433,18 @@ public class ScepRAServlet extends HttpServlet {
         }
     }
 
-	private void getCACertChain(String message, String remoteAddr, HttpServletResponse response, String alias, KeyStore raks) throws KeyStoreException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, CertStoreException, CMSException, IOException, Exception {
+	private void getCACertChain(String message, String remoteAddr, HttpServletResponse response, String alias, KeyStore raks, boolean getcaracertchain) throws KeyStoreException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, CertStoreException, CMSException, IOException, Exception {
 		Certificate[] chain = raks.getCertificateChain(alias);
 		if (chain != null) {
 			X509Certificate cert = (X509Certificate) raks.getCertificateChain(alias)[0];
 			log.debug("Found cert with DN '" + cert.getSubjectDN().toString() + "'");
 			byte[] pkcs7response = createPKCS7(chain);                               
 			log.debug("Sent certificate(s) for CA/RA '" + message + "' to SCEP client with ip "+remoteAddr);
-			RequestHelper.sendBinaryBytes(pkcs7response, response, "application/x-x509-ca-ra-cert", null);                		
+			String ctype = "application/x-x509-ca-ra-cert";
+			if (getcaracertchain) {
+				ctype = "application/x-x509-ca-ra-cert-chain";				
+			}
+			RequestHelper.sendBinaryBytes(pkcs7response, response, ctype, null);                						
 		} else {
 		    log.error("No CA certificates found");
 		    response.sendError(HttpServletResponse.SC_NOT_FOUND, "No CA certificates found.");
