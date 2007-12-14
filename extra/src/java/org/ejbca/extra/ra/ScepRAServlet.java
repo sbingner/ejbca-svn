@@ -89,7 +89,7 @@ import org.hibernate.cfg.Configuration;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.14 2007-12-13 12:26:11 anatom Exp $
+ * @version $Id: ScepRAServlet.java,v 1.15 2007-12-14 13:26:35 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
@@ -374,7 +374,7 @@ public class ScepRAServlet extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "Can not handle request");
                     return;
                 }
-                // Send back Scep response, PKCS#7 which contains the end entity's certificate (or failure)
+                // Send back SCEP response, PKCS#7 which contains the end entity's certificate, or pending, or failure
                 RequestHelper.sendBinaryBytes(reply, response, "application/x-pki-message", null);
             } else if (operation.equals("GetCACert")) {
                 // The response has the content type tagged as application/x-x509-ca-cert. 
