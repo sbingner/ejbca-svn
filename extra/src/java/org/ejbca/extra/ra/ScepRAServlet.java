@@ -89,7 +89,7 @@ import org.hibernate.cfg.Configuration;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.15 2007-12-14 13:26:35 anatom Exp $
+ * @version $Id: ScepRAServlet.java,v 1.16 2008-01-21 10:36:11 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
@@ -211,7 +211,9 @@ public class ScepRAServlet extends HttpServlet {
     	String operation = request.getParameter("operation");
     	String message = request.getParameter("message");
     	// Some clients don't url encode the + sign in the request
-    	message = message.replace(' ', '+');
+        if (message != null) {
+        	message = message.replace(' ', '+');
+        }
 
     	service(operation, message, request.getRemoteAddr(), response);
 
