@@ -102,7 +102,7 @@ import org.ejbca.util.KeyTools;
 import org.ejbca.util.query.Query;
 
 /**
- * @version $Id: ExtRACAProcess.java,v 1.25 2007-12-12 09:53:04 anatom Exp $
+ * @version $Id: ExtRACAProcess.java,v 1.26 2008-01-25 12:40:24 anatom Exp $
  */
 public class ExtRACAProcess extends RACAProcess {
 
@@ -887,7 +887,7 @@ public class ExtRACAProcess extends RACAProcess {
 	private int getCertificateProfileId(Admin admin, String certificateProfileName) throws EjbcaException, ClassCastException, CreateException, NamingException{		
 		int retval = getCertStoreSession().getCertificateProfileId(admin,certificateProfileName);
 		if(retval == 0){
-			throw new EjbcaException("Error Certificate profile " + certificateProfileName + " doesn't exists.");
+			throw new EjbcaException("Error Certificate profile '" + certificateProfileName + "' doesn't exists.");
 		}
 		return retval;
 	}
@@ -895,7 +895,7 @@ public class ExtRACAProcess extends RACAProcess {
 	private int getEndEntityProfileId(Admin admin,String endEntityProfileName) throws EjbcaException, ClassCastException, CreateException, NamingException {
 		int retval = getRAAdminSession().getEndEntityProfileId(admin,endEntityProfileName);
 		if(retval == 0){
-			throw new EjbcaException("Error End Entity profile " + endEntityProfileName + " doesn't exists.");
+			throw new EjbcaException("Error End Entity profile '" + endEntityProfileName + "' doesn't exists.");
 		}
 		return retval;
 	}
@@ -903,7 +903,7 @@ public class ExtRACAProcess extends RACAProcess {
 	private int getCAId(Admin admin, String cAName) throws EjbcaException, ClassCastException, CreateException, NamingException {
 		CAInfo info = getCAAdminSession().getCAInfo(admin,cAName);
 		if(info == null){
-			throw new EjbcaException("Error CA " + cAName + " doesn't exists.");
+			throw new EjbcaException("Error CA '" + cAName + "' doesn't exists.");
 		}
 		int retval = info.getCAId();
 		return retval;
