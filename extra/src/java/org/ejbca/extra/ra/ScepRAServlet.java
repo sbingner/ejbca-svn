@@ -89,7 +89,7 @@ import org.hibernate.cfg.Configuration;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.16 2008-01-21 10:36:11 anatom Exp $
+ * @version $Id: ScepRAServlet.java,v 1.17 2008-02-07 10:34:16 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
@@ -439,15 +439,18 @@ public class ScepRAServlet extends HttpServlet {
 
 	private void getCACertChain(String message, String remoteAddr, HttpServletResponse response, String alias, KeyStore raks, boolean getcaracertchain) throws KeyStoreException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, CertStoreException, CMSException, IOException, Exception {
 		Certificate[] chain = raks.getCertificateChain(alias);
+		log.debug("CACertChain is of length: "+chain.length);
 		if (chain != null) {
 			X509Certificate cert = (X509Certificate) raks.getCertificateChain(alias)[0];
 			log.debug("Found cert with DN '" + cert.getSubjectDN().toString() + "'");
-			byte[] pkcs7response = createPKCS7(chain);                               
-			log.debug("Sent certificate(s) for CA/RA '" + message + "' to SCEP client with ip "+remoteAddr);
+//            X509Certificate racert = (X509Certificate) raks.getCertificate(alias);
+//            PrivateKey rapriv = (PrivateKey) raks.getKey(alias, keystorepwd.toCharArray());
+			byte[] pkcs7response = createPKCS7(chain, null, null);                               
 			String ctype = "application/x-x509-ca-ra-cert";
 			if (getcaracertchain) {
 				ctype = "application/x-x509-ca-ra-cert-chain";				
 			}
+			log.debug("Sent certificate(s) for CA/RA '" + message + "' to SCEP client with ip "+remoteAddr+". Using content-type: "+ctype);
 			RequestHelper.sendBinaryBytes(pkcs7response, response, ctype, null);                						
 		} else {
 		    log.error("No CA certificates found");
@@ -501,13 +504,20 @@ public class ScepRAServlet extends HttpServlet {
     	return ret;
     }
     
-    private byte[] createPKCS7(Certificate[] chain) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, CertStoreException, CMSException, IOException {
+    private byte[] createPKCS7(Certificate[] chain, PrivateKey pk, X509Certificate cert) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, CertStoreException, CMSException, IOException {
     	Collection<Certificate> certList = Arrays.asList(chain);
-    	CMSProcessable msg = new CMSProcessableByteArray("EJBCA".getBytes());
+    	CMSProcessable msg = new CMSProcessableByteArray(new byte[0]);
     	CertStore certs = CertStore.getInstance("Collection", new CollectionCertStoreParameters(certList), "BC");
     	CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
     	gen.addCertificatesAndCRLs(certs);
-    	CMSSignedData s = gen.generate(msg, "BC");
+    	// it is possible to sign the pkcs7, but it's not currently used
+    	CMSSignedData s = null;
+    	if ( (pk != null) && (cert != null) ) {
+    		gen.addSigner(pk, cert, CMSSignedDataGenerator.DIGEST_MD5);
+        	s = gen.generate(msg, true, "BC");
+    	} else {
+        	s = gen.generate(msg, "BC");    		
+    	}
     	return s.getEncoded();
     }    
 
