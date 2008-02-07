@@ -65,7 +65,7 @@
     </path>
 
     <path id="j2ee.classpath">
-        <fileset dir="${jboss.home}/client">
+        <fileset dir="${appserver.home}/client">
             <include name="jbossall-client.jar" />
             <include name="jboss-j2ee.jar" />
         </fileset>
@@ -105,7 +105,7 @@
         <fail message="Environment variable EJBCA_HOME haven't been set or EJBCA haven't been built" unless="ejbca.home.found"/>
         <echo>
 ---------- ${app.version} ----------
-        	jboss.home             = ${jboss.home}
+        	appserver.home         = ${appserver.home}
         	ejbca.home             = ${ejbca.home}
         	java.ver               = ${java.ver}        	
       </echo>
@@ -212,7 +212,7 @@
             </fileset>
         </copy>
         <copy todir="${client-jars.dir}">
-            <fileset dir="${jboss.home}/client/">
+            <fileset dir="${appserver.home}/client/">
         	    <include name="jboss-j2ee.jar" />            	
             </fileset>
         </copy>
@@ -270,9 +270,9 @@
     <!-- =================================================================== -->
     <target name="ra-ca-jbossservice" depends="compile, rajbosshibernite">
         <path id="extracajbossservice.classpath">
-            <pathelement location="${jboss.home}/lib/jboss-system.jar" />
-            <pathelement location="${jboss.home}/lib/jboss-common.jar" />
-            <pathelement location="${jboss.home}/lib/jboss-jmx.jar" />
+            <pathelement location="${appserver.home}/lib/jboss-system.jar" />
+            <pathelement location="${appserver.home}/lib/jboss-common.jar" />
+            <pathelement location="${appserver.home}/lib/jboss-jmx.jar" />
         </path>
         <javac srcdir="${src.java}" extdirs="${lib}" destdir="${build}" debug="on" encoding="iso8859-1">
             <exclude name="**/CVS/**" />
