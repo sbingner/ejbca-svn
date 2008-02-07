@@ -67,8 +67,10 @@ import org.ejbca.core.protocol.ScepRequestMessage;
 import org.ejbca.util.CertTools;
 import org.ejbca.util.KeyTools;
 
-/** Tests http pages of scep
- * @version $Id: ProtocolScepHttpTest.java,v 1.10 2007-10-04 13:25:13 anatom Exp $
+/** Tests SCEP enrollment with an RA. 
+ * This test assumes a CA hierarch. One root CA AdminCA1 and one sub CA ScepCA.
+ * 
+ * @version $Id: ProtocolScepHttpTest.java,v 1.11 2008-02-07 10:33:29 anatom Exp $
  **/
 public class ProtocolScepHttpTest extends TestCase {
     private static Logger log = Logger.getLogger(ProtocolScepHttpTest.class);
@@ -76,9 +78,9 @@ public class ProtocolScepHttpTest extends TestCase {
     private static final String httpReqPath = "http://127.0.0.1:8080";
     private static final String resourceScep = "/scepraserver/scep/pkiclient.exe";
     private static final String resourceScepNoCA = "/scepraserver/scep/noca/pkiclient.exe";
-    private static final String radn = "CN=Scep RA,O=Tomas Foo,C=SE";
-    private static final String cadn = "CN=Scep_test,O=Tomas Foo,C=SE";
-    private static final String rootcadn = "CN=Root_soft,O=Tomas Foo,C=SE";
+    private static final String radn = "CN=Scep RA,O=PrimeKey,C=SE";
+    private static final String cadn = "CN=Scep CA,O=EJBCA Sample,C=SE";
+    private static final String rootcadn = "CN=AdminCA1,O=EJBCA Sample,C=SE";
 
     private static X509Certificate rootcacert = null;
     private static X509Certificate cacert = null;
@@ -125,7 +127,7 @@ public class ProtocolScepHttpTest extends TestCase {
 
     public void test03ScepGetCACertChain() throws Exception {
         log.debug(">test03ScepGetCACertChain()");
-    	scepGetCACertChain("GetCACertChain", "application/x-x509-ca-ra-cert");    	
+    	scepGetCACertChain("GetCACertChain", "application/x-x509-ca-ra-cert-chain");    	
         log.debug(">test03ScepGetCACertChain()");
     }
     private void scepGetCACertChain(String method, String mimetype) throws Exception {
