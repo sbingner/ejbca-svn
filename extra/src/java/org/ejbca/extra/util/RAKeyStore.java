@@ -28,7 +28,7 @@ import org.ejbca.util.CertTools;
 /**
  * Simple utility class that reads a P12 Keystore from file.
  * @author Philip Vendil
- * $Id: RAKeyStore.java,v 1.1 2006-07-31 13:13:05 herrvendil Exp $
+ * $Id: RAKeyStore.java,v 1.2 2008-02-07 10:30:16 anatom Exp $
  */
 public class RAKeyStore {
 	
@@ -55,7 +55,7 @@ public class RAKeyStore {
 	}
 	
 	/**
-	 * Returns the first found alias in keystore.
+	 * Returns the first found alias for a certificate that is not a CA in keystore.
 	 * @return keystore alias
 	 * @throws KeyStoreException 
 	 */
