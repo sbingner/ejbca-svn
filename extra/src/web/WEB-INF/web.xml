@@ -9,12 +9,8 @@
         <display-name>ScepRAServlet</display-name>
         <servlet-class>org.ejbca.extra.ra.ScepRAServlet</servlet-class>
         <init-param>
-            <param-name>keyStorePath</param-name>
-            <param-value>@jboss.conf.dir@/keystore/sceprakeystore.p12</param-value>
-        </init-param>
-        <init-param>
-            <param-name>keyStorePassword</param-name>
-            <param-value>foo123</param-value>
+            <param-name>keyStoreNumber</param-name>
+            <param-value>1</param-value>
         </init-param>
         <init-param>
             <param-name>cryptProvider</param-name>
@@ -33,12 +29,8 @@
         <display-name>ScepRAServletNoCACert</display-name>
         <servlet-class>org.ejbca.extra.ra.ScepRAServlet</servlet-class>
         <init-param>
-            <param-name>keyStorePath</param-name>
-            <param-value>@jboss.conf.dir@/keystore/sceprakeystore.p12</param-value>
-        </init-param>
-        <init-param>
-            <param-name>keyStorePassword</param-name>
-            <param-value>foo123</param-value>
+            <param-name>keyStoreNumber</param-name>
+            <param-value>1</param-value>
         </init-param>
         <init-param>
             <param-name>cryptProvider</param-name>
@@ -58,44 +50,5 @@
       <servlet-name>ScepRAServletNoCACert</servlet-name>
       <url-pattern>/scep/noca/pkiclient.exe</url-pattern>
     </servlet-mapping>
-
-
-
-   <env-entry>
-      <description><![CDATA[Set to another value if the Scep RA should require a specific password in the SCEP request. Leave as 'none' to not require any password, i.e. allow anything.]]></description>
-      <env-entry-name>authPwd</env-entry-name>
-      <env-entry-value>none</env-entry-value>
-      <env-entry-type>java.lang.String</env-entry-type>
-   </env-entry>
-   <env-entry>
-      <description><![CDATA[The Certificate profile used to register new SCEP users]]></description>
-      <env-entry-name>certificateProfile</env-entry-name>
-      <env-entry-value>ENDUSER</env-entry-value>
-      <env-entry-type>java.lang.String</env-entry-type>
-   </env-entry>
-   <env-entry>
-      <description><![CDATA[The End entity profile used to register new SCEP users]]></description>
-      <env-entry-name>entityProfile</env-entry-name>
-      <env-entry-value>EMPTY</env-entry-value>
-      <env-entry-type>java.lang.String</env-entry-type>
-   </env-entry>
-   <env-entry>
-      <description><![CDATA[Defines if a request to the RA will create a new user, or edit an existing in EJBCA. If false users must be pre-registered in EJBCA with a pwd.]]></description>
-      <env-entry-name>createOrEditUser</env-entry-name>
-      <env-entry-value>true</env-entry-value>
-      <env-entry-type>java.lang.Boolean</env-entry-type>
-   </env-entry>
-   <env-entry>
-      <description><![CDATA[The CA used to register new SCEP users]]></description>
-      <env-entry-name>defaultCA</env-entry-name>
-      <env-entry-value>ScepTest</env-entry-value>
-      <env-entry-type>java.lang.String</env-entry-type>
-   </env-entry>
-   <env-entry>
-      <description><![CDATA[Mapping a CAs issuer DN (as from the Admin-GUI), which will be received form the client to a CA name]]></description>
-      <env-entry-name>CN=ScepTest</env-entry-name>
-      <env-entry-value>ScepTest</env-entry-value>
-      <env-entry-type>java.lang.String</env-entry-type>
-   </env-entry>
 
 </web-app>

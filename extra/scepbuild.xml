@@ -29,7 +29,8 @@
     <zipfileset id="commons.jar" 
             prefix="WEB-INF/lib"
             dir="lib">
-        <include name="commons-lang-2.0.jar" />
+        <include name="commons-lang-2.3.jar" />
+        <include name="commons-configuration-1.5.jar" />
     </zipfileset>
 
     <!-- =================================================================== -->
@@ -47,12 +48,16 @@
 			<fileset dir="${scepraserver.src}/WEB-INF/">
 				<include name="web.xml"/>
 			</fileset>	
+			<fileset dir="conf/">
+	    	    <include name="scep.properties"/>
+			</fileset>	
 			<filterchain>
 			<tokenfilter>
 				<replacestring from="@jboss.conf.dir@" to="${jboss.conf.dir}"/>				
 			</tokenfilter>
 			</filterchain>
         </copy>
+    	
     </target>
 
     <!-- =================================================================== -->
@@ -71,6 +76,9 @@
          	</classes>
         	<classes dir="${src}/db">
         	    <include name="hibernate.cfg.xml"/>
+        	</classes>
+        	<classes dir="${tmp}">
+        	    <include name="scep.properties"/>
         	</classes>
         </war>
     </target>

@@ -71,6 +71,7 @@ import org.ejbca.extra.db.HibernateUtil;
 import org.ejbca.extra.db.Message;
 import org.ejbca.extra.db.MessageHome;
 import org.ejbca.extra.db.SubMessages;
+import org.ejbca.extra.util.ExtraConfiguration;
 import org.ejbca.extra.util.RAKeyStore;
 import org.ejbca.ui.web.RequestHelper;
 import org.ejbca.util.Base64;
@@ -89,26 +90,21 @@ import org.hibernate.cfg.Configuration;
  *   been processed by CA, othervise respond with pending
  * 
  * 
- * @version $Id: ScepRAServlet.java,v 1.17 2008-02-07 10:34:16 anatom Exp $
+ * @version $Id: ScepRAServlet.java,v 1.18 2008-02-08 14:42:08 anatom Exp $
  */
 public class ScepRAServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
 
-	private static Logger log = Logger.getLogger(ScepRAServlet.class);   
+	private static final Logger log = Logger.getLogger(ScepRAServlet.class);   
     
 
 	private SecureRandom randomSource;
 	private RAKeyStore scepraks;
-	private String keystorepwd;
+	private String keyStoreNumber;
 	private String cryptProvider;
 	private MessageHome msgHome = new MessageHome(MessageHome.MESSAGETYPE_SCEPRA);
-	private String certificateProfile = "ENDUSER";
-	private String entityProfile = "EMPTY";
-	private String authPwd = "none";
-	private String defaultCA = "ScepTest";
-	private boolean createOrEditUser = true; // Default value true, to work as the first deployment by default
 
     /**
      * Inits the SCEP servlet
@@ -121,16 +117,21 @@ public class ScepRAServlet extends HttpServlet {
         super.init(config);
 
         try {
+        	// Initialize configuration, not really needed but it prints some debug info that might 
+        	// be interesting.
+        	ExtraConfiguration.instance();
+        	
             // Install BouncyCastle provider
             log.debug("Re-installing BC-provider");
             CertTools.removeBCProvider();
             CertTools.installBCProvider();
             
-            String keystorepath = getInitParameter("keyStorePath");
-            keystorepwd = getInitParameter("keyStorePassword");
             cryptProvider = getInitParameter("cryptProvider");
 
-            scepraks = new RAKeyStore(keystorepath, keystorepwd);
+            keyStoreNumber = "."+getInitParameter("keyStoreNumber");
+            String kspath = ExtraConfiguration.instance().getString(ExtraConfiguration.SCEPKEYSTOREPATH+keyStoreNumber);
+            String kspwd = ExtraConfiguration.instance().getString(ExtraConfiguration.SCEPKEYSTOREPWD+keyStoreNumber);
+            scepraks = new RAKeyStore(kspath, kspwd);
             
             String randomAlgorithm = "SHA1PRNG";
             randomSource = SecureRandom.getInstance(randomAlgorithm);
@@ -138,15 +139,6 @@ public class ScepRAServlet extends HttpServlet {
             SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
             HibernateUtil.setSessionFactory(HibernateUtil.SESSIONFACTORY_RAMESSAGE, sessionFactory,false);
 
-            certificateProfile = ServiceLocator.getInstance().getString("java:comp/env/certificateProfile");            
-            entityProfile = ServiceLocator.getInstance().getString("java:comp/env/entityProfile");            
-            authPwd = ServiceLocator.getInstance().getString("java:comp/env/authPwd");            
-            defaultCA = ServiceLocator.getInstance().getString("java:comp/env/defaultCA");
-            createOrEditUser = ServiceLocator.getInstance().getBoolean("java:comp/env/createOrEditUser");
-            log.info("Using certificate profile: "+certificateProfile);
-            log.info("Using entity profile: "+entityProfile);
-            log.info("Using default CA: "+defaultCA);
-            log.info("Create or edit user: "+createOrEditUser);            
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -244,7 +236,8 @@ public class ScepRAServlet extends HttpServlet {
             	log.error("Certificate chain in RA keystore is only 1 certificate long! This is en error, because there should also be CA certificates.");
             }
             X509Certificate racert = (X509Certificate) raks.getCertificate(alias);
-            PrivateKey rapriv = (PrivateKey) raks.getKey(alias, keystorepwd.toCharArray());
+            String kspwd = ExtraConfiguration.instance().getString(ExtraConfiguration.SCEPKEYSTOREPWD+keyStoreNumber);
+            PrivateKey rapriv = (PrivateKey) raks.getKey(alias, kspwd.toCharArray());
 
         	
             if (operation.equals("PKIOperation")) {
@@ -317,6 +310,7 @@ public class ScepRAServlet extends HttpServlet {
                             throw new SignRequestException(msg);
                         }
                         log.info("Received a SCEP/PKCS10 request for user: "+username+", from host: "+remoteAddr);
+                        String authPwd = ExtraConfiguration.instance().getString(ExtraConfiguration.SCEPAUTHPWD);
                         if (StringUtils.isNotEmpty(authPwd) && !StringUtils.equals(authPwd, "none")) {
                         	log.debug("Requiring authPwd in order to precess SCEP requests");
                         	String pwd = reqmsg.getPassword();
@@ -330,11 +324,11 @@ public class ScepRAServlet extends HttpServlet {
                         	log.debug("Not requiring authPwd in order to precess SCEP requests");                        	
                         }
                         PKCS10CertificationRequest p10 = reqmsg.getCertificationRequest();
-                        // Try to find the CA name from the issuerDN, if we can't find it (i.e. not defuined in web.xml) we use the default
+                        // Try to find the CA name from the issuerDN, if we can't find it (i.e. not defined in web.xml) we use the default
                         String issuerDN = CertTools.stringToBCDNString(reqmsg.getIssuerDN());
-                        String caName = ServiceLocator.getInstance().getString("java:comp/env/"+issuerDN);
+                        String caName = ExtraConfiguration.instance().getString(issuerDN);
                         if (StringUtils.isEmpty(caName)) {
-                        	caName = defaultCA;
+                        	caName = ExtraConfiguration.instance().getString(ExtraConfiguration.SCEPDEFAULTCA);
                         	log.info("Did not find a CA name from issuerDN: "+issuerDN+", using the default CA '"+caName+"'");
                         } else {
                         	log.debug("Found a CA name '"+caName+"' from issuerDN: "+issuerDN);
@@ -362,6 +356,9 @@ public class ScepRAServlet extends HttpServlet {
                         String pkcs10 = new String(Base64.encode(p10.getEncoded(), false));
                         
                     	// Create a pkcs10 request
+                        String certificateProfile = ExtraConfiguration.instance().getString(ExtraConfiguration.SCEPCERTPROFILEKEY);
+                        String entityProfile = ExtraConfiguration.instance().getString(ExtraConfiguration.SCEPENTITYPROFILEKEY);
+                		boolean createOrEditUser = ExtraConfiguration.instance().getBoolean(ExtraConfiguration.SCEPEDITUSER);
                 		ExtRAPKCS10Request req = new ExtRAPKCS10Request(100,username, reqmsg.getRequestDN(), altNames, null, null, entityProfile, certificateProfile, caName, pkcs10);
                 		req.setCreateOrEditUser(createOrEditUser);
                 		SubMessages submessages = new SubMessages();

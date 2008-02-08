@@ -36,8 +36,8 @@ public class TestMessageHome extends TestCase {
             setProperty("hibernate.connection.url", "jdbc:mysql://localhost/messages").
 //            setProperty("hibernate.connection.driver_class", "org.postgresql.Driver").
 //            setProperty("hibernate.connection.url", "jdbc:postgresql://127.0.0.1/extra").
-            setProperty("hibernate.connection.username", "test").
-            setProperty("hibernate.connection.password", "foo123").
+            setProperty("hibernate.connection.username", "ejbca").
+            setProperty("hibernate.connection.password", "ejbca").
             setProperty("hibernate.connection.autocommit", "true").
             setProperty("hibernate.cache.provider_class", "org.hibernate.cache.HashtableCacheProvider").
             setProperty("hibernate.hbm2ddl.auto", "update").
