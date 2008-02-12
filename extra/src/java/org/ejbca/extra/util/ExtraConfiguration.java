@@ -21,6 +21,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.ejbca.extra.ra.ScepRAServlet;
 
@@ -30,7 +31,7 @@ import org.ejbca.extra.ra.ScepRAServlet;
  * See in-line comments below for the sources added to the configuration.
  * 
  * @author tomas
- * @version $Id: ExtraConfiguration.java,v 1.1 2008-02-08 14:42:08 anatom Exp $
+ * @version $Id: ExtraConfiguration.java,v 1.2 2008-02-12 14:45:55 anatom Exp $
  */
 public class ExtraConfiguration {
 	private static Logger log = Logger.getLogger(ExtraConfiguration.class);   
@@ -39,7 +40,9 @@ public class ExtraConfiguration {
 	
 	/** This is a singleton so it's not allowed to create an instance explicitly */ 
 	private ExtraConfiguration() {}
-	
+
+	public static final String CONFIGALLOWEXTERNAL = "allow.external-dynamic.configuration";
+
 	public static final String SCEPCERTPROFILEKEY = "scep.ra.certificateProfile";
 	public static final String SCEPENTITYPROFILEKEY = "scep.ra.entityProfile";
 	public static final String SCEPAUTHPWD = "scep.ra.authPwd";
@@ -51,32 +54,43 @@ public class ExtraConfiguration {
 	public static Configuration instance() {
 		if (config == null) {
 	        try {
+
+	        	// Default values build into war file, this is last prio used if no of the other sources override this
+	        	URL url = ScepRAServlet.class.getResource("/config.properties");
+	        	PropertiesConfiguration pc = new PropertiesConfiguration(url);
+	        	String allowexternal = pc.getString(CONFIGALLOWEXTERNAL, "false");
+
 	        	config = new CompositeConfiguration();
 	        	
-	        	// Override with system properties, this is prio 1 if it exists (java -Dscep.test=foo)
-	        	config.addConfiguration(new SystemConfiguration());
-	        	log.info("Added system properties to configuration source (java -Dfoo.prop=bar).");
-	        	
-	        	// Override with file in "application server home directory"/conf, this is prio 2
-	        	File f1 = new File("conf/scep.properties");
-	        	PropertiesConfiguration pc = new PropertiesConfiguration(f1);
-	        	pc.setReloadingStrategy(new FileChangedReloadingStrategy());
-	        	config.addConfiguration(pc);
-	        	log.info("Added file to configuration source: "+f1.getAbsolutePath());
-	        	
-	        	// Override with file in "/etc/ejbca/conf/extra, this is prio 3
-	        	File f2 = new File("/etc/ejbca/conf/extra/scep.properties");
-	        	pc = new PropertiesConfiguration(f2);
-	        	pc.setReloadingStrategy(new FileChangedReloadingStrategy());
-	        	config.addConfiguration(pc);
-	        	log.info("Added file to configuration source: "+f2.getAbsolutePath());
+	        	// Only add these config sources if we allow external configuration
+	        	if (StringUtils.equals(allowexternal, "true")) {
+		        	// Override with system properties, this is prio 1 if it exists (java -Dscep.test=foo)
+		        	config.addConfiguration(new SystemConfiguration());
+		        	log.info("Added system properties to configuration source (java -Dfoo.prop=bar).");
+		        	
+		        	// Override with file in "application server home directory"/conf, this is prio 2
+		        	File f1 = new File("conf/scep.properties");
+		        	pc = new PropertiesConfiguration(f1);
+		        	pc.setReloadingStrategy(new FileChangedReloadingStrategy());
+		        	config.addConfiguration(pc);
+		        	log.info("Added file to configuration source: "+f1.getAbsolutePath());
+		        	
+		        	// Override with file in "/etc/ejbca/conf/extra, this is prio 3
+		        	File f2 = new File("/etc/ejbca/conf/extra/scep.properties");
+		        	pc = new PropertiesConfiguration(f2);
+		        	pc.setReloadingStrategy(new FileChangedReloadingStrategy());
+		        	config.addConfiguration(pc);
+		        	log.info("Added file to configuration source: "+f2.getAbsolutePath());	        		
+	        	}
 	        	
 	        	// Default values build into war file, this is last prio used if no of the other sources override this
-	        	URL url = ScepRAServlet.class.getResource("/scep.properties");
+	        	url = ScepRAServlet.class.getResource("/scep.properties");
 	        	pc = new PropertiesConfiguration(url);
 	        	config.addConfiguration(pc);
 	        	log.info("Added url to configuration source: "+url);
 	        	
+	        	
+	            log.info("Allow external re-configuration: "+allowexternal);
 	        	// Test
 	            log.debug("Using keystore path (1): "+config.getString(SCEPKEYSTOREPATH+".1"));
 	            //log.debug("Using keystore pwd (1): "+config.getString(SCEPKEYSTOREPWD+".1"));

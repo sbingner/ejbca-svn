@@ -49,7 +49,7 @@
 				<include name="web.xml"/>
 			</fileset>	
 			<fileset dir="conf/">
-	    	    <include name="scep.properties"/>
+	    	    <include name="*.properties"/>
 			</fileset>	
 			<filterchain>
 			<tokenfilter>
@@ -78,7 +78,7 @@
         	    <include name="hibernate.cfg.xml"/>
         	</classes>
         	<classes dir="${tmp}">
-        	    <include name="scep.properties"/>
+        	    <include name="*.properties"/>
         	</classes>
         </war>
     </target>
