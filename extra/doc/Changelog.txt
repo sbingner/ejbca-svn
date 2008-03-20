@@ -1,3 +1,10 @@
+3.6.0
+-----
+- [ECA-606] - ExtRA SCEP servlet should init directly at startup
+- [ECA-670] - ExtRA SCEP, GetCACertChain return wrong content type
+- [ECA-707] - ExtRA: make configuration of scep ra easier
+- [ECA-669] - ExtRA SCEP, possible to use pre-registered users and verify their passwords
+
 3.5.2
 -----
 - [ECA-618] - External RA SCEP module should include ip and dns altNames from request
