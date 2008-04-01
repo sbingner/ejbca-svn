@@ -3,7 +3,7 @@
 
 	<property name="app.name" value="extraserver" />
     <property name="app.name.cap" value="ExtRAServer" />
-	<property name="app.version" value="${app.name.cap} 3.6beta" />
+	<property name="app.version" value="${app.name.cap} 3.6.0" />
 	
     <property environment="env" />
     <property name="ejbca.home" value="${env.EJBCA_HOME}" />
