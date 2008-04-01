@@ -30,7 +30,7 @@ import org.ejbca.util.KeyTools;
  * Class containing constans common for unit tests.
  * 
  * @author Philip Vendil
- * $Id: Constants.java,v 1.2 2007-05-15 12:59:28 anatom Exp $
+ * $Id: Constants.java,v 1.3 2008-04-01 05:10:32 anatom Exp $
  */
 public class Constants {
 	
@@ -107,16 +107,17 @@ public class Constants {
 			+"q6Y2mFTmc2afDFzxkHvHOoMf9tnj7KwjZEuqGckUCbKqvk1MX/9cB3KLo9t+wqCW"
 			+"jk+w4V4pCK643qQ=").getBytes());
 	
+	// Simple pkcs10 with RSA keys and a challenge password extension (foo123)
 	public static final String pkcs10_1 = 
-			 "MIIBkzCB/QIBADBUMQswCQYDVQQGEwJTRTETMBEGA1UECBMKU29tZS1TdGF0ZTEh"
-			+"MB8GA1UEChMYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMQ0wCwYDVQQDEwRUZXN0"
-			+"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDczgi13kcTGTMmOdMU/QzvH6JV"
-			+"QxL23dqdYpsV//XHO2bjKlgqqc3MpGH4QQkz/80rzFi4EwuqBpOnXo0P09I2jztk"
-			+"IG4TSM+RwOfvaAMDJ1B6eeih6JX+v0A5PaWJlx1nshUuikcYJK3iNVepy39li0m3"
-			+"OBwub9NnnVWXuClUGwIDAQABoAAwDQYJKoZIhvcNAQEEBQADgYEAz4NpjNraufWg"
-			+"ZDv5J1muOHwZvOO9Is1L8WvMLG+jgH8Q2rPpDq8buIIWDy6VK8ghr7xhZzEZznTX"
-			+"5HLSLB1a6KvktiVSKB0nmAmDU28xXLWWwkA7/68J6DvAipk00bHdxuEJ4+Mg8UJ0"
-			+"Mr+aXDlmZUfghzlB70dDUy/Np/YJVb8=";
+			 "MIIBnDCCAQUCAQAwRTELMAkGA1UEBhMCQVUxEzARBgNVBAgTClNvbWUtU3RhdGUx"
+			+"ITAfBgNVBAoTGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDCBnzANBgkqhkiG9w0B"
+			+"AQEFAAOBjQAwgYkCgYEA3ORsiKZqZxYv80aKJ1o25Q4aiosSqaZtCoFKwxG7gqdt"
+			+"4fURJmDxB36CxrNK6UQA10ZBHxYS2SOcnvwUxQDqn4vxUK+RCgmBrejlt0xTz8/U"
+			+"nwZ5VdutWwqCZBCnPSe8fW/CaOtVntbIqfSPEDdNa246HAJbxt+eRRUwSHFOTsEC"
+			+"AwEAAaAXMBUGCSqGSIb3DQEJBzEIEwZmb28xMjMwDQYJKoZIhvcNAQEFBQADgYEA"
+			+"b6n+bj33rW7EGeTBujOMO+gCuoSURodb2gaWuk0zOPccJuuirgfuWb7FI52TsUiG"
+			+"km6kad9HdUb6YuBB3gM7s1udTHCb6Wxm9jL9Qx8XX99XhL5e0E0nFAL6nD7my4aN"
+			+"CLatc4drxI/EVc+NI8Qu4rkoIztSyb63RSBKSuufgb8=";
 	
 	public static final String pkcs10_2 = 
 		"-----BEGIN CERTIFICATE REQUEST-----\n"

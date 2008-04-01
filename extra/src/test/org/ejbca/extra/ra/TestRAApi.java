@@ -61,7 +61,7 @@ import org.ejbca.util.KeyTools;
  * - Externan RA CA-service installed on EJBCA machine
  * 
  * @author philip
- * @version $Id: TestRAApi.java,v 1.10 2007-03-29 15:13:40 anatom Exp $
+ * @version $Id: TestRAApi.java,v 1.11 2008-04-01 05:10:32 anatom Exp $
  */
 
 public class TestRAApi extends TestCase {
@@ -152,7 +152,7 @@ public class TestRAApi extends TestCase {
 		assertTrue(resp.getRequestId() == 100);
 		assertTrue(resp.isSuccessful() == false);
 		
-		// if we create the user first, with correct status, the requets shoudl be ok
+		// if we create the user first, with correct status, the request should be ok
 		smgs = new SubMessages(null,null,null);
 		smgs.addSubMessage(TestExtRAMessages.genExtRAPKCS10UserRequest(101,"SimplePKCS10Test1NoAdd", "foo123"));
 		TestMessageHome.msghome.create("SimplePKCS10Test1NoAdd", smgs);		
