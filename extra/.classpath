@@ -11,14 +11,15 @@
 	<classpathentry kind="lib" path="lib/commons-lang-2.3.jar"/>
 	<classpathentry kind="lib" path="lib/commons-logging.jar"/>
 	<classpathentry kind="lib" path="lib/log4j.jar"/>
-	<classpathentry kind="lib" path="lib/ext/servlet-2.3.jar"/>
-	<classpathentry kind="lib" path="lib/ext/hibernate3.jar"/>
-	<classpathentry kind="lib" path="lib/ext/junit-3.8.1.jar"/>
-	<classpathentry kind="lib" path="lib/ext/dom4j-1.6.jar"/>
-	<classpathentry kind="lib" path="lib/ext/cglib-2.1.jar"/>
 	<classpathentry kind="lib" path="lib/ext/asm.jar"/>
 	<classpathentry kind="lib" path="lib/ext/asm-attrs.jar"/>
+	<classpathentry kind="lib" path="lib/ext/cglib-2.1.jar"/>
+	<classpathentry kind="lib" path="lib/ext/dom4j-1.6.jar"/>
+	<classpathentry kind="lib" path="lib/ext/hibernate3.jar"/>
+	<classpathentry kind="lib" path="lib/ext/junit-3.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/ext/mysql-connector-java-5.0.4-bin.jar"/>
 	<classpathentry kind="lib" path="lib/ext/postgresql-8.1-407.jdbc3.jar"/>
+	<classpathentry kind="lib" path="lib/ext/servlet-2.3.jar"/>
 	<classpathentry kind="var" path="JBOSS_HOME/client/jbossall-client.jar"/>
 	<classpathentry kind="var" path="JBOSS_HOME/lib/jboss-system.jar"/>
 	<classpathentry kind="output" path="out/classes"/>
