@@ -13,6 +13,7 @@
 package org.ejbca.extra.db;
 
 import java.io.ByteArrayInputStream;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -49,7 +50,7 @@ public class ExtRACardRenewalResponse extends ExtRAResponse {
 	 * Default constructor that should be used.
 	 *  
 	 */
-	public ExtRACardRenewalResponse(long requestId, boolean success, String failinfo, X509Certificate authcert, X509Certificate signcert){
+	public ExtRACardRenewalResponse(long requestId, boolean success, String failinfo, Certificate authcert, Certificate signcert){
         super(requestId, success, failinfo);
         try {
     		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));

@@ -12,8 +12,8 @@
  *************************************************************************/
 package org.ejbca.extra.db;
 
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -98,15 +98,15 @@ public class ExtRACardRenewalRequest extends ExtRARequest {
 	}
 
 	/** Helper method */
-	public X509Certificate getAuthCertificate() {
+	public Certificate getAuthCertificate() {
 		return getCertificate(getAuthCert());
 	}
 	/** Helper method */
-	public X509Certificate getSignCertificate() {
+	public Certificate getSignCertificate() {
 		return getCertificate(getSignCert());
 	}
-	private X509Certificate getCertificate(String certStr) {
-		X509Certificate ret = null;
+	private Certificate getCertificate(String certStr) {
+		Certificate ret = null;
 		if (StringUtils.isNotEmpty(certStr)) {
 			try {
 				ret = CertTools.getCertfromByteArray(Base64.decode(certStr.getBytes()));
