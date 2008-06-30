@@ -385,7 +385,16 @@ public class ExtRACAProcess extends RACAProcess {
 
 	      retval = new ExtRAPKCS12Response(submessage.getRequestId(),true,null,pkcs12,submessage.getPassword());
           storeUserData(admin, userdata, false, UserDataConstants.STATUS_GENERATED);
+		} catch (ApprovalException ae) {
+			// there might be an already saved approval for this user or a new approval will be created, 
+			// so catch the exception thrown when this is the case and let the method return null to leave the message in the queue to be tried the next round.
+			log.info("ApprovalException: "+ae.getMessage());
+		} catch (WaitingForApprovalException wae) {
+			// there might be an already saved approval for this user or a new approval will be created, 
+			// so catch the exception thrown when this is the case and let the method return null to leave the message in the queue to be tried the next round.
+			log.info("WaitingForApprovalException: "+wae.getMessage());
 		}catch(Exception e){
+			// We should end up here if an approval is rejected, or some other error occur. We will then send back a failed message
 			log.error("Error processing ExtRAPKCS12Requset : ", e);
             if (userdata != null) {
                 try {
