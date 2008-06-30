@@ -65,7 +65,7 @@ import org.ejbca.core.model.ca.catoken.CATokenConstants;
 import org.ejbca.core.protocol.ResponseStatus;
 import org.ejbca.core.protocol.ScepRequestMessage;
 import org.ejbca.util.CertTools;
-import org.ejbca.util.KeyTools;
+import org.ejbca.util.keystore.KeyTools;
 
 /** Tests SCEP enrollment with an RA. 
  * This test assumes a CA hierarch. One root CA AdminCA1 and one sub CA ScepCA.

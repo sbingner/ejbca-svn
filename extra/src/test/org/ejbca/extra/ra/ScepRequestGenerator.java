@@ -61,7 +61,7 @@ import org.bouncycastle.util.encoders.Base64;
 import org.ejbca.core.model.ca.catoken.CATokenConstants;
 import org.ejbca.core.protocol.ScepRequestMessage;
 import org.ejbca.util.CertTools;
-import org.ejbca.util.KeyTools;
+import org.ejbca.util.keystore.KeyTools;
 
 public class ScepRequestGenerator {
     private static Logger log = Logger.getLogger(ScepRequestGenerator.class);

@@ -50,7 +50,7 @@ import org.ejbca.extra.db.TestExtRAMessages;
 import org.ejbca.extra.db.TestMessageHome;
 import org.ejbca.util.Base64;
 import org.ejbca.util.CertTools;
-import org.ejbca.util.KeyTools;
+import org.ejbca.util.keystore.KeyTools;
 
 
 /**
