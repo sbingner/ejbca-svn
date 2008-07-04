@@ -1,3 +1,7 @@
+3.6.2
+-----
+- [ECA-841] - ExtRA PKCS12 request does not work with approvals
+
 3.6.0
 -----
 - [ECA-606] - ExtRA SCEP servlet should init directly at startup
