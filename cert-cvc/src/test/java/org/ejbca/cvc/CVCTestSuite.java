@@ -16,7 +16,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Skapar JUnit testsvit f�r alla testcase
+ * Creates a JUnit test suite for all test cases
  * 
  * @author Keijo Kurkinen, Swedish National Police Board
  * @version $Id$
@@ -24,7 +24,7 @@ import junit.framework.TestSuite;
 public class CVCTestSuite {
 
    public static Test suite() {
-      TestSuite suite = new TestSuite("Tester f�r CVC");
+      TestSuite suite = new TestSuite("cert-cvc test suite");
       
       suite.addTestSuite(TestAlgorithmUtil.class);
       suite.addTestSuite(TestFactories.class);
