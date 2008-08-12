@@ -15,8 +15,7 @@ package org.ejbca.cvc;
 import java.util.HashMap;
 
 /**
- * Utilityklass f�r att mappa fr�n str�ngidentifierare av typen "SHA1WITHRSA"
- * till v�r egen typ OIDFIeld.
+ * Utility for mapping a String of type "SHA1WITHRSA" to our own type OIDFIeld.
  * 
  * @author Keijo Kurkinen, Swedish National Police Board
  * @version $Id$
@@ -37,7 +36,7 @@ public class AlgorithmUtil {
    }
 
    /**
-    * Returnerar OIDField associerad med 'algorithmName'
+    * Returns the OIDField associated with 'algorithmName'
     * @param algorithmName
     * @return
     */
@@ -51,7 +50,7 @@ public class AlgorithmUtil {
  
    
    /**
-    * Returnerar algorithmName f�r given oid
+    * Returns algorithmName for a given OID
     * @param oid
     * @return
     */

@@ -24,9 +24,8 @@ import java.security.cert.CertificateException;
 import org.ejbca.cvc.exception.ConstructionException;
 
 
-
 /**
- * Representerar ett CVC-request med en yttre signatur.
+ * Represents a CVC-request having an outer signature
  * 
  * @author Keijo Kurkinen, Swedish National Police Board
  * @version $Id$
@@ -48,14 +47,14 @@ public class CVCAuthenticatedRequest
    }
 
    /**
-    * Defaultkonstruktorn ska ha begr�nsad synlighet
+    * Default constructor
     */
    CVCAuthenticatedRequest() {
       super(CVCTagEnum.REQ_AUTHENTICATION);
    }
 
    /**
-    * Skapar instans fr�n certifikat, caRef samt signatur
+    * Creates an instance
     * @param cvcert
     * @param caReference
     * @param signatureData
@@ -70,7 +69,7 @@ public class CVCAuthenticatedRequest
    }
 
    /**
-    * Returnerar det inb�ddade requestet
+    * Returns the embedded request (as an instance of CVCertificate)
     * @return
     */
    public CVCertificate getRequest() throws NoSuchFieldException {
@@ -78,7 +77,7 @@ public class CVCAuthenticatedRequest
    }
 
    /**
-    * Returnerar CA_REFERENCE
+    * Returns CA_REFERENCE
     * @return
     */
    public CAReferenceField getAuthorityReference() throws NoSuchFieldException {
@@ -86,7 +85,7 @@ public class CVCAuthenticatedRequest
    }
 
    /**
-    * Returnerar requestets signatur
+    * Returns the signature
     * @return
     */
    public byte[] getSignature() throws NoSuchFieldException {
@@ -95,8 +94,7 @@ public class CVCAuthenticatedRequest
 
 
    /**
-    * Verifierar att objektet signerats med den privata nyckeln som 
-    * �r associerad med angiven publik nyckel.
+    * Verifies the signature
     * @param pubKey
     * @throws CertificateException
     * @throws NoSuchAlgorithmException
@@ -106,22 +104,23 @@ public class CVCAuthenticatedRequest
     */
    public void verify(PublicKey pubKey) throws CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException {
       try {
-         // M�ste hitta hashalgoritmen
+         // Must find the hash algorithm
          String algorithm = "";
          if( pubKey instanceof CVCPublicKey ){
-            // Om argumentet �r CVCPublicKey s� finns informationen d�r
+            // If pubKey is an instance of CVCPublicKey then the algorithm can be extracted
+        	// using its OID
             CVCPublicKey cvcKey = (CVCPublicKey)pubKey;
             algorithm = AlgorithmUtil.getAlgorithmName(cvcKey.getObjectIdentifier());
          }
          else {
-            // I annat fall antar vi att requestets inre signatur har samma
-            // hashalgoritm som den yttre!
+            // Otherwise we assume that the inner signature is calculated using the same 
+            // hash algorithm as the outer one!
             CVCPublicKey cvcKey = getRequest().getCertificateBody().getPublicKey();
             algorithm = AlgorithmUtil.getAlgorithmName(cvcKey.getObjectIdentifier());
          }
          Signature sign = Signature.getInstance(algorithm);
          
-         // Verifiera signatur
+         // Now verify the signature
          TBSData tbs = TBSData.getInstance(getRequest());
          sign.initVerify(pubKey);
          sign.update(tbs.getEncoded());
@@ -138,7 +137,7 @@ public class CVCAuthenticatedRequest
    }
 
    /**
-    * Bekv�mlighetsmetod
+    * Little helper
     */
    public String toString() {
       return getAsText("", true);

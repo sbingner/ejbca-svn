@@ -27,7 +27,7 @@ import org.ejbca.cvc.exception.ConstructionException;
 
 /**
  * 
- * Ett Card Verifyable Certificate i enlighet med specifikation f�r EAC 1.11.
+ * Represents a Card Verifiable Certificate according to the specification for EAC 1.11.
  * 
  * @author Keijo Kurkinen, Swedish National Police Board
  * @version $Id$
@@ -47,7 +47,7 @@ public class CVCertificate extends AbstractSequence {
 
 
    /**
-    * Default konstruktor
+    * Default constructor
     */
    CVCertificate(){
       super(CVCTagEnum.CV_CERTIFICATE);
@@ -56,10 +56,10 @@ public class CVCertificate extends AbstractSequence {
    
 
    /**
-    * Skapar instans av en CVCRequestBody samt dess signatur
+    * Creates an instance from a CVCRequestBody and its signature
     * @param body
     * @param signatureData
-    * @throws IllegalArgumentException om n�got argument �r null
+    * @throws IllegalArgumentException if any argument is null
     */
    CVCertificate(CVCertificateBody body, byte[] signatureData) throws ConstructionException {
       this();
@@ -76,7 +76,7 @@ public class CVCertificate extends AbstractSequence {
    }
 
    /**
-    * Returnerar inb�ddad CertificateBody
+    * Returns the embedded CertificateBody
     * @return
     */
    public CVCertificateBody getCertificateBody() throws NoSuchFieldException {
@@ -84,7 +84,7 @@ public class CVCertificate extends AbstractSequence {
    }
 
    /**
-    * Returnerar certifikatets signatur
+    * Returns the signature
     * @return
     */
    public byte[] getSignature() throws NoSuchFieldException {
@@ -93,7 +93,7 @@ public class CVCertificate extends AbstractSequence {
 
 
    /**
-    * Returnerar certifikatet som text
+    * Returns the certificate in text format
     */
    public String toString() {
       return getAsText("");
@@ -101,15 +101,15 @@ public class CVCertificate extends AbstractSequence {
 
 
    /**
-    * Verifierar certifikatets signatur
+    * Verifies the signature
     */
    public void verify(PublicKey key, String provider) throws CertificateException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException {
       try {
-         // Kolla upp OID, d�r kodas hash-algoritmen ocks�
+         // Lookup the OID, the hash-algorithm can be found through it
          OIDField oid = getCertificateBody().getPublicKey().getObjectIdentifier();
          Signature sign = Signature.getInstance(AlgorithmUtil.getAlgorithmName(oid), provider);
          
-         // Verifiera signatur
+         // Verify the signature
          TBSData tbs = TBSData.getInstance(getCertificateBody());
 
          sign.initVerify(key);

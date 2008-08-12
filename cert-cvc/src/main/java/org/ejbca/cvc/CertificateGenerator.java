@@ -28,7 +28,7 @@ import org.ejbca.cvc.exception.ConstructionException;
 
 
 /**
- * Klass f�r att generera CV-certifikat samt -request
+ * Generates CV-certificates and CVC-requests
  * 
  * @author Keijo Kurkinen, Swedish National Police Board
  * @version $Id$
@@ -36,15 +36,17 @@ import org.ejbca.cvc.exception.ConstructionException;
  */
 public class CertificateGenerator {
 
-   // Klassen beh�ver inte instansieras
+   // Only static methods...
    private CertificateGenerator(){
    }
 
    /**
-    * Genererar ett nytt CVCertificate giltigt 3 m�nader fr�n idag, hash-algoritm 'SHA1withRSA' samt
-    * AuthorizationRoleEnum = IS.
+    * Generates a CVCertificate for testing with the following characteristics:
+    * - expires 3 months from today
+    * - hash-algorithm is 'SHA1withRSA'
+    * - AuthorizationRoleEnum = IS.
     * 
-    *   TODO: Flytta metoden till test-klasserna!
+    *   TODO: Move this method to the test cases!
     * 
     * @param keyPair
     * @param caRef
@@ -84,7 +86,7 @@ public class CertificateGenerator {
 
 
    /**
-    * Genererar ett nytt CVCertificate
+    * Generates a CVCertificate
     * @param publicKey
     * @param signerKey
     * @param algorithmName
@@ -117,7 +119,7 @@ public class CertificateGenerator {
 
       CVCPublicKey cvcPublicKey = KeyFactory.createInstance(publicKey, algorithmName);
       
-      // Skapa en CVCertificateBody
+      // Create the CVCertificateBody
       CVCertificateBody body = new CVCertificateBody(
             caRef, 
             cvcPublicKey,
@@ -127,21 +129,21 @@ public class CertificateGenerator {
             validFrom,
             validTo );
 
-      // Plocka ut datat att signera
+      // Fetch data to be signed
       TBSData tbs = TBSData.getInstance(body);
       
-      // Utf�r signering
+      // Perform signing
       Signature signature = Signature.getInstance(algorithmName, provider);
       signature.initSign(signerKey);
       signature.update(tbs.getEncoded());
       byte[] signdata = signature.sign();
 
-      // Nu kan en instans av certifikatet skapas
+      // Create and return the certificate
       return new CVCertificate(body, signdata);
    }
 
    /**
-    * Skapar ett cvc-request utan yttre signatur
+    * Generates a CVC-request without an outer signature using BouncyCastle as signature provider
     * @param keyPair
     * @param algorithmName
     * @param holderRef
@@ -161,7 +163,7 @@ public class CertificateGenerator {
    }
 
    /**
-    * Som ovan men d�r �ven signaturprovider kan anges.
+    * Same as above except that signature provider is an argument
     * @param keyPair
     * @param algorithmName
     * @param holderRef
@@ -184,8 +186,8 @@ public class CertificateGenerator {
    }
 
    /**
-    * Skapar ett cvc-request utan yttre signatur d�r Certificate Authority Reference
-    * kan anges.
+    * Generates a CVC-request without an outer signature using BouncyCastle as signature provider, taking
+    * Certificate Authority Reference as argument.
     * @param keyPair
     * @param algorithmName
     * @param holderRef
@@ -207,7 +209,7 @@ public class CertificateGenerator {
    }
 
    /**
-    * Som ovan men d�r �ven signaturprovider kan anges.
+    * Same as above except that signature provider is also an argument
     * @param keyPair
     * @param algorithmName
     * @param caRef
@@ -230,38 +232,39 @@ public class CertificateGenerator {
    throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, ConstructionException{
       CVCPublicKey cvcPublicKey = KeyFactory.createInstance(keyPair.getPublic(), algorithmName);
 
-      /* Certificate Authority Reference ska ha samma v�rden som Certificate Holder Reference
-       * eftersom detta blir ett self-signed certifikat.
+      /* If the supplied Certificate Authority Reference is null then we set it to the values from 
+       * Certificate Holder Reference, making this a self-signed certificate (used for initial requests).
        */
       if( caRef==null ){
          caRef = new CAReferenceField(holderRef.getCountry(), holderRef.getMnemonic(), holderRef.getSequence());
       }
 
+      // Create the Request Body (which is a simplified CVCertificateBody)
       CVCertificateBody reqBody = new CVCertificateBody(
-            caRef,          // CA ref
-            cvcPublicKey,   // public key
-            holderRef );    // holder ref
+            caRef,
+            cvcPublicKey,
+            holderRef );
       
-      // Plocka ut datat att signera
+      // Fetch the data to be signed
       TBSData tbs = TBSData.getInstance(reqBody);
       
-      // Utf�r inre signering
+      // Perform the signing
       Signature innerSign = Signature.getInstance(algorithmName, signProvicer);
       innerSign.initSign(keyPair.getPrivate());
       innerSign.update(tbs.getEncoded());
       byte[] signdata = innerSign.sign();
 
-      // Skapa CVCRequest
+      // Create and return the CVCRequest (which is an instance of CVCertificate)
       return new CVCertificate(reqBody, signdata);
    }
 
 
    /**
-    * Skapar instans av CVCAuthenticatedRequest
+    * Generates a CVCAuthenticatedRequest using BouncyCastle as signature provider
     * @param cvcRequest
     * @param keyPair
     * @param algorithmName
-    * @param caRef Ska vara samma som caRef i cvcRequest men med uppr�knat sekvensnummer
+    * @param caRef Should be the same as caRef in the supplied cvcRequest but with an incremented sequence number
     * @return
     * @throws IOException
     * @throws NoSuchAlgorithmException
@@ -279,7 +282,7 @@ public class CertificateGenerator {
    }
 
    /**
-    * Samma som ovan men d�r �ven signature provider kan anges.
+    * Same as above except that signature provider is an argument
     * @param cvcRequest
     * @param keyPair
     * @param algorithmName
@@ -301,15 +304,17 @@ public class CertificateGenerator {
          String            signProvider )
    throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, ConstructionException {
 
-      // Utf�r yttre signering
+      // Fetch the data to be signed (for outer signature)
       TBSData reqTbs = TBSData.getInstance(cvcRequest);
 
+      // Perform the signing
       Signature outerSign = Signature.getInstance(algorithmName, signProvider);
       outerSign.initSign(keyPair.getPrivate());
       outerSign.update(reqTbs.getEncoded());
       byte[] signdata = outerSign.sign();
 
-      // Skapa autenticerat request
+      // Create and return the CVCAuthenticatedRequest
       return new CVCAuthenticatedRequest(cvcRequest, caRef, signdata);
    }
+
 }
