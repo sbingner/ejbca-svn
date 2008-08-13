@@ -18,7 +18,7 @@ import org.ejbca.cvc.OIDField;
 import junit.framework.TestCase;
 
 /**
- * Testar klassen AlgorithmUtil
+ * Tests AlgorithmUtil
  * 
  * @author Keijo Kurkinen, Swedish National Police Board
  * @version $Id$
@@ -36,7 +36,7 @@ public class TestAlgorithmUtil
    }
 
    
-   /** Kontroll: validera metoderna i AlgorithmUtil */ 
+   /** Check: Validate AlgorithmUtil */ 
    public void testAlgorithmUtil() throws Exception {
       String algorithmName1 = "SHA224withECDSA";
       OIDField oid = AlgorithmUtil.getOIDField(algorithmName1);
@@ -50,7 +50,7 @@ public class TestAlgorithmUtil
          throw new Exception("Illegal algorithm name should throw IllegalArgumentException");
       }
       catch( IllegalArgumentException e ){
-         // H�r ska vi hamna
+         // This is expected
       }
       
    }
