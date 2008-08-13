@@ -19,6 +19,7 @@ import java.security.SecureRandom;
 import java.security.Security;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.ejbca.cvc.AuthorizationRoleEnum;
 import org.ejbca.cvc.CAReferenceField;
 import org.ejbca.cvc.CVCObject;
 import org.ejbca.cvc.CVCertificate;
@@ -53,7 +54,7 @@ public class GenerateCert {
 
          // Use the simpler method CertificateGenerator for this test purpose
          CVCertificate cvc = 
-            CertificateGenerator.createTestCertificate(keyPair.getPublic(), keyPair.getPrivate(), caRef, holderRef);
+            CertificateGenerator.createTestCertificate(keyPair.getPublic(), keyPair.getPrivate(), caRef, holderRef, "SHA1WithRSA", AuthorizationRoleEnum.IS);
 
          byte[] certData = cvc.getDEREncoded();
 

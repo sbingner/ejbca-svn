@@ -51,6 +51,7 @@ public class CertificateGenerator {
     * @param keyPair
     * @param caRef
     * @param holderRef
+    * @param algorithm SHA1WithRSA, SHA256WithECDSA etc
     * @return
     * @throws IOException
     * @throws NoSuchAlgorithmException
@@ -62,7 +63,9 @@ public class CertificateGenerator {
          PublicKey             publicKey,
          PrivateKey            privateKey,
          CAReferenceField      caRef, 
-         HolderReferenceField  holderRef ) 
+         HolderReferenceField  holderRef, 
+         String algorithm, 
+         AuthorizationRoleEnum role) 
    throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, ConstructionException {
       // Skapa default-datum
       Calendar cal1 = Calendar.getInstance();
@@ -74,10 +77,10 @@ public class CertificateGenerator {
       return createCertificate(
             publicKey, 
             privateKey, 
-            "SHA1withRSA", 
+            algorithm, 
             caRef, 
             holderRef, 
-            AuthorizationRoleEnum.IS,
+            role,
             AccessRightEnum.READ_ACCESS_DG3_AND_DG4,
             validFrom, 
             validTo, 

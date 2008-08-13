@@ -93,7 +93,7 @@ public class TestPublicKey
 
       // Anropa metod i CertificateGenerator
       CVCertificate cvc = 
-         CertificateGenerator.createTestCertificate(publicKey1, keyPair.getPrivate(), caRef, holderRef );
+         CertificateGenerator.createTestCertificate(publicKey1, keyPair.getPrivate(), caRef, holderRef, "SHA1WithRSA", AuthorizationRoleEnum.IS );
       
       // J�mf�r som text - ska vara identiska
       CVCPublicKey publicKey2 = cvc.getCertificateBody().getPublicKey();

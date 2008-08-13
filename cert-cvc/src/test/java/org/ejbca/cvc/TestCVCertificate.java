@@ -38,7 +38,7 @@ import org.ejbca.cvc.CertificateParser;
 import org.ejbca.cvc.HolderReferenceField;
 
 /**
- * Tester specifika f�r CVCertificate
+ * Tests specific for CV Certificates
  * 
  * @author Keijo Kurkinen, Swedish National Police Board
  * @version $Id$
@@ -90,7 +90,7 @@ public class TestCVCertificate
 
       // Detta blir ett self-signed certifikat
       CVCertificate cert = 
-         CertificateGenerator.createTestCertificate(keyPair.getPublic(), keyPair.getPrivate(), caRef, holderRef);
+         CertificateGenerator.createTestCertificate(keyPair.getPublic(), keyPair.getPrivate(), caRef, holderRef, "SHA1WithRSA", AuthorizationRoleEnum.IS);
       cert.verify(keyPair.getPublic(), "BC");
       
       CardVerifiableCertificate cvc = new CardVerifiableCertificate(cert);
@@ -169,7 +169,7 @@ public class TestCVCertificate
       HolderReferenceField holderRef = new HolderReferenceField(HR_COUNTRY_CODE, HR_HOLDER_MNEMONIC, HR_SEQUENCE_NO);
 
       // Anropa metod i CertificateGenerator
-      return CertificateGenerator.createTestCertificate(keyPair.getPublic(), keyPair.getPrivate(), caRef, holderRef);
+      return CertificateGenerator.createTestCertificate(keyPair.getPublic(), keyPair.getPrivate(), caRef, holderRef, "SHA1WithRSA", AuthorizationRoleEnum.IS);
    }
 
 }
