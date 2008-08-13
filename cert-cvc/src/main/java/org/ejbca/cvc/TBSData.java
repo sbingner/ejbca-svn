@@ -15,8 +15,7 @@ package org.ejbca.cvc;
 import java.io.IOException;
 
 /**
- * Klassen representerar det data som ska signeras ('To Be Signed')
- * dvs DER-kodad version av en viss typ av AbstractSequence inklusive tagg och l�ngd.
+ * Represents data To Be Signed
  * 
  * @author Keijo Kurkinen, Swedish National Police Board
  * @version $Id$
@@ -25,16 +24,14 @@ public class TBSData {
 
    private byte[] data;
 
-   /**
-    * Ska inte instansieras 'tom'
-    * @param data
-    */
+   // Only static methods...
    private TBSData(byte[] data){
       this.data = data;
    }
 
    /**
-    * Skapar instans av klassen fr�n en CVCertificate
+    * Constructs an instance using a CVCertificate (used when creating
+    * a CVCAuthenticatedRequest)
     * @param body
     * @return
     * @throws IOException
@@ -44,7 +41,8 @@ public class TBSData {
    }
 
    /**
-    * Skapar instans av klassen fr�n en CVCertificateBody
+    * Constructs an instance using a CVCertificateBody (used when creating
+    * a CVCertificate representing a certificate or a certificate request).
     * @param body
     * @return
     * @throws IOException
@@ -54,13 +52,13 @@ public class TBSData {
    }
 
 
-   // Hj�lpmetod
+   // Helper method
    private static TBSData getTBS(AbstractSequence seq) throws IOException {
       return new TBSData(seq.getDEREncoded());
    }
 
    /**
-    * Returnerar datat som ska signeras
+    * Returns the data to be signed
     * @return
     */
    public byte[] getEncoded() {
