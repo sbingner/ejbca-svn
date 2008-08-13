@@ -79,25 +79,32 @@ public class PublicKeyEC
     * @param oid
     * @param pubKey
     */
-   public PublicKeyEC(OIDField oid, ECPublicKey pubKeyEC) throws ConstructionException {
+   public PublicKeyEC(OIDField oid, ECPublicKey pubKeyEC, AuthorizationRoleEnum authRole) throws ConstructionException {
       super();
 
       addSubfield(oid);
-      
-      ECParameterSpec ecParameterSpec  = pubKeyEC.getParams();
-      ECField ecField = ecParameterSpec.getCurve().getField();
-      if( ecField instanceof ECFieldFp ){
-         ECFieldFp fp = (ECFieldFp)ecField;
-         addSubfield(new ByteField(CVCTagEnum.MODULUS,         trimByteArray(fp.getP().toByteArray())));
-      }
-      // TODO: Can ecField be of type ECFieldF2m? Then what is the modulus?
 
-      addSubfield(new ByteField(CVCTagEnum.COEFFICIENT_A,      trimByteArray(ecParameterSpec.getCurve().getA().toByteArray())));
-      addSubfield(new ByteField(CVCTagEnum.COEFFICIENT_B,      trimByteArray(ecParameterSpec.getCurve().getB().toByteArray())));
-      addSubfield(new ByteField(CVCTagEnum.BASE_POINT_G,       encodePoint(ecParameterSpec.getGenerator())));
-      addSubfield(new ByteField(CVCTagEnum.BASE_POINT_R_ORDER, trimByteArray(ecParameterSpec.getOrder().toByteArray())));
+      ECParameterSpec ecParameterSpec  = pubKeyEC.getParams();
+      boolean addAllParams = (authRole==null || authRole==AuthorizationRoleEnum.CVCA);
+      if( addAllParams ){
+         ECField ecField = ecParameterSpec.getCurve().getField();
+         if( ecField instanceof ECFieldFp ){
+            ECFieldFp fp = (ECFieldFp)ecField;
+            addSubfield(new ByteField(CVCTagEnum.MODULUS,         trimByteArray(fp.getP().toByteArray())));
+         }
+         // TODO: Can ecField be of type ECFieldF2m? Then what is the modulus?
+
+         addSubfield(new ByteField(CVCTagEnum.COEFFICIENT_A,      trimByteArray(ecParameterSpec.getCurve().getA().toByteArray())));
+         addSubfield(new ByteField(CVCTagEnum.COEFFICIENT_B,      trimByteArray(ecParameterSpec.getCurve().getB().toByteArray())));
+         addSubfield(new ByteField(CVCTagEnum.BASE_POINT_G,       encodePoint(ecParameterSpec.getGenerator())));
+         addSubfield(new ByteField(CVCTagEnum.BASE_POINT_R_ORDER, trimByteArray(ecParameterSpec.getOrder().toByteArray())));
+      }
+
       addSubfield(new ByteField(CVCTagEnum.PUBLIC_POINT_Y,     encodePoint(pubKeyEC.getW())));
-      addSubfield(new IntegerField(CVCTagEnum.COFACTOR_F,      ecParameterSpec.getCofactor()));
+
+      if( addAllParams ){
+         addSubfield(new IntegerField(CVCTagEnum.COFACTOR_F,      ecParameterSpec.getCofactor()));
+      }
    }
 
 
