@@ -31,6 +31,7 @@ public class CVCTestSuite {
       suite.addTestSuite(TestDatafields.class);
       suite.addTestSuite(TestSequences.class);
       suite.addTestSuite(TestPublicKey.class);
+      suite.addTestSuite(TestECCCVCertificate.class);
       suite.addTestSuite(TestCVCRequest.class);
       suite.addTestSuite(TestCVCertificate.class);
       
