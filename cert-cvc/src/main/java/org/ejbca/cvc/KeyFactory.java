@@ -31,9 +31,10 @@ public class KeyFactory {
     * Constructs instance from a PublicKey and a hash algorithm
     * @param pubKey
     * @param algorithmName @see AlgorithmUtil
+    * @param authRole role of certificate holder (affects creation of PublicKeyEC instances)
     * @return
     */
-   static CVCPublicKey createInstance(PublicKey pubKey, String algorithmName, AuthorizationRoleEnum  authRole) throws ConstructionException {
+   static CVCPublicKey createInstance(PublicKey pubKey, String algorithmName, AuthorizationRoleEnum authRole) throws ConstructionException {
       
       if( pubKey instanceof CVCPublicKey ){
          // Object is already of the expected type
