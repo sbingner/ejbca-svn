@@ -33,7 +33,7 @@ public class KeyFactory {
     * @param algorithmName @see AlgorithmUtil
     * @return
     */
-   static CVCPublicKey createInstance(PublicKey pubKey, String algorithmName) throws ConstructionException {
+   static CVCPublicKey createInstance(PublicKey pubKey, String algorithmName, AuthorizationRoleEnum  authRole) throws ConstructionException {
       
       if( pubKey instanceof CVCPublicKey ){
          // Object is already of the expected type
@@ -50,7 +50,7 @@ public class KeyFactory {
       }
       else if( oid.getValue().startsWith(CVCObjectIdentifiers.id_TA_ECDSA) ){
          // It's EC
-         cvcPublicKey = new PublicKeyEC(oid, (ECPublicKey)pubKey);
+         cvcPublicKey = new PublicKeyEC(oid, (ECPublicKey)pubKey, authRole);
       }
       else {
          throw new IllegalArgumentException("Unknown key type: " + oid);
