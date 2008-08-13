@@ -15,7 +15,7 @@ package org.ejbca.cvc;
 import java.security.Provider;
 
 /**
- * V�r egen Provider f�r att kunna hantera CVC-formatet.
+ * This is our own Security Provider for CVC.
  * 
  * @author Keijo Kurkinen, Swedish National Police Board
  * @version $Id$
@@ -24,7 +24,7 @@ public class CVCProvider
       extends Provider {
 
    static double version = 1.0;
-   // TODO: Vad ska det st� h�r egentligen? 
+   // TODO: Text OK? 
    static String INFO = "CVC Security Provider " + version + " (supports Card Verifiable Certificates for ePassports)";
    
    public static String PROVIDER_NAME = "CVC";
