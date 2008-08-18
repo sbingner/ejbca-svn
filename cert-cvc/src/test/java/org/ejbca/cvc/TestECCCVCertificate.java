@@ -75,6 +75,13 @@ extends TestCase implements CVCTest {
 		byte[] pubkey2 = cert2.getCertificateBody().getPublicKey().getDEREncoded();
 		assertTrue("DER-coded public keys not equal", Arrays.equals(pubkey1, pubkey2));
 
+		// For CVCA certificates the whole public key with parameters is available
+		// Verify cert1 with cert1
+		cert1.verify(cert1.getCertificateBody().getPublicKey(), "BC");
+		
+		// Verify cert2 with cert2
+		cert2.verify(cert2.getCertificateBody().getPublicKey(), "BC");
+
 		//
 		// Test an IS certificate
 		//
@@ -97,11 +104,6 @@ extends TestCase implements CVCTest {
 		pubkey2 = cert2.getCertificateBody().getPublicKey().getDEREncoded();
 		assertTrue("DER-coded public keys not equal", Arrays.equals(pubkey1, pubkey2));
 		
-		// Verify cert1 with cert1
-		cert1.verify(cert1.getCertificateBody().getPublicKey(), "BC");
-		
-		// Verify cert2 with cert2
-		cert2.verify(cert2.getCertificateBody().getPublicKey(), "BC");
 	}
 
 
