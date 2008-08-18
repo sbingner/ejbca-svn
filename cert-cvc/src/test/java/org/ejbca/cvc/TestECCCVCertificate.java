@@ -27,15 +27,6 @@ import java.util.Date;
 import junit.framework.TestCase;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.ejbca.cvc.AuthorizationRoleEnum;
-import org.ejbca.cvc.CAReferenceField;
-import org.ejbca.cvc.CVCObject;
-import org.ejbca.cvc.CVCProvider;
-import org.ejbca.cvc.CVCertificate;
-import org.ejbca.cvc.CardVerifiableCertificate;
-import org.ejbca.cvc.CertificateGenerator;
-import org.ejbca.cvc.CertificateParser;
-import org.ejbca.cvc.HolderReferenceField;
 
 /**
  * Tests specific for ECC CV Certificates
@@ -105,6 +96,12 @@ extends TestCase implements CVCTest {
 
 		pubkey2 = cert2.getCertificateBody().getPublicKey().getDEREncoded();
 		assertTrue("DER-coded public keys not equal", Arrays.equals(pubkey1, pubkey2));
+		
+		// Verify cert1 with cert1
+		cert1.verify(cert1.getCertificateBody().getPublicKey(), "BC");
+		
+		// Verify cert2 with cert2
+		cert2.verify(cert2.getCertificateBody().getPublicKey(), "BC");
 	}
 
 
