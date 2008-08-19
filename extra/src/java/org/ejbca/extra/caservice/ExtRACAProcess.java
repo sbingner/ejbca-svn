@@ -194,11 +194,17 @@ public class ExtRACAProcess extends RACAProcess {
 	    		}else{
 	              submgs =  msg.getSubMessages(null,null,null);
 	    		}
+	    		if (submgs.isSigned()) {
+	    			log.debug("Message from : " + msg.getMessageid() + " was signed");
+	    		}
 				if(conf.getSignatureRequired() && !submgs.isSigned()){
 					errormessage = "Error: Message from : " + msg.getMessageid() + " wasn't signed which is a requrement";
 					log.error(errormessage);
 					
 				}
+	    		if (submgs.isEncrypted()) {
+	    			log.debug("Message from : " + msg.getMessageid() + " was encrypted");
+	    		}
 				if(conf.getEncryptionRequired() && !submgs.isEncrypted()){
 					errormessage = "Error: Message from : " + msg.getMessageid() + " wasn't encrypted which is a requrement";
 					log.error(errormessage);
