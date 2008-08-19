@@ -15,6 +15,7 @@
             dir="lib">
         <include name="bcprov-jdk${java.ver}.jar" />
         <include name="bcmail-jdk${java.ver}.jar" />
+        <include name="cert-cvc.jar" />
     </zipfileset>
     <zipfileset id="ejbca.jar" 
             prefix="WEB-INF/lib"
