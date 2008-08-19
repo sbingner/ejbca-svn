@@ -1,0 +1,165 @@
+<!DOCTYPE composition PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:s="http://jboss.com/products/seam/taglib"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:rich="http://richfaces.org/rich"
+                template="layout/template.xhtml"
+                xmlns:a4j="http://richfaces.org/a4j">
+
+<ui:define name="body">
+
+
+	<h:messages globalOnly="true" styleClass="message"/>
+    
+    <rich:simpleTogglePanel switchType="ajax" label="JBoss Control" opened="#{jbosscontrol.panelopen}">
+
+    <h:form id="jbosscontrolform" enctype="multipart/form-data">
+
+    <h:panelGroup>
+	
+		<h:panelGrid columns="3">
+			<h:commandButton value="Check status" action="#{jbosscontrol.check}" class="button"/>
+			<h:commandButton value="Start" action="#{jbosscontrol.start}" class="button"/>
+			<h:commandButton value="Stop" action="#{jbosscontrol.stop}" class="button"/>
+		</h:panelGrid>
+		<h:panelGrid columns="3">
+	        <h:outputText value="#{jbosscontrol.date}"></h:outputText>
+	        <h:outputText value=""></h:outputText>
+	        <h:outputText value=""></h:outputText>
+	        
+	        <h:outputLabel for="jbossprocess">JBoss process</h:outputLabel>
+	        <h:outputText value=":"></h:outputText>
+	        <h:outputText id="jbossprocess" value="#{jbosscontrol.running}"></h:outputText>
+	        
+	        <h:outputLabel for="healthcheck"><h:outputLink target="ejbcahealth" value="#{jbosscontrol.healthcheckUrl}">EJBCA health check</h:outputLink></h:outputLabel>
+	        <h:outputText value=":"></h:outputText>
+	        <h:outputText id="healthcheck" value="#{jbosscontrol.healthcheck}"></h:outputText>
+		</h:panelGrid>
+		
+    </h:panelGroup>
+    
+    </h:form>
+		
+    </rich:simpleTogglePanel>
+    
+    <rich:simpleTogglePanel switchType="ajax" label="Rotation control" opened="#{rotationcontrol.panelopen}">
+
+    <h:form id="rotationcontrolform" enctype="multipart/form-data">
+
+    <h:panelGroup>
+	
+		<h:panelGrid columns="2">
+			<h:commandButton value="Remove from rotation" action="#{rotationcontrol.removeFromRotation}" class="button"/>
+			<h:commandButton value="Add to rotation" action="#{rotationcontrol.addToRotation}" class="button"/>
+		</h:panelGrid>
+		<h:panelGrid columns="3">
+	        <h:outputText value="#{jbosscontrol.date}"></h:outputText>
+	        <h:outputText value=""></h:outputText>
+	        <h:outputText value=""></h:outputText>
+	        
+	        <h:outputLabel for="rotationstring">Rotation file</h:outputLabel>
+	        <h:outputText value=":"></h:outputText>
+	        <h:outputText id="rotationstring" value="#{rotationcontrol.rotationString}"></h:outputText>	        
+		</h:panelGrid>
+		
+    </h:panelGroup>
+
+    </h:form>
+    
+    </rich:simpleTogglePanel>
+
+    <rich:simpleTogglePanel switchType="ajax" label="Log Watch" opened="#{logcontrol.panelopen}">
+
+    <h:form id="logwatchform" enctype="multipart/form-data">
+    
+    <h:panelGroup>
+			
+    <rich:panel>
+		<h:panelGrid columns="2">
+		
+    	    <rich:panel style="height:150px;" bodyClass="inpanelBody">
+		    <f:facet name="header">Directories</f:facet>
+		    <h:selectOneListbox size="5" id="logdirs" value="#{logdir}">
+ 		        <a4j:support event="ondblclick" action="#{logcontrol.listFiles}" reRender="logwatchform" ajaxSingle="true"/>
+		        <f:selectItems value="#{logcontrol.logdirItems}" />
+		    </h:selectOneListbox>
+			<h:panelGrid columns="2">
+			    <h:outputText value="Double click item to list contents, or press button."/>
+				<h:commandButton value="List files" action="#{logcontrol.listFiles}" class="button"/>
+			</h:panelGrid>
+		    </rich:panel> 
+		    
+		    <rich:panel style="height:150px;" bodyClass="inpanelBody">
+		    <f:facet name="header">Files</f:facet>
+		    <h:selectOneListbox size="5" id="logfiles" value="#{logfile}">
+ 		        <a4j:support event="ondblclick" action="#{logcontrol.tail}" reRender="logwatchform" ajaxSingle="true"/>
+		        <f:selectItems value="#{logcontrol.logfileItems}" />
+		    </h:selectOneListbox> 
+		    <br/><br/><h:outputText value="Double click to tail 25 last lines"/>
+		    </rich:panel>
+		    		    		    
+		</h:panelGrid>
+        
+		<h:panelGrid columns="1">
+            <h:panelGrid columns="3">
+		    
+		    <rich:panel id="infotext" style="width:200px;height:100px;" bodyClass="inpanelBody">
+				<h:outputText value="#{logcontrol.pipeUserInfo}"></h:outputText>
+				<s:formattedText value="#{logcontrol.pipeUserInfoFormat}"></s:formattedText>
+		    </rich:panel>
+
+		    <rich:panel id="pipepanel" style="height:100px;" bodyClass="inpanelBody">
+		        <h:panelGrid columns="3">
+				<h:outputLabel for="pipelines">Lines of history</h:outputLabel>
+				<s:decorate>
+				<h:inputText id="pipelines" value="#{pipelines}" size="15" maxlength="40"></h:inputText>
+				</s:decorate>
+				<h:outputText/>
+				<h:outputLabel for="pipehost">Host</h:outputLabel>
+				<s:decorate>
+				<h:inputText id="pipehost" value="#{pipehost}" size="15" maxlength="40"></h:inputText>
+				</s:decorate>
+				<h:outputText/>
+				<h:outputLabel for="pipeport">Port</h:outputLabel>
+				<s:decorate>
+				<h:inputText id="pipeport" value="#{pipeport}" size="15" maxlength="40"></h:inputText>
+				</s:decorate>
+				<h:commandButton id="pipebtn" value="Pipe" action="#{logcontrol.pipe}" class="button"/>
+				<h:outputLabel for="pipebtn"></h:outputLabel>
+				</h:panelGrid>
+		    </rich:panel>
+		    
+		    <rich:panel id="greppanel" style="width:180px;height:100px;" bodyClass="inpanelBody">
+				<h:panelGrid columns="2">
+					<h:commandButton value="Grep" action="#{logcontrol.grep}" class="button"/>
+				    <rich:inplaceInput id="grepstring" layout="inline" inputWidth="90" value="#{grepstring}" defaultLabel="string to grep for"/>
+					<h:commandButton value="Tail" action="#{logcontrol.tail}" class="button"/>
+				    <rich:inplaceInput id="tail" layout="block" inputWidth="90" value="#{tailstring}" defaultLabel="no of lines to tail"/>
+				</h:panelGrid>
+				<h:panelGrid columns="1">
+    				<h:outputText value="Output limited to #{logcontrol.maxlines} lines"></h:outputText>
+				</h:panelGrid>
+		    </rich:panel>
+
+			</h:panelGrid>
+		</h:panelGrid>
+		
+        
+    </rich:panel>
+       <rich:panel bodyClass="inpanelBody">
+       <pre>
+<h:outputText value="#{logresult}"/>
+       </pre>
+       </rich:panel>
+    </h:panelGroup>
+
+   	<h:commandButton id="savefile" value="Save" action="#{logcontrol.save}" class="button"/>
+
+    </h:form>
+    
+    </rich:simpleTogglePanel>
+</ui:define> 
+</ui:composition>

@@ -1,0 +1,109 @@
+Node Control installation
+=========================
+
+Build and install node control
+------------------------------
+NodeControl is by default made to work with apache-tomcat, and has been tested with tomcat 6.
+
+In production you will build and install nodecontrol with:
+1. > cd nodecontrol
+2. Configure resources/nodecontrol.properties
+3. > ant archive
+3. > cp dist/nodecontrol.war $CATALINA_HOME/webapps
+
+Configure Tomcat
+----------------
+Before you start tomcat there are a few configuration options you should configure in
+CATALINA_HOME/conf/server.xml.
+
+Nodecontrol requires SSL with client certificate authentication. So you should set up 
+listener for this:
+ <Connector port="8444" protocol="HTTP/1.1" SSLEnabled="true"
+         maxThreads="150" scheme="https" secure="true" 
+         clientAuth="true" sslProtocol = "TLS" 
+         keystoreFile="/ngs/app/lsmond/current/apache-tomcat/conf/keystore/keystore.jks"
+         keystorePass="serverpwd"
+         truststoreFile="/ngs/app/lsmond/current/apache-tomcat/conf/keystore/truststore.jks" truststorePass="foobar123" truststoreType="JKS"
+         URIEncoding="UTF-8" />
+
+In this example I have copied keystore.jks and truststore.jks from the p12 directory of my
+EJBCA installation.
+
+You must configure Tomcat to run in "headless" mode.
+export JAVA_OPTS=-Djava.awt.headless=true
+
+You must now also drop the allowed client certificates into the directory configured in nodecontrol.properties, key 'nodecontrol.authorized.admin.cert.dir'.
+The certificates must be plain PEM files containing a single certificate. Just drop as many files in the directory as you have administrators.
+
+Start Tomcat, it should pick up nodecontrol.war from webapps and deploy it.
+
+Go to https://<your_host>:8444/nodecontrol
+
+Tips and tricks
+---------------
+If you make changes and need to re-deploy nodecontrol with updated code, tomcat can be a bit tricky about picking up the changes.
+1. Stop Tomcat
+2. >rm -rf webapps/nodecontrol*
+3. Copy a new nodecontrol.war file to webapps
+4. Start Tomcat
+
+Run NodeControl in Tomcat as one user to control JBoss running as another user
+------------------------------------------------------------------------------
+To restrict (security) access that the Tomcat instance has to the CA, the Tomcat instance can run as another
+user than JBoss. 
+In order for this to work you must:
+- Grant tomcat user access to the log files if should read.
+- Grant tomcat user write access to the maintenance file for rotation control.
+- Grant tomcat uses sudo rights to run run.sh and shutdown.sh for start and stop of JBoss.
+
+The last item can be done by adding a row like this to /etc/sudoers
+
+tomcat  ALL = (jboss) NOPASSWD: /home/jboss/jboss/bin/run.sh, /home/jboss/jboss/bin/shutdown.sh -S
+
+This means: give user tomcat the right to run two commands (run.sh and shutdown.sh -S) as user jboss without 
+giving a password.
+so you can run the command:
+tomcat>  sudo -H -u jboss /home/jboss/jboss/bin/shutdown.sh -S
+ 
+Running in JBoss
+----------------
+If you want to run NodeControl in JBoss instead of Tomcat, there are a few jar files that we should not deploy.
+In build.xml there is a target 'war':
+<target name="war"...
+In this target jar files are copied around line 121. There is a comment for jars needed
+in tomcat, and you can remove all include lines below that comment.
+Change:
+        <copy todir="${war.dir}/WEB-INF/lib">
+            <fileset dir="${lib.dir}">
+                <include name="richfaces*.jar" />
+                <include name="jsf-facelets.jar" />
+                <include name="jboss-seam*.jar" />
+                <include name="core.jar"/>
+                <include name="janino*.jar"/>
+                <include name="antlr*.jar"/>
+                <include name="mvel*.jar"/>
+                <include name="jboss-el.jar" />
+                <include name="commons-*.jar" />
+            	<!-- needed for tomcat -->
+                <include name="javassist*.jar" />
+            	<include name="dom4j*.jar" />
+            	<include name="jsf-*.jar" />
+            	<include name="persistence*.jar" />
+            	<include name="jta*.jar" />
+            	<include name="hibernate*.jar" />
+            </fileset>
+        </copy>
+to:
+        <copy todir="${war.dir}/WEB-INF/lib">
+            <fileset dir="${lib.dir}">
+                <include name="richfaces*.jar" />
+                <include name="jsf-facelets.jar" />
+                <include name="jboss-seam*.jar" />
+                <include name="core.jar"/>
+                <include name="janino*.jar"/>
+                <include name="antlr*.jar"/>
+                <include name="mvel*.jar"/>
+                <include name="jboss-el.jar" />
+                <include name="commons-*.jar" />
+            </fileset>
+        </copy>

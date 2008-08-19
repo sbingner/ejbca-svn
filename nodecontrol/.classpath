@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+    <classpathentry kind="src" output="classes/model" path="src/model"/>
+    <classpathentry kind="src" output="classes/action" path="src/action"/>
+    <classpathentry kind="src" output="classes/test" path="src/test"/>
+    <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+    <classpathentry kind="lib" path="lib/hibernate-validator.jar"/>
+    <classpathentry kind="lib" path="lib/jboss-seam.jar"/>
+    <classpathentry kind="lib" path="lib/jboss-seam-debug.jar"/>
+    <classpathentry kind="lib" path="lib/antlr.jar"/>
+    <classpathentry kind="lib" path="lib/jsf-facelets.jar"/>
+    <classpathentry kind="lib" path="lib/jsf-api.jar"/>
+    <classpathentry kind="lib" path="lib/servlet-api.jar"/>
+    <classpathentry kind="lib" path="lib/jboss-el.jar"/>
+    <classpathentry kind="lib" path="lib/mvel14.jar"/>
+    <classpathentry kind="lib" path="lib/janino.jar"/>
+    <classpathentry kind="lib" path="lib/antlr-runtime.jar"/>
+    <classpathentry kind="lib" path="lib/persistence-api.jar" />
+    <classpathentry kind="lib" path="lib/jta.jar" />
+    <classpathentry kind="lib" path="lib/core.jar"/>
+    <classpathentry kind="lib" path="lib/richfaces-api-3.2.0.GA.jar" />
+    <classpathentry kind="lib" path="lib/commons-configuration-1.5.jar" />
+    <classpathentry kind="lib" path="lib/commons-lang-2.3.jar" />
+    <classpathentry kind="output" path="test-build"/>
+</classpath>
