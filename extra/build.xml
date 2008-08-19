@@ -49,7 +49,7 @@
 	<!-- Import ant targets for the scep RA server -->
     <import file="scepbuild.xml" />
 
-    <property name="jar.extclasspath" value="lib/bcmail-jdk${java.ver}.jar lib/bcprov-jdk${java.ver}.jar lib/log4j.jar"/>
+    <property name="jar.extclasspath" value="lib/bcmail-jdk${java.ver}.jar lib/bcprov-jdk${java.ver}.jar lib/cert-cvc.jar lib/log4j.jar"/>
 
     <path id="ext.classpath">
         <fileset dir="lib/ext" includes="*.jar" />
@@ -60,6 +60,7 @@
         <fileset dir="lib" includes="*.jar" excludes="bc*.jar"/>
         <fileset dir="lib" includes="bcmail-jdk${java.ver}.jar"/>
     	<fileset dir="lib" includes="bcprov-jdk${java.ver}.jar"/>
+    	<fileset dir="lib" includes="cert-cvc.jar"/>
         <path refid="j2ee.classpath" />
         <path refid="ejbca.classpath" /> 
     </path>
@@ -176,9 +177,9 @@
         <jar basedir="${ext-raclient.build}" jarfile="${ext-raclientjar}">
             <manifest>
                 <attribute name="Class-Path" value="jboss-j2ee.jar
-                	bcmail-jdk${java.ver}.jar bcprov-jdk${java.ver}.jar log4j.jar                                                	
+                	bcmail-jdk${java.ver}.jar bcprov-jdk${java.ver}.jar cert-cvc.jar log4j.jar                                                	
                 	asm-attrs.jar dom4j-1.6.jar asm.jar 
-                	mysql-connector-java-3.1.12-bin.jar 
+                	mysql-connector-java-5.0.4-bin.jar 
                 	cglib-2.1.jar hibernate3.jar ejbca-util.jar
                 	commons-collections-2.1.1.jar commons-logging.jar commons-lang-2.3.jar"/>
                 <attribute name="Main-Class" value="org.ejbca.extra.ra.ExtRATestClient"/>
@@ -188,6 +189,7 @@
             <fileset dir="${lib}">
                 <include name="bcmail-jdk${java.ver}.jar" />
                 <include name="bcprov-jdk${java.ver}.jar" />
+                <include name="cert-cvc.jar" />
                 <include name="commons-collections-2.1.1.jar" />
                 <include name="commons-logging.jar" />
                 <include name="commons-lang-2.3.jar" />
@@ -200,7 +202,7 @@
                 <include name="asm-attrs.jar" />
                 <include name="dom4j-1.6.jar" />
                 <include name="asm.jar" />
-                <include name="mysql-connector-java-3.1.12-bin.jar" />
+                <include name="mysql-connector-java-5.0.4-bin.jar" />
                 <include name="cglib-2.1.jar" />
                 <include name="hibernate3.jar" />
             	<include name="ejbca-util.jar" />            	
