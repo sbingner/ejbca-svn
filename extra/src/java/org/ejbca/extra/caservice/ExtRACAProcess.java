@@ -185,7 +185,7 @@ public class ExtRACAProcess extends RACAProcess {
 	    	  String errormessage = null;
 	    	  SubMessages submgs = null;
 	    	  try {
-	    		log.info("Started processing message with messageId: " + msg.getMessageid()); 
+	    		log.info("Started processing message with messageId: " + msg.getMessageid()+", and uniqueId: "+msg.getUniqueId()); 
 
 	    		if(serviceKeyStore != null){
 				  submgs = msg.getSubMessages(
