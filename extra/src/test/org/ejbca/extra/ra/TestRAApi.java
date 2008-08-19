@@ -235,6 +235,7 @@ public class TestRAApi extends TestCase {
 		
 	}
 	
+	/** This test requires that keyrecovery is enabled in the EJBCA Admin-GUI */
 	public void test04GenerateSimpleKeyRecoveryRequest() throws Exception {
 		// First generate keystore
 		SubMessages smgs = new SubMessages(null,null,null);
@@ -260,7 +261,7 @@ public class TestRAApi extends TestCase {
 		
 		assertTrue(orgCert.getSubjectDN().toString().equals("CN=PKCS12REQ"));
 		
-		// Generate Key Reokevry request with original cert.
+		// Generate Key Recovery request with original cert.
 		
 		smgs = new SubMessages(null,null,null);
 		smgs.addSubMessage(TestExtRAMessages.genExtRAKeyRecoveryRequest(301,"SimpleKeyRecTest",true,orgCert));
@@ -276,8 +277,8 @@ public class TestRAApi extends TestCase {
 		assertTrue(submessagesresp.getSubMessages().size() == 1);
 		
 		resp = (ExtRAPKCS12Response) submessagesresp.getSubMessages().iterator().next();
-		assertTrue(resp.getRequestId() == 301);
-		assertTrue(resp.isSuccessful() == true);
+		assertEquals(301, resp.getRequestId());
+		assertTrue(resp.isSuccessful());
 		
 		X509Certificate keyRecCert = (X509Certificate) resp.getKeyStore("foo123").getCertificate("PKCS12REQ");
         assertTrue(keyRecCert.getSerialNumber().equals(orgCert.getSerialNumber()));
