@@ -162,7 +162,7 @@ public class ProtocolScepHttpTest extends TestCase {
         Collection certs = certstore.getCertificates(null);
         // Length two if the Scep RA server is signed directly by a Root CA
         // Length three if the Scep RA server is signed by a CA which is signed by a Root CA
-        assertEquals(certs.size(), 3);	                	
+        assertEquals(3, certs.size());	                	
         Iterator it = certs.iterator();
         racert = (X509Certificate)it.next();
         cacert = (X509Certificate)it.next();
