@@ -13,6 +13,7 @@
 package org.ejbca.cvc;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
@@ -27,6 +28,7 @@ import java.util.Date;
 import junit.framework.TestCase;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.ejbca.cvc.example.FileHelper;
 
 /**
  * Tests specific for ECC CV Certificates
@@ -68,8 +70,8 @@ extends TestCase implements CVCTest {
 		CVCertificate cert2 = (CVCertificate)cvcObj;
 		System.out.println("CERT1");
 		System.out.println(cert1.getAsText());
-		System.out.println("CERT2");
-		System.out.println(cert2.getAsText());
+//		System.out.println("CERT2");
+//		System.out.println(cert2.getAsText());
 		assertEquals("Certificates as text differ", cert1.getAsText(), cert2.getAsText());
 
 		byte[] pubkey2 = cert2.getCertificateBody().getPublicKey().getDEREncoded();
@@ -95,10 +97,10 @@ extends TestCase implements CVCTest {
 		assertTrue("Parsed object is not a CVCertificate: " + cvcObj.getTag(), (cvcObj instanceof CVCertificate));
 
 		cert2 = (CVCertificate)cvcObj;
-		System.out.println("CERT1");
-		System.out.println(cert1.getAsText());
-		System.out.println("CERT2");
-		System.out.println(cert2.getAsText());
+//		System.out.println("CERT1");
+//		System.out.println(cert1.getAsText());
+//		System.out.println("CERT2");
+//		System.out.println(cert2.getAsText());
 		assertEquals("Certificates as text differ", cert1.getAsText(), cert2.getAsText());
 
 		pubkey2 = cert2.getCertificateBody().getPublicKey().getDEREncoded();
@@ -190,6 +192,17 @@ extends TestCase implements CVCTest {
 		Security.removeProvider("CVC");
 	}
 
+	
+	public void testExternalCert()throws Exception {
+	      //byte[] bytes = FileHelper.loadFile(new File("./src/test/resources/GO_CVCA_EC256.cvcert"));
+	      byte[] bytes = FileHelper.loadFile(new File("./src/test/resources/C_CZCVCADCZ000.cvcert"));
+	      CVCertificate cvc = (CVCertificate)CertificateParser.parseCVCObject(bytes);
+	      CardVerifiableCertificate cvcacert = new CardVerifiableCertificate(cvc);
+	      System.out.println("CERT\n: "+cvcacert.toString());
+	      cvcacert.verify(cvc.getCertificateBody().getPublicKey(), "BC");
+
+	}
+	
 
 	// Helper method to create a certificate
 	private CVCertificate createTestCertificate(AuthorizationRoleEnum role) throws Exception {

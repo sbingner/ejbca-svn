@@ -13,6 +13,7 @@
 package org.ejbca.cvc;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
@@ -36,6 +37,7 @@ import org.ejbca.cvc.CardVerifiableCertificate;
 import org.ejbca.cvc.CertificateGenerator;
 import org.ejbca.cvc.CertificateParser;
 import org.ejbca.cvc.HolderReferenceField;
+import org.ejbca.cvc.example.FileHelper;
 
 /**
  * Tests specific for CV Certificates
@@ -158,6 +160,14 @@ public class TestCVCertificate
       Security.removeProvider("CVC");
    }
 
+	public void testExternalCert()throws Exception {
+	      byte[] bytes = FileHelper.loadFile(new File("./src/test/resources/GO_CVCA_RSA2008.cvcert"));
+	      CVCertificate cvc = (CVCertificate)CertificateParser.parseCVCObject(bytes);
+	      CardVerifiableCertificate cvcacert = new CardVerifiableCertificate(cvc);
+	      System.out.println("CERT\n: "+cvcacert.toString());
+	      cvcacert.verify(cvc.getCertificateBody().getPublicKey(), "BC");
+
+	}
 
    // Hj�lpmetod f�r att skapa ett cert
    private CVCertificate createTestCertificate() throws Exception {
