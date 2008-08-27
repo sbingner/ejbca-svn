@@ -132,17 +132,17 @@ public class CertificateGenerator {
             validFrom,
             validTo );
 
-      // Fetch data to be signed
-      TBSData tbs = TBSData.getInstance(body);
+      CVCertificate cvc = new CVCertificate(body);
       
       // Perform signing
       Signature signature = Signature.getInstance(algorithmName, provider);
       signature.initSign(signerKey);
-      signature.update(tbs.getEncoded());
+      signature.update(cvc.getTBS());
       byte[] signdata = signature.sign();
 
-      // Create and return the certificate
-      return new CVCertificate(body, signdata);
+      // Save the signature and return the certificate
+      cvc.setSignature(signdata);
+      return cvc;
    }
 
    /**
@@ -248,17 +248,17 @@ public class CertificateGenerator {
             cvcPublicKey,
             holderRef );
       
-      // Fetch the data to be signed
-      TBSData tbs = TBSData.getInstance(reqBody);
+      CVCertificate cvc = new CVCertificate(reqBody);
       
       // Perform the signing
       Signature innerSign = Signature.getInstance(algorithmName, signProvicer);
       innerSign.initSign(keyPair.getPrivate());
-      innerSign.update(tbs.getEncoded());
+      innerSign.update(cvc.getTBS());
       byte[] signdata = innerSign.sign();
 
       // Create and return the CVCRequest (which is an instance of CVCertificate)
-      return new CVCertificate(reqBody, signdata);
+      cvc.setSignature(signdata);
+      return cvc;
    }
 
 
@@ -307,17 +307,19 @@ public class CertificateGenerator {
          String            signProvider )
    throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, ConstructionException {
 
+      CVCAuthenticatedRequest authRequest = new CVCAuthenticatedRequest(cvcRequest, caRef);
       // Fetch the data to be signed (for outer signature)
       TBSData reqTbs = TBSData.getInstance(cvcRequest);
 
       // Perform the signing
       Signature outerSign = Signature.getInstance(algorithmName, signProvider);
       outerSign.initSign(keyPair.getPrivate());
-      outerSign.update(reqTbs.getEncoded());
+      outerSign.update(authRequest.getTBS());
       byte[] signdata = outerSign.sign();
 
       // Create and return the CVCAuthenticatedRequest
-      return new CVCAuthenticatedRequest(cvcRequest, caRef, signdata);
+      authRequest.setSignature(signdata);
+      return authRequest;
    }
 
 }
