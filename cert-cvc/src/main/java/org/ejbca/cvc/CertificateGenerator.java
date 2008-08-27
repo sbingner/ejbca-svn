@@ -308,8 +308,6 @@ public class CertificateGenerator {
    throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, ConstructionException {
 
       CVCAuthenticatedRequest authRequest = new CVCAuthenticatedRequest(cvcRequest, caRef);
-      // Fetch the data to be signed (for outer signature)
-      TBSData reqTbs = TBSData.getInstance(cvcRequest);
 
       // Perform the signing
       Signature outerSign = Signature.getInstance(algorithmName, signProvider);
