@@ -12,6 +12,8 @@
  *************************************************************************/
 package org.ejbca.cvc;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -80,11 +82,18 @@ public class CVCAuthenticatedRequest
     */
    public byte[] getTBS() throws ConstructionException {
       try {
-         // Eventuell signatur ska inte vara med här
-         CVCAuthenticatedRequest tmpRequest = new CVCAuthenticatedRequest();
-         tmpRequest.addSubfield(getSubfield(CVCTagEnum.CV_CERTIFICATE));
-         tmpRequest.addSubfield(getSubfield(CVCTagEnum.CA_REFERENCE));
-         return tmpRequest.getDEREncoded();
+         // The TBS for an authenticated request is from ECA 1.11 
+    	 // "The signature SHALL be created over the concatenation of the encoded CV Certificate
+    	 // and the encoded Certification Authority Reference (i.e. both including tag and length)."
+         ByteArrayOutputStream bout = new ByteArrayOutputStream();
+         DataOutputStream dout = new DataOutputStream(bout);
+    	 CVCertificate cert = getRequest();
+    	 cert.encode(dout);
+    	 CAReferenceField caref = getAuthorityReference();
+    	 caref.encode(dout);
+    	 dout.close();
+    	 byte[] res = bout.toByteArray();
+    	 return res;
       }
       catch( NoSuchFieldException e ){
          throw new ConstructionException(e);

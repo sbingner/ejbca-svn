@@ -1,0 +1,8 @@
+1.2.7
+-----
+- Support for ECC keys and signatures, upgrades BC to 1.41.
+- Fix bug where outer signature in authenticated requests did not include CARef in tbs
+
+1.2.6
+-----
+Initial release
