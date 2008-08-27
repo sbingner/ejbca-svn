@@ -23,7 +23,6 @@ import java.security.cert.CertificateException;
 
 import org.ejbca.cvc.exception.ConstructionException;
 
-
 /**
  * Represents a CVC-request having an outer signature
  * 
@@ -32,7 +31,7 @@ import org.ejbca.cvc.exception.ConstructionException;
  *
  */
 public class CVCAuthenticatedRequest
-      extends AbstractSequence {
+      extends AbstractSequence implements Signable {
 
 
    private static CVCTagEnum[] allowedFields = new CVCTagEnum[] {
@@ -54,18 +53,45 @@ public class CVCAuthenticatedRequest
    }
 
    /**
-    * Creates an instance
+    * Creates an instance 
     * @param cvcert
     * @param caReference
-    * @param signatureData
     */
-   public CVCAuthenticatedRequest(CVCertificate cvcert, CAReferenceField caReference, byte[] signatureData) 
+   public CVCAuthenticatedRequest(CVCertificate cvcert, CAReferenceField caReference) 
    throws ConstructionException {
       this();
       
       addSubfield(cvcert);
       addSubfield(caReference);
+   }
+
+   /**
+    * Adds signature
+    * @param signatureData
+    * @throws ConstructionException
+    */
+   public void setSignature(byte[] signatureData) throws ConstructionException {
       addSubfield(new ByteField(CVCTagEnum.SIGNATURE, signatureData));
+   }
+
+   
+   /**
+    * Returns the data To Be Signed
+    */
+   public byte[] getTBS() throws ConstructionException {
+      try {
+         // Eventuell signatur ska inte vara med här
+         CVCAuthenticatedRequest tmpRequest = new CVCAuthenticatedRequest();
+         tmpRequest.addSubfield(getSubfield(CVCTagEnum.CV_CERTIFICATE));
+         tmpRequest.addSubfield(getSubfield(CVCTagEnum.CA_REFERENCE));
+         return tmpRequest.getDEREncoded();
+      }
+      catch( NoSuchFieldException e ){
+         throw new ConstructionException(e);
+      }
+      catch( IOException e ){
+         throw new ConstructionException(e);
+      }
    }
 
    /**
@@ -85,7 +111,7 @@ public class CVCAuthenticatedRequest
    }
 
    /**
-    * Returns the signature
+    * Returns signature
     * @return
     */
    public byte[] getSignature() throws NoSuchFieldException {
@@ -108,22 +134,21 @@ public class CVCAuthenticatedRequest
          String algorithm = "";
          if( pubKey instanceof CVCPublicKey ){
             // If pubKey is an instance of CVCPublicKey then the algorithm can be extracted
-        	// using its OID
+         	// using its OID
             CVCPublicKey cvcKey = (CVCPublicKey)pubKey;
             algorithm = AlgorithmUtil.getAlgorithmName(cvcKey.getObjectIdentifier());
          }
          else {
-            // Otherwise we assume that the inner signature is calculated using the same 
-            // hash algorithm as the outer one!
+             // Otherwise we assume that the inner signature is calculated using the same 
+             // hash algorithm as the outer one!
             CVCPublicKey cvcKey = getRequest().getCertificateBody().getPublicKey();
             algorithm = AlgorithmUtil.getAlgorithmName(cvcKey.getObjectIdentifier());
          }
          Signature sign = Signature.getInstance(algorithm);
          
          // Now verify the signature
-         TBSData tbs = TBSData.getInstance(getRequest());
          sign.initVerify(pubKey);
-         sign.update(tbs.getEncoded());
+         sign.update(getTBS());
          if( !sign.verify(getSignature()) ){
             throw new SignatureException("Signature verification failed!");
          }
@@ -131,13 +156,13 @@ public class CVCAuthenticatedRequest
       catch( NoSuchFieldException e ){
          throw new CertificateException("CV-Certificate is corrupt", e);
       }
-      catch( IOException e ){
+      catch( ConstructionException e ){
          throw new CertificateException("CV-Certificate is corrupt", e);
       }
    }
 
    /**
-    * Little helper
+    * Helper method, returns this request as text
     */
    public String toString() {
       return getAsText("", true);
