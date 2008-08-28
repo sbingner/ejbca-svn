@@ -1,3 +1,7 @@
+3.7.0
+-----
+- Updated to work with EJBCA 3.7.0
+
 3.6.2
 -----
 - [ECA-841] - ExtRA PKCS12 request does not work with approvals
