@@ -38,7 +38,7 @@ public class TestAlgorithmUtil
    
    /** Check: Validate AlgorithmUtil */ 
    public void testAlgorithmUtil() throws Exception {
-      String algorithmName1 = "SHA224withECDSA";
+      String algorithmName1 = "SHA224withCVC-ECDSA";
       OIDField oid = AlgorithmUtil.getOIDField(algorithmName1);
       assertEquals("OID values not equal", oid.getValue(), "0.4.0.127.0.7.2.2.2.2.2");
       

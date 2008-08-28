@@ -135,7 +135,7 @@ public class CertificateGenerator {
       CVCertificate cvc = new CVCertificate(body);
       
       // Perform signing
-      Signature signature = Signature.getInstance(algorithmName, provider);
+      Signature signature = Signature.getInstance(AlgorithmUtil.convertAlgorithmNameToCVC(algorithmName), provider);
       signature.initSign(signerKey);
       signature.update(cvc.getTBS());
       byte[] signdata = signature.sign();
@@ -251,7 +251,7 @@ public class CertificateGenerator {
       CVCertificate cvc = new CVCertificate(reqBody);
       
       // Perform the signing
-      Signature innerSign = Signature.getInstance(algorithmName, signProvicer);
+      Signature innerSign = Signature.getInstance(AlgorithmUtil.convertAlgorithmNameToCVC(algorithmName), signProvicer);
       innerSign.initSign(keyPair.getPrivate());
       innerSign.update(cvc.getTBS());
       byte[] signdata = innerSign.sign();
@@ -310,7 +310,7 @@ public class CertificateGenerator {
       CVCAuthenticatedRequest authRequest = new CVCAuthenticatedRequest(cvcRequest, caRef);
 
       // Perform the signing
-      Signature outerSign = Signature.getInstance(algorithmName, signProvider);
+      Signature outerSign = Signature.getInstance(AlgorithmUtil.convertAlgorithmNameToCVC(algorithmName), signProvider);
       outerSign.initSign(keyPair.getPrivate());
       outerSign.update(authRequest.getTBS());
       byte[] signdata = outerSign.sign();

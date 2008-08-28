@@ -14,20 +14,14 @@ package org.ejbca.cvc;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
-import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
-import java.security.spec.ECParameterSpec;
-import java.security.spec.ECPoint;
-import java.security.spec.InvalidKeySpecException;
 
-import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.ejbca.cvc.exception.ConstructionException;
-import org.ejbca.cvc.util.BCECUtil;
 
 /**
  * 
@@ -128,25 +122,7 @@ public class CVCertificate extends AbstractSequence implements Signable {
          Signature sign = Signature.getInstance(AlgorithmUtil.getAlgorithmName(oid), provider);
          
          // Verify the signature
-         PublicKey vKey = key;
-         
-         // If the key is an EC key, we must convert our CVC EC key to a BC EC key in order for the verification to work.
-         if (key instanceof PublicKeyEC) {
-        	 PublicKeyEC eckey = (PublicKeyEC)key;
-        	 ECParameterSpec spec = eckey.getParams();
-        	 ECPoint point = eckey.getW();
-        	 org.bouncycastle.jce.spec.ECParameterSpec bcspec = BCECUtil.convertSpec(spec, false);
-        	 org.bouncycastle.math.ec.ECPoint bcpoint = BCECUtil.convertPoint(spec, point, false);
-        	 ECPublicKeySpec pkspec = new ECPublicKeySpec(bcpoint, bcspec);
-        	 KeyFactory f = KeyFactory.getInstance("ECDSA", "BC");
-        	 try {
-				vKey = f.generatePublic(pkspec);
-			} catch (InvalidKeySpecException e) {
-				throw new InvalidKeyException(e);
-			}
-         }
-         
-         sign.initVerify(vKey);
+         sign.initVerify(key);
          sign.update(getTBS());
          if( !sign.verify(getSignature()) ){
             throw new SignatureException("Signature verification failed!");

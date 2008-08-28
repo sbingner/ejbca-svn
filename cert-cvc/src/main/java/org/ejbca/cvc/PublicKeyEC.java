@@ -264,7 +264,7 @@ public class PublicKeyEC
       System.arraycopy(data, 1, xEnc, 0, xEnc.length);
       System.arraycopy(data, xEnc.length + 1, yEnc, 0, yEnc.length);
       
-      return new ECPoint(new BigInteger(xEnc), new BigInteger(yEnc));
+      return new ECPoint(new BigInteger(1, xEnc), new BigInteger(1, yEnc));
    }
 
 }

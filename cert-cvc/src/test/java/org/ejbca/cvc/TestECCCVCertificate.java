@@ -84,6 +84,9 @@ extends TestCase implements CVCTest {
 		// Verify cert2 with cert2
 		cert2.verify(cert2.getCertificateBody().getPublicKey(), "BC");
 
+		// Verify cert1 with cert2
+		cert1.verify(cert2.getCertificateBody().getPublicKey(), "BC");
+
 		//
 		// Test an IS certificate
 		//
