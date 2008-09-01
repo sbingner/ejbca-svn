@@ -37,7 +37,7 @@ public class TestCVCRequest
    }
 
    protected void tearDown() throws Exception {
-      // Uninstallera BC 
+      // Uninstall BC 
       Security.removeProvider("BC");
    }
 
@@ -59,6 +59,9 @@ public class TestCVCRequest
       CVCertificate certRequest = createTestRequest(algorithmName);
       String caRef = certRequest.getCertificateBody().getAuthorityReference().getConcatenated();
       assertEquals("CA_REF not equal", HR_COUNTRY_CODE+HR_HOLDER_MNEMONIC+HR_SEQUENCE_NO, caRef);
+
+      certRequest = createTestRequestNoCA(algorithmName);
+      assertNull("CAReference", certRequest.getCertificateBody().getAuthorityReference());
    }
 
    /** Check: DER encoding/decoding of a Request should not affect the data */
@@ -107,10 +110,25 @@ public class TestCVCRequest
       keyGen.initialize(1024, new SecureRandom());
       KeyPair keyPair = keyGen.generateKeyPair();
 
+      CAReferenceField caRef = new CAReferenceField(HR_COUNTRY_CODE, HR_HOLDER_MNEMONIC, HR_SEQUENCE_NO);
       HolderReferenceField holderRef = new HolderReferenceField(HR_COUNTRY_CODE, HR_HOLDER_MNEMONIC, HR_SEQUENCE_NO);
 
       // Call CertificateGenerator
-      return CertificateGenerator.createRequest(keyPair, algName, holderRef);
+      return CertificateGenerator.createRequest(keyPair, algName, caRef, holderRef);
+   }
+
+   // Creates a request (CVCertificate) without caRef
+   private CVCertificate createTestRequestNoCA(String algName) throws Exception {
+      // Create key pair
+      KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", "BC");
+      keyGen.initialize(1024, new SecureRandom());
+      KeyPair keyPair = keyGen.generateKeyPair();
+
+      CAReferenceField caRef = null;
+      HolderReferenceField holderRef = new HolderReferenceField(HR_COUNTRY_CODE, HR_HOLDER_MNEMONIC, HR_SEQUENCE_NO);
+
+      // Call CertificateGenerator
+      return CertificateGenerator.createRequest(keyPair, algName, caRef, holderRef);
    }
 
    // Creates a request (CVCAuthenticatedRequest)
