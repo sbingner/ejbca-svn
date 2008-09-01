@@ -235,13 +235,6 @@ public class CertificateGenerator {
    throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, ConstructionException{
       CVCPublicKey cvcPublicKey = KeyFactory.createInstance(keyPair.getPublic(), algorithmName, null);
 
-      /* If the supplied Certificate Authority Reference is null then we set it to the values from 
-       * Certificate Holder Reference, making this a self-signed certificate (used for initial requests).
-       */
-      if( caRef==null ){
-         caRef = new CAReferenceField(holderRef.getCountry(), holderRef.getMnemonic(), holderRef.getSequence());
-      }
-
       // Create the Request Body (which is a simplified CVCertificateBody)
       CVCertificateBody reqBody = new CVCertificateBody(
             caRef,
