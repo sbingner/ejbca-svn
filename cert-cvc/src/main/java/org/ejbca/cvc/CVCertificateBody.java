@@ -63,10 +63,8 @@ public class CVCertificateBody
    {
       this();
 
-      // All arguments must be set
-      if( authorityReference==null ){
-         throw new IllegalArgumentException("authorityReference is null");
-      }
+      // All arguments must be set, except authorityReference which is
+      // optional in requests
       if( publicKey==null ){
          throw new IllegalArgumentException("publicKey is null");
       }
