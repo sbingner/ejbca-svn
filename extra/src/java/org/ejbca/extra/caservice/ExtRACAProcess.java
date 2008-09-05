@@ -316,7 +316,7 @@ public class ExtRACAProcess extends RACAProcess {
 		ExtRAPKCS10Response retval = null;
 		try {
 	      // Create a PKCS10
-	      PKCS10RequestMessage pkcs10 = RequestMessageUtils.genPKCS10RequestMessageFromPEM(submessage.getPKCS10().getBytes());
+	      PKCS10RequestMessage pkcs10 = RequestMessageUtils.genPKCS10RequestMessage(submessage.getPKCS10().getBytes());
 	      String password = pkcs10.getPassword();
 	      
 	      if (submessage.createOrEditUser()) {
@@ -589,8 +589,8 @@ public class ExtRACAProcess extends RACAProcess {
                 // Verify requests
                 byte[] authReqBytes = authReq.getBytes();
                 byte[] signReqBytes = signReq.getBytes();
-                PKCS10RequestMessage authPkcs10 = RequestMessageUtils.genPKCS10RequestMessageFromPEM(authReqBytes);
-                PKCS10RequestMessage signPkcs10 = RequestMessageUtils.genPKCS10RequestMessageFromPEM(signReqBytes);
+                PKCS10RequestMessage authPkcs10 = RequestMessageUtils.genPKCS10RequestMessage(authReqBytes);
+                PKCS10RequestMessage signPkcs10 = RequestMessageUtils.genPKCS10RequestMessage(signReqBytes);
                 String authok = null;
                 try {
                     if (!authPkcs10.verify(authcert.getPublicKey())) {
