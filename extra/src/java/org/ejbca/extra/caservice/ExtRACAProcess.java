@@ -886,7 +886,7 @@ public class ExtRACAProcess extends RACAProcess {
 			Admin admin = new Admin(signerCert);
 			
 			// Check that user have the administrator flag set.
-			getUserAdminSession().checkIfCertificateBelongToAdmin(admin, signerCert.getSerialNumber(), signerCert.getIssuerDN().toString());
+			getUserAdminSession().checkIfCertificateBelongToUser(admin, signerCert.getSerialNumber(), signerCert.getIssuerDN().toString());
 			
 			RevokedCertInfo revokeResult =  getCertStoreSession().isRevoked(new Admin(Admin.TYPE_INTERNALUSER),CertTools.stringToBCDNString(signerCert.getIssuerDN().toString()), signerCert.getSerialNumber());
 			if(revokeResult == null || revokeResult.getReason() != RevokedCertInfo.NOT_REVOKED){
