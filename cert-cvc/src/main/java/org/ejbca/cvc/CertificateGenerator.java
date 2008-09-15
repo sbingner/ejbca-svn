@@ -25,6 +25,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.ejbca.cvc.exception.ConstructionException;
+import org.ejbca.cvc.util.BCECUtil;
 
 
 /**
@@ -139,11 +140,14 @@ public class CertificateGenerator {
       signature.initSign(signerKey);
       signature.update(cvc.getTBS());
       byte[] signdata = signature.sign();
-
+      
+      // Now convert the X9.62 signature to a CVC signature
+      byte[] sig = BCECUtil.convertX962SigToCVC(algorithmName, signdata);
       // Save the signature and return the certificate
-      cvc.setSignature(signdata);
+      cvc.setSignature(sig);
       return cvc;
    }
+   
 
    /**
     * Generates a CVC-request without an outer signature using BouncyCastle as signature provider
@@ -249,8 +253,11 @@ public class CertificateGenerator {
       innerSign.update(cvc.getTBS());
       byte[] signdata = innerSign.sign();
 
+      // Now convert the X9.62 signature to a CVC signature
+      byte[] sig = BCECUtil.convertX962SigToCVC(algorithmName, signdata);
+
       // Create and return the CVCRequest (which is an instance of CVCertificate)
-      cvc.setSignature(signdata);
+      cvc.setSignature(sig);
       return cvc;
    }
 
@@ -308,8 +315,11 @@ public class CertificateGenerator {
       outerSign.update(authRequest.getTBS());
       byte[] signdata = outerSign.sign();
 
+      // Now convert the X9.62 signature to a CVC signature
+      byte[] sig = BCECUtil.convertX962SigToCVC(algorithmName, signdata);
+
       // Create and return the CVCAuthenticatedRequest
-      authRequest.setSignature(signdata);
+      authRequest.setSignature(sig);
       return authRequest;
    }
 

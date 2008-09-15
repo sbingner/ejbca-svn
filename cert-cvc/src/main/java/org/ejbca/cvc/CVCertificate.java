@@ -22,6 +22,7 @@ import java.security.SignatureException;
 import java.security.cert.CertificateException;
 
 import org.ejbca.cvc.exception.ConstructionException;
+import org.ejbca.cvc.util.BCECUtil;
 
 /**
  * 
@@ -119,12 +120,15 @@ public class CVCertificate extends AbstractSequence implements Signable {
       try {
          // Lookup the OID, the hash-algorithm can be found through it
          OIDField oid = getCertificateBody().getPublicKey().getObjectIdentifier();
-         Signature sign = Signature.getInstance(AlgorithmUtil.getAlgorithmName(oid), provider);
+         String algorithm = AlgorithmUtil.getAlgorithmName(oid);
+         Signature sign = Signature.getInstance(algorithm, provider);
          
          // Verify the signature
          sign.initVerify(key);
          sign.update(getTBS());
-         if( !sign.verify(getSignature()) ){
+         // Now convert the CVC signature to a X9.62 signature
+         byte[] sig = BCECUtil.convertCVCSigToX962(algorithm, getSignature());
+         if( !sign.verify(sig) ){
             throw new SignatureException("Signature verification failed!");
          }
       }

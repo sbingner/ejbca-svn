@@ -1,197 +1,101 @@
 package org.ejbca.cvc.util;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
-import java.security.spec.ECField;
-import java.security.spec.ECFieldF2m;
-import java.security.spec.ECFieldFp;
-import java.security.spec.ECParameterSpec;
-import java.security.spec.ECPoint;
-import java.security.spec.EllipticCurve;
+import java.security.SignatureException;
 
-import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
-import org.bouncycastle.jce.spec.ECNamedCurveSpec;
-import org.bouncycastle.math.ec.ECCurve;
+import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.DERInteger;
+import org.bouncycastle.asn1.DEROutputStream;
+import org.bouncycastle.asn1.DERSequence;
 
-/** This is directly copied from org.bouncycastle.jce.provider.EC5Util, with one additional method from org.bouncycastle.jce.provider.ECUtil
- *  BC version 1.40 was the base of the copy-paste operation.
+/** This is directly copied from org.bouncycastle.jce.provider.asymmetric.ec.Signature
+ *  BC version 1.41b04 was the base of the copy-paste operation.
  *  
  * @version $Id$
  */
 public class BCECUtil
 {
-    static EllipticCurve convertCurve(
-        ECCurve curve, 
-        byte[]  seed)
-    {
-        if (curve instanceof ECCurve.Fp)
-        {
-            return new EllipticCurve(new ECFieldFp(((ECCurve.Fp)curve).getQ()), curve.getA().toBigInteger(), curve.getB().toBigInteger(), seed);
-        }
-        else
-        {
-            ECCurve.F2m curveF2m = (ECCurve.F2m)curve;
-            int ks[];
-            
-            if (curveF2m.isTrinomial())
-            {
-                ks = new int[] { curveF2m.getK1() };
-                
-                return new EllipticCurve(new ECFieldF2m(curveF2m.getM(), ks), curve.getA().toBigInteger(), curve.getB().toBigInteger(), seed);
-            }
-            else
-            {
-                ks = new int[] { curveF2m.getK3(), curveF2m.getK2(), curveF2m.getK1() };
-                
-                return new EllipticCurve(new ECFieldF2m(curveF2m.getM(), ks), curve.getA().toBigInteger(), curve.getB().toBigInteger(), seed);
-            } 
-        }
-    }
+	   public static byte[] convertX962SigToCVC(String algorithmName, byte[] xsig) throws IOException {
+		   // Only do this if it's an ECDSA algorithm
+		   if (!algorithmName.toUpperCase().contains("ECDSA")) {
+			   return xsig;
+		   }
+		   // Read r and s from asn.1 encoded x9.62 signature
+	       ASN1InputStream aIn = new ASN1InputStream(xsig);
+	       ASN1Sequence seq = (ASN1Sequence)aIn.readObject();
+	       BigInteger r = ((DERInteger)seq.getObjectAt(0)).getValue();
+	       BigInteger s = ((DERInteger)seq.getObjectAt(1)).getValue();
 
-    static ECCurve convertCurve(
-        EllipticCurve ec)
-    {
-        ECField field = ec.getField();
-        BigInteger a = ec.getA();
-        BigInteger b = ec.getB();
+	       // Write r and s to not asn.1 encoded cvc signature
+	       byte[] first = makeUnsigned(r);
+	       byte[] second = makeUnsigned(s);
+	       byte[] res;
 
-        if (field instanceof ECFieldFp)
-        {
-            return new ECCurve.Fp(((ECFieldFp)field).getP(), a, b);
-        }
-        else
-        {
-            ECFieldF2m fieldF2m = (ECFieldF2m)field;
-            int m = fieldF2m.getM();
-            int ks[] = convertMidTerms(fieldF2m.getMidTermsOfReductionPolynomial());
-            return new ECCurve.F2m(m, ks[0], ks[1], ks[2], a, b); 
-        }
-    }
+	       if (first.length > second.length)
+	       {
+	           res = new byte[first.length * 2];
+	       }
+	       else
+	       {
+	           res = new byte[second.length * 2];
+	       }
 
-    static ECParameterSpec convertSpec(
-        EllipticCurve ellipticCurve,
-        org.bouncycastle.jce.spec.ECParameterSpec spec)
-    {
-        if (spec instanceof ECNamedCurveParameterSpec)
-        {
-            return new ECNamedCurveSpec(
-                ((ECNamedCurveParameterSpec)spec).getName(),
-                ellipticCurve,
-                new ECPoint(
-                    spec.getG().getX().toBigInteger(),
-                    spec.getG().getY().toBigInteger()),
-                spec.getN(),
-                spec.getH());
-        }
-        else
-        {
-            return new ECParameterSpec(
-                ellipticCurve,
-                new ECPoint(
-                    spec.getG().getX().toBigInteger(),
-                    spec.getG().getY().toBigInteger()),
-                spec.getN(),
-                spec.getH().intValue());
-        }
-    }
+	       System.arraycopy(first, 0, res, res.length / 2 - first.length, first.length);
+	       System.arraycopy(second, 0, res, res.length - second.length, second.length);
 
-    public static org.bouncycastle.jce.spec.ECParameterSpec convertSpec(
-        ECParameterSpec ecSpec,
-        boolean withCompression)
-    {
-        ECCurve curve = convertCurve(ecSpec.getCurve());
+	       return res;
+	   }
 
-        return new org.bouncycastle.jce.spec.ECParameterSpec(
-            curve,
-            convertPoint(curve, ecSpec.getGenerator(), withCompression),
-            ecSpec.getOrder(),
-            BigInteger.valueOf(ecSpec.getCofactor()),
-            ecSpec.getCurve().getSeed());
-    }
+	   public static byte[] convertCVCSigToX962(String algorithmName, byte[] xsig) throws SignatureException {
+		   // Only do this if it's an ECDSA algorithm
+		   if (!algorithmName.toUpperCase().contains("ECDSA")) {
+			   return xsig;
+		   }
+		   // Read r and s from non asn.1 encoded CVC signature
+           byte[] first = new byte[xsig.length / 2];
+           byte[] second = new byte[xsig.length / 2];
 
-    public static org.bouncycastle.math.ec.ECPoint convertPoint(
-        ECParameterSpec ecSpec,
-        ECPoint point,
-        boolean withCompression)
-    {
-        return convertPoint(convertCurve(ecSpec.getCurve()), point, withCompression);
-    }
+           System.arraycopy(xsig, 0, first, 0, first.length);
+           System.arraycopy(xsig, first.length, second, 0, second.length);
 
-    static org.bouncycastle.math.ec.ECPoint convertPoint(
-        ECCurve curve,
-        ECPoint point,
-        boolean withCompression)
-    {
-        return curve.createPoint(point.getAffineX(), point.getAffineY(), withCompression);
-    }
-    
-    /**
-     * Returns a sorted array of middle terms of the reduction polynomial.
-     * @param k The unsorted array of middle terms of the reduction polynomial
-     * of length 1 or 3.
-     * @return the sorted array of middle terms of the reduction polynomial.
-     * This array always has length 3.
-     */
-    static int[] convertMidTerms(
-        int[] k)
-    {
-        int[] res = new int[3];
-        
-        if (k.length == 1)
-        {
-            res[0] = k[0];
-        }
-        else
-        {
-            if (k.length != 3)
-            {
-                throw new IllegalArgumentException("Only Trinomials and pentanomials supported");
-            }
+           BigInteger r = new BigInteger(1, first);
+           BigInteger s = new BigInteger(1, second);
 
-            if (k[0] < k[1] && k[0] < k[2])
-            {
-                res[0] = k[0];
-                if (k[1] < k[2])
-                {
-                    res[1] = k[1];
-                    res[2] = k[2];
-                }
-                else
-                {
-                    res[1] = k[2];
-                    res[2] = k[1];
-                }
-            }
-            else if (k[1] < k[2])
-            {
-                res[0] = k[1];
-                if (k[0] < k[2])
-                {
-                    res[1] = k[0];
-                    res[2] = k[2];
-                }
-                else
-                {
-                    res[1] = k[2];
-                    res[2] = k[0];
-                }
-            }
-            else
-            {
-                res[0] = k[2];
-                if (k[0] < k[1])
-                {
-                    res[1] = k[0];
-                    res[2] = k[1];
-                }
-                else
-                {
-                    res[1] = k[1];
-                    res[2] = k[0];
-                }
-            }
-        }
+	       // Write r and s to asn.1 encoded X9.62 signature
+           ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+           DEROutputStream dOut = new DEROutputStream(bOut);
+           ASN1EncodableVector v = new ASN1EncodableVector();
 
-        return res;
-    }
+           v.add(new DERInteger(r));
+           v.add(new DERInteger(s));
+
+           try {
+               dOut.writeObject(new DERSequence(v));        	   
+           } catch (IOException e) {
+        	   throw new SignatureException(e);
+           }
+
+           return bOut.toByteArray();
+	   }
+
+	   private static byte[] makeUnsigned(BigInteger val)
+	   {
+	       byte[] res = val.toByteArray();
+
+	       if (res[0] == 0)
+	       {
+	           byte[] tmp = new byte[res.length - 1];
+
+	           System.arraycopy(res, 1, tmp, 0, tmp.length);
+
+	           return tmp;
+	       }
+
+	       return res;
+	   }
 
 }

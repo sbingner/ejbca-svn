@@ -24,6 +24,7 @@ import java.security.SignatureException;
 import java.security.cert.CertificateException;
 
 import org.ejbca.cvc.exception.ConstructionException;
+import org.ejbca.cvc.util.BCECUtil;
 
 /**
  * Represents a CVC-request having an outer signature
@@ -158,7 +159,9 @@ public class CVCAuthenticatedRequest
          // Now verify the signature
          sign.initVerify(pubKey);
          sign.update(getTBS());
-         if( !sign.verify(getSignature()) ){
+         // Now convert the CVC signature to a X9.62 signature
+         byte[] sig = BCECUtil.convertCVCSigToX962(algorithm, getSignature());
+         if( !sign.verify(sig) ){
             throw new SignatureException("Signature verification failed!");
          }
       }

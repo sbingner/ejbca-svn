@@ -31,17 +31,19 @@ public class AlgorithmUtil {
       algorithmMap.put("SHA1WITHRSAANDMGF1",   CVCObjectIdentifiers.id_TA_RSA_PSS_SHA_1);
       algorithmMap.put("SHA256WITHRSAANDMGF1", CVCObjectIdentifiers.id_TA_RSA_PSS_SHA_256);
       // Because CVC certificates does not use standard X9.62 signature encoding we have CVC variants of the ECDSA signature algorithms
-      algorithmMap.put("SHA1WITHCVC-ECDSA",        CVCObjectIdentifiers.id_TA_ECDSA_SHA_1);
-      algorithmMap.put("SHA224WITHCVC-ECDSA",      CVCObjectIdentifiers.id_TA_ECDSA_SHA_224);
-      algorithmMap.put("SHA256WITHCVC-ECDSA",      CVCObjectIdentifiers.id_TA_ECDSA_SHA_256);
+      // skip SHA1WITHCVC-ECDSA etc since we have to convert the signature manually to support HSM providers
+      algorithmMap.put("SHA1WITHECDSA",        CVCObjectIdentifiers.id_TA_ECDSA_SHA_1);
+      algorithmMap.put("SHA224WITHECDSA",      CVCObjectIdentifiers.id_TA_ECDSA_SHA_224);
+      algorithmMap.put("SHA256WITHECDSA",      CVCObjectIdentifiers.id_TA_ECDSA_SHA_256);
    }
 
    static {
 	   // Because CVC certificates does not use standard X9.62 signature encoding we have CVC variants of the ECDSA signature algorithms
 	   // We have these to make it easier for folks by letting them use the regular style algorithm names
-	   conversionMap.put("SHA1WITHECDSA",        "SHA1WITHCVC-ECDSA");
-	   conversionMap.put("SHA224WITHECDSA",      "SHA224WITHCVC-ECDSA");
-	   conversionMap.put("SHA256WITHECDSA",      "SHA256WITHCVC-ECDSA");
+      // skip SHA1WITHCVC-ECDSA etc since we have to convert the signature manually to support HSM providers
+	   conversionMap.put("SHA1WITHECDSA",        "SHA1WITHECDSA");
+	   conversionMap.put("SHA224WITHECDSA",      "SHA224WITHECDSA");
+	   conversionMap.put("SHA256WITHECDSA",      "SHA256WITHECDSA");
    }
 
    /**
