@@ -30,7 +30,7 @@
     <zipfileset id="commons.jar" 
             prefix="WEB-INF/lib"
             dir="lib">
-        <include name="commons-lang-2.3.jar" />
+        <include name="commons-lang-2.4.jar" />
         <include name="commons-configuration-1.5.jar" />
     </zipfileset>
 
