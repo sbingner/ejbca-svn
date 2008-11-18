@@ -2,6 +2,10 @@
 -----
 - Updated to work with EJBCA 3.8.0
 
+3.7.4
+-----
+- External RA SCEP service fails on cisco message with wrongly encoded request extension
+
 3.7.1
 -----
 - Updated to work with EJBCA 3.7.1
