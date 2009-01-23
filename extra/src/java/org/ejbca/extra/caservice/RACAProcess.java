@@ -140,7 +140,7 @@ public abstract class RACAProcess {
         int approvalid = aar.generateApprovalId();
         if (oldUserData != null) {
         	// a user already exists, so this is an edit entity request we are preparing
-        	log.debug("User already exist, we will look for an edit end entity request");
+        	log.debug("User already exist, we will look for an edit end entity approval request");
         	approvalid = ear.generateApprovalId();
         }
 		Query query = new Query(Query.TYPE_APPROVALQUERY);		
