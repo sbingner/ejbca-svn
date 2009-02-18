@@ -32,9 +32,9 @@ import org.ejbca.util.CertTools;
  * @version $Id: ExtRACardRenewalResponse.java,v 1.3 2007-05-15 12:57:58 anatom Exp $
  */
 
-public class ExtRACardRenewalResponse extends ExtRAResponse {
+public class CardRenewalResponse extends ExtRAResponse {
 
-	private static final Log log = LogFactory.getLog(ExtRACardRenewalResponse.class);
+	private static final Log log = LogFactory.getLog(CardRenewalResponse.class);
 	
 	public static final float LATEST_VERSION = (float) 1.0;
 	
@@ -50,7 +50,7 @@ public class ExtRACardRenewalResponse extends ExtRAResponse {
 	 * Default constructor that should be used.
 	 *  
 	 */
-	public ExtRACardRenewalResponse(long requestId, boolean success, String failinfo, Certificate authcert, Certificate signcert){
+	public CardRenewalResponse(long requestId, boolean success, String failinfo, Certificate authcert, Certificate signcert){
         super(requestId, success, failinfo);
         try {
     		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
@@ -72,7 +72,7 @@ public class ExtRACardRenewalResponse extends ExtRAResponse {
 	 * Constructor used when laoded from a persisted state
 	 * 
 	 */	
-	public ExtRACardRenewalResponse(){}
+	public CardRenewalResponse(){}
 	
 	/**
 	 * Returns the auth certificate base 64 encoded string.

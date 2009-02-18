@@ -140,47 +140,47 @@ public class TestExtRAMessages extends TestCase {
 	}
 	
 	
-	public static ExtRAPKCS10Request genExtRAPKCS10Request(long requestId, String username, String pkcs10, boolean createUser){
-		ExtRAPKCS10Request req = new ExtRAPKCS10Request(requestId,username, "CN=PKCS10REQ", "RFC822NAME=PKCS10Request@test.com",
+	public static PKCS10Request genExtRAPKCS10Request(long requestId, String username, String pkcs10, boolean createUser){
+		PKCS10Request req = new PKCS10Request(requestId,username, "CN=PKCS10REQ", "RFC822NAME=PKCS10Request@test.com",
 				                           "PKCS10Request@test.com", null, "EMPTY", "ENDUSER", 
 				                           "AdminCA1",pkcs10);
 		req.setCreateOrEditUser(createUser);
 		return req;
 		}
-	public static ExtRAPKCS10Request genExtRAPKCS10Request(long requestId, String username, String pkcs10){
+	public static PKCS10Request genExtRAPKCS10Request(long requestId, String username, String pkcs10){
 	   return genExtRAPKCS10Request(requestId, username, pkcs10, true);
 	}
-	public static ExtRAEditUserRequest genExtRAPKCS10UserRequest(long requestId, String username, String password){
-		   return new ExtRAEditUserRequest(requestId,username, "CN=PKCS10REQ", "RFC822NAME=PKCS10Request@test.com",
+	public static EditUserRequest genExtRAPKCS10UserRequest(long requestId, String username, String password){
+		   return new EditUserRequest(requestId,username, "CN=PKCS10REQ", "RFC822NAME=PKCS10Request@test.com",
 				                           "PKCS10Request@test.com", null, "EMPTY", "ENDUSER", 
 				                           "AdminCA1",password,10, 1, "USERGENERATED", null);
 	    }
 	
-	public static ExtRAPKCS12Request genExtRAPKCS12Request(long requestId, String username, boolean store){
-	   return new ExtRAPKCS12Request(requestId,username, "CN=PKCS12REQ", "RFC822NAME=PKCS12Request@test.com",
+	public static PKCS12Request genExtRAPKCS12Request(long requestId, String username, boolean store){
+	   return new PKCS12Request(requestId,username, "CN=PKCS12REQ", "RFC822NAME=PKCS12Request@test.com",
 			                           "PKCS12Request@test.com", null, "EMPTY", "ENDUSER", 
-			                           "AdminCA1","foo123",ExtRAPKCS12Request.KEYALG_RSA, "1024", store);
+			                           "AdminCA1","foo123",PKCS12Request.KEYALG_RSA, "1024", store);
     }
 	
-	public static ExtRAEditUserRequest genExtRAEditUserRequest(long requestId, String username){
-		   return new ExtRAEditUserRequest(requestId,username, "CN=PKCS12REQ", "RFC822NAME=PKCS12Request@test.com",
+	public static EditUserRequest genExtRAEditUserRequest(long requestId, String username){
+		   return new EditUserRequest(requestId,username, "CN=PKCS12REQ", "RFC822NAME=PKCS12Request@test.com",
 				                           "PKCS12Request@test.com", null, "EMPTY", "ENDUSER", 
 				                           "AdminCA1","foo123",10, 1, "USERGENERATED", null);
 	    }
 	
 	
-	public static ExtRAKeyRecoveryRequest genExtRAKeyRecoveryRequest(long requestId, String username, boolean orgCert, X509Certificate cert){
+	public static KeyRecoveryRequest genExtRAKeyRecoveryRequest(long requestId, String username, boolean orgCert, X509Certificate cert){
 		if(cert == null){
-		      return new ExtRAKeyRecoveryRequest(requestId, username, "KEYRECPWD", 
+		      return new KeyRecoveryRequest(requestId, username, "KEYRECPWD", 
                       "CN=AdminCA1,O=EJBCA Sample,C=SE", 
                       new BigInteger("1"));			
 		}
 		if(orgCert){
-		      return new ExtRAKeyRecoveryRequest(requestId, username, "foo123", 
+		      return new KeyRecoveryRequest(requestId, username, "foo123", 
                       cert.getIssuerDN().toString(), 
                       cert.getSerialNumber());		
 		}else{
-		      return new ExtRAKeyRecoveryRequest(requestId,username, 
+		      return new KeyRecoveryRequest(requestId,username, 
 		    		  "CN=KEYRECREQ", "RFC822NAME=KEYRECRequest@test.com",
                       "KEYRECRequest@test.com", null, "EMPTY", "ENDUSER", 
                       "AdminCA1","foo123",
@@ -189,39 +189,39 @@ public class TestExtRAMessages extends TestCase {
 		}
 	}
 	
-	static ExtRAPKCS10Response genExtRAPKCS10Response() throws Exception {
-	  return new ExtRAPKCS10Response(4,true, "PKCS10RESFAILINFO", Constants.getUserCert(), null);
+	static PKCS10Response genExtRAPKCS10Response() throws Exception {
+	  return new PKCS10Response(4,true, "PKCS10RESFAILINFO", Constants.getUserCert(), null);
     }
 	
-	static ExtRAPKCS12Response genExtRAPKCS12Response() throws Exception{
-	  return new ExtRAPKCS12Response(5,true, "PKCS12RESFAILINFO", Constants.getUserKeyStore(),"foo123");
+	static PKCS12Response genExtRAPKCS12Response() throws Exception{
+	  return new PKCS12Response(5,true, "PKCS12RESFAILINFO", Constants.getUserKeyStore(),"foo123");
 	}
 	
 	static void checkSubMessages(List submessages) throws Exception{
 	  Iterator iter = submessages.iterator();
 	  while(iter.hasNext()){
 		ISubMessage submessage = (ISubMessage) iter.next();
-		if(submessage instanceof ExtRAPKCS10Request){
-			checkExtRAPKCS10Request((ExtRAPKCS10Request) submessage);			
+		if(submessage instanceof PKCS10Request){
+			checkExtRAPKCS10Request((PKCS10Request) submessage);			
 		}
-		if(submessage instanceof ExtRAPKCS12Request){
-			checkExtRAPKCS12Request((ExtRAPKCS12Request) submessage);			
+		if(submessage instanceof PKCS12Request){
+			checkExtRAPKCS12Request((PKCS12Request) submessage);			
 		}
-		if(submessage instanceof ExtRAKeyRecoveryRequest){
-		     checkExtRAKeyRecoveryRequest((ExtRAKeyRecoveryRequest) submessage);				
+		if(submessage instanceof KeyRecoveryRequest){
+		     checkExtRAKeyRecoveryRequest((KeyRecoveryRequest) submessage);				
 		}
-		if(submessage instanceof ExtRAPKCS10Response){
-			checkExtRAPKCS10Response((ExtRAPKCS10Response) submessage);
+		if(submessage instanceof PKCS10Response){
+			checkExtRAPKCS10Response((PKCS10Response) submessage);
 		}
-		if(submessage instanceof ExtRAPKCS12Response){
-			checkExtRAPKCS12Response((ExtRAPKCS12Response) submessage);
+		if(submessage instanceof PKCS12Response){
+			checkExtRAPKCS12Response((PKCS12Response) submessage);
 		}
 		
 	  }
 	  
 	}
 	
-	static void checkExtRAPKCS10Request(ExtRAPKCS10Request submessage) {
+	static void checkExtRAPKCS10Request(PKCS10Request submessage) {
 		assertTrue(submessage.getRequestId() == 1);
 		assertTrue(submessage.getUsername().equals("PKCS10REQ"));
 		assertTrue(submessage.getSubjectDN().equals("CN=PKCS10REQ"));
@@ -233,7 +233,7 @@ public class TestExtRAMessages extends TestCase {
 		assertTrue(submessage.getPKCS10().equals("PKCS10"));
 	}
 
-	static void checkExtRAPKCS12Request(ExtRAPKCS12Request submessage) {
+	static void checkExtRAPKCS12Request(PKCS12Request submessage) {
 		assertTrue(submessage.getRequestId() == 2);
 		assertTrue(submessage.getUsername().equals("PKCS12REQ"));
 		assertTrue(submessage.getSubjectDN().equals("CN=PKCS12REQ"));
@@ -243,12 +243,12 @@ public class TestExtRAMessages extends TestCase {
 		assertTrue(submessage.getCertificateProfileName().equals("ENDUSER"));
 		assertTrue(submessage.getCAName().equals("AdminCA1"));
 		assertTrue(submessage.getPassword().equals("foo123"));
-		assertTrue(submessage.getKeyAlg() == ExtRAPKCS12Request.KEYALG_RSA);
+		assertTrue(submessage.getKeyAlg() == PKCS12Request.KEYALG_RSA);
 		assertTrue(submessage.getKeySpec().equals("1024"));
 		assertFalse(submessage.getStoreKeys());
 	}
 
-	static void checkExtRAKeyRecoveryRequest(ExtRAKeyRecoveryRequest submessage) {
+	static void checkExtRAKeyRecoveryRequest(KeyRecoveryRequest submessage) {
         assertTrue(submessage.getRequestId() == 3);
         assertTrue(submessage.getPassword().equals("KEYRECPWD"));
         assertTrue(submessage.getReUseCertificate() == true);
@@ -256,14 +256,14 @@ public class TestExtRAMessages extends TestCase {
         assertTrue(submessage.getCertificateSN().equals(new BigInteger("1")));
 	}
 
-	static void checkExtRAPKCS10Response(ExtRAPKCS10Response submessage) throws Exception{
+	static void checkExtRAPKCS10Response(PKCS10Response submessage) throws Exception{
          assertTrue(submessage.getRequestId() == 4);
          assertTrue(submessage.isSuccessful() == true);
          assertTrue(submessage.getFailInfo().equals("PKCS10RESFAILINFO"));
          assertTrue(submessage.getCertificate().getSubjectDN().toString().equals(Constants.getUserCert().getSubjectDN().toString()));
 	}
 
-	static void checkExtRAPKCS12Response(ExtRAPKCS12Response submessage) throws Exception {
+	static void checkExtRAPKCS12Response(PKCS12Response submessage) throws Exception {
         assertTrue(submessage.getRequestId() == 5);
         assertTrue(submessage.isSuccessful() == true);
         assertTrue(submessage.getFailInfo().equals("PKCS12RESFAILINFO"));

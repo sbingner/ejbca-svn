@@ -33,13 +33,20 @@ public class Message  implements java.io.Serializable {
 
     // Fields    
 
-     private String uniqueId;
-     private String messageid;
-     private Integer type;
-     private Integer status;
-     private long createtime;
-     private long modifytime;
-     private String message;
+	/** A unique id, messageId.hashCode+type.hashCode, set in constuctor */
+	private String uniqueId;
+	/** A unique message id. User defined for example username, scep transactionId or similar */
+	private String messageid;
+	/** Type of message one of MessageHome.MESSAGETYPE_XX */
+	private Integer type;
+	/** Status of processing. One of Message.STATUS_XX */
+	private Integer status;
+	/** The time the extra message was stored */
+	private long createtime;
+	/** When the extra message was modified */
+	private long modifytime;
+	/** The message itself, serialized */
+	private String message;
 
 
     // Constructors

@@ -24,10 +24,10 @@ import java.util.Random;
 import java.util.Vector;
 
 import org.apache.log4j.PropertyConfigurator;
-import org.ejbca.extra.db.ExtRAPKCS10Request;
-import org.ejbca.extra.db.ExtRAPKCS10Response;
-import org.ejbca.extra.db.ExtRAPKCS12Request;
-import org.ejbca.extra.db.ExtRAPKCS12Response;
+import org.ejbca.extra.db.PKCS10Request;
+import org.ejbca.extra.db.PKCS10Response;
+import org.ejbca.extra.db.PKCS12Request;
+import org.ejbca.extra.db.PKCS12Response;
 import org.ejbca.extra.db.HibernateUtil;
 import org.ejbca.extra.db.Message;
 import org.ejbca.extra.db.MessageHome;
@@ -85,7 +85,7 @@ public class ExtRATestClient {
 		+"5HLSLB1a6KvktiVSKB0nmAmDU28xXLWWwkA7/68J6DvAipk00bHdxuEJ4+Mg8UJ0"
 		+"Mr+aXDlmZUfghzlB70dDUy/Np/YJVb8=";
 	
-	private  MessageHome msghome = new MessageHome(MessageHome.MESSAGETYPE_EXTRA); 
+	private  MessageHome msghome = null; 
 
     static {
     	
@@ -128,8 +128,8 @@ public class ExtRATestClient {
             addInputStream(ExtRATestClient.class.getResourceAsStream("/Message.hbm.xml"));
             //addDirectory(new File("src/db")); // Uncomment if running from eclipse
 
-            HibernateUtil.setSessionFactory(HibernateUtil.SESSIONFACTORY_RAMESSAGE, dbconfig.buildSessionFactory(), true);
-			
+            HibernateUtil util = new HibernateUtil(HibernateUtil.SESSIONFACTORY_RAMESSAGE, dbconfig.buildSessionFactory(), true);
+            msghome = new MessageHome(util, MessageHome.MESSAGETYPE_EXTRA);
 			securitylevel = args[ARG_SECURITYLEVEL];
 			if(!securitylevel.equalsIgnoreCase(SECURITY_UNSECURED) &&
 			   !securitylevel.equalsIgnoreCase(SECURITY_SIGNED) &&
@@ -327,10 +327,10 @@ public class ExtRATestClient {
 				
 
 				
-				ExtRAPKCS10Response pkcs10resp = (ExtRAPKCS10Response) respmsgs.getSubMessages().get(0);
-				ExtRAPKCS12Response pkcs12resp = null;
+				PKCS10Response pkcs10resp = (PKCS10Response) respmsgs.getSubMessages().get(0);
+				PKCS12Response pkcs12resp = null;
 				if(requestKeyStore){
-					pkcs12resp = (ExtRAPKCS12Response) respmsgs.getSubMessages().get(1);
+					pkcs12resp = (PKCS12Response) respmsgs.getSubMessages().get(1);
 				}
 				
 				
@@ -366,7 +366,7 @@ public class ExtRATestClient {
 		private long createPKCS10Request(String username, SubMessages submessages) {
 			long requestId = random.nextLong();			
             
-			submessages.addSubMessage(new ExtRAPKCS10Request(requestId,username, "CN=PKCS10REQ", "RFC822NAME=PKCS10Request@test.com",
+			submessages.addSubMessage(new PKCS10Request(requestId,username, "CN=PKCS10REQ", "RFC822NAME=PKCS10Request@test.com",
                     "PKCS10Request@test.com", null, "EMPTY", "ENDUSER", 
                     "AdminCA1",pkcs10_1));					
 			
@@ -376,9 +376,9 @@ public class ExtRATestClient {
 		private long createPKCS12Request(String username, SubMessages submessages) {
 			long requestId = random.nextLong();			
             
-			submessages.addSubMessage(new ExtRAPKCS12Request(requestId,username, "CN=PKCS12REQ", "RFC822NAME=PKCS12Request@test.com",
+			submessages.addSubMessage(new PKCS12Request(requestId,username, "CN=PKCS12REQ", "RFC822NAME=PKCS12Request@test.com",
                     "PKCS12Request@test.com", null, "EMPTY", "ENDUSER", 
-                    "AdminCA1","foo123",ExtRAPKCS12Request.KEYALG_RSA, "1024", true)); 
+                    "AdminCA1","foo123",PKCS12Request.KEYALG_RSA, "1024", true)); 
 			
 			
 			return requestId;

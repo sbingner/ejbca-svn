@@ -6,7 +6,6 @@
 	<property name="app.version" value="${app.name.cap} 3.9.0" />
 	
     <property environment="env" />
-    <property name="ejbca.home" value="${env.EJBCA_HOME}" />
 	
     <!-- Give user a chance to override without editing this file
        (and without typing -D each time it compiles it).
@@ -36,13 +35,9 @@
     <property name="ext-raclient.build" value="${tmp}/${ext-raclient.name}" />
     <property name="ext-raclientjar" value="${client-jars.dir}/${ext-raclient.name}" />
 	
-	<property name="extracajbossservice.name" value="extracajbossservice.jar" />
-    <property name="extracajbossservice.build" value="${tmp}/${extracajbossservice.name}" />
-    <property name="extracajbossservicejar" value="${dist.dir}/${extracajbossservice.name}" />	
-	
-	<property name="extrajbosshibernite.name" value="extrajbosshibernite.har" />
-    <property name="extrajbosshibernite.build" value="${tmp}/${extrajbosshibernite.name}" />
-    <property name="extrajbosshibernitehar" value="${dist.dir}/${extrajbosshibernite.name}" />		
+	<property name="extracaservice.name" value="extracaservice.jar" />
+    <property name="extracaservice.build" value="${tmp}/${extracaservice.name}" />
+    <property name="extracaservicejar" value="${dist.dir}/lib/${extracaservice.name}" />	
 	
 	<!-- Import ant targets for the application server deployment -->
     <import file="jboss.xml" />
@@ -73,8 +68,8 @@
     </path>
 	
     <path id="ejbca.classpath">
-        <fileset dir="${ejbca.home}/dist">
-            <include name="ejbca-ejb.jar" />
+        <fileset dir="lib">
+            <include name="ejbca-util.jar" />
         </fileset>
     </path>
 
@@ -83,6 +78,13 @@
         <path location="${build}" />
     </path>
 
+    <path id="test.run.classpath">
+        <path refid="compile.classpath" />
+        <path location="${build}" />
+        <fileset dir="lib/ext">
+            <include name="ldap.jar" />
+        </fileset>
+    </path>
 
     <!-- =================================================================== -->
     <!-- Build ALL                                                           -->
@@ -91,7 +93,7 @@
         <echo>
 ---------- ${app.version} Help ----------
  compile                 : Compiles and builds ext-raclient.jar  (Default)   	        	
- ra-ca-jbossservice      : Builds racaservice.jar    
+ ra-ca-service      : Builds racaservice.jar    
  deploy-keystore         : Copies the ra ca service keystore to EJBCA app server
  deploy-ra-caservice     : Deploys the ra ca service to EJBCA app server
  deployscepraserver      : Deploys the scep ra server to app server         	
@@ -101,13 +103,10 @@
     <!-- =================================================================== -->
     <!-- Create the time stamp and build directory -->
     <!-- =================================================================== -->
-    <target name="init" depends="j2ee:check">
-        <available file="${ejbca.home}/dist/ejbca-ejb.jar" property="ejbca.home.found"/>
-        <fail message="Environment variable EJBCA_HOME haven't been set or EJBCA haven't been built" unless="ejbca.home.found"/>
+    <target name="init" depends="extraj2ee:check">
         <echo>
 ---------- ${app.version} ----------
         	appserver.home         = ${appserver.home}
-        	ejbca.home             = ${ejbca.home}
         	java.ver               = ${java.ver}        	
       </echo>
         <!-- Create the time stamp -->
@@ -141,18 +140,6 @@
             <src path="${src.java}" />
         	<exclude name="**/jboss/**" />
         </javac>
-    	<!-- update web.xml file -->
-
-        <copy todir="${tmp}" overwrite="true">
-			<fileset dir="${src}/appserver/jboss/">
-				<include name="extraca-service.xml"/>
-			</fileset>	
-			<filterchain>
-			<tokenfilter>
-				<replacestring from="@jboss.conf.dir@" to="${jboss.conf.dir}"/>				
-			</tokenfilter>
-			</filterchain>
-        </copy>
     	
         <mkdir dir="${ext-raclient.build}" />
     	<mkdir dir="${ext-raclient.build}/META-INF" />
@@ -194,6 +181,7 @@
                 <include name="commons-logging.jar" />
                 <include name="commons-lang-2.4.jar" />
             	<include name="log4j.jar" />
+            	<include name="ejbca-util.jar" />
             </fileset>
         </copy>
         <copy todir="${client-jars.dir}">
@@ -205,11 +193,6 @@
                 <include name="mysql-connector-java-5.0.4-bin.jar" />
                 <include name="cglib-2.1.jar" />
                 <include name="hibernate3.jar" />
-            	<include name="ejbca-util.jar" />            	
-            </fileset>
-        </copy>
-        <copy todir="${client-jars.dir}">
-            <fileset dir="${ejbca.home}/dist/">
             	<include name="ejbca-util.jar" />            	
             </fileset>
         </copy>
@@ -230,77 +213,40 @@
         </javadoc>
     </target>
 	
-    <!-- =================================================================== -->
-    <!-- Build EXTRA Hibernite configuration package                       -->
-    <!-- =================================================================== -->
-    <target name="rajbosshibernite" depends="compile">
-        <mkdir dir="${extrajbosshibernite.build}" />
-    	<mkdir dir="${extrajbosshibernite.build}/META-INF" />
-        <copy todir="${extrajbosshibernite.build}/META-INF">
-            <fileset dir="${src}/appserver/jboss">
-                <include name="hibernate-service.xml" />
-            </fileset>
-        </copy>
-    	<mkdir dir="${extrajbosshibernite.build}/org/ejbca/extra/db" />
-        <copy todir="${extrajbosshibernite.build}/org/ejbca/extra/db">
-            <fileset dir="${src.db}">
-                <include name="Message.hbm.xml" />
-            </fileset>
-        </copy>
-        <copy todir="${extrajbosshibernite.build}/org/ejbca/extra/db">
-            <fileset dir="${build}/org/ejbca/extra/db">
-                <include name="*.class" />
-            </fileset>
-        </copy>
-        <copy todir="${extrajbosshibernite.build}">
-            <fileset dir="${lib}">
-               <include name="commons-collections-3.2.jar" />
-            </fileset>
-        </copy>    	
-        <jar basedir="${extrajbosshibernite.build}" jarfile="${extrajbosshibernitehar}">
-            <manifest>
-                <attribute name="Class-Path" value="" />
-            </manifest>
-        </jar>
-    </target>
-	
-
-	
 	
     <!-- =================================================================== -->
     <!-- Build EXTRACA JBoss Specific Services                       -->
     <!-- =================================================================== -->
-    <target name="ra-ca-jbossservice" depends="compile, rajbosshibernite">
-        <path id="extracajbossservice.classpath">
-            <pathelement location="${appserver.home}/lib/jboss-system.jar" />
-            <pathelement location="${appserver.home}/lib/jboss-common.jar" />
-            <pathelement location="${appserver.home}/lib/jboss-jmx.jar" />
-        </path>
+    <target name="ra-ca-service" depends="compile">
         <javac srcdir="${src.java}" extdirs="${lib}" destdir="${build}" debug="on" encoding="iso8859-1">
             <exclude name="**/CVS/**" />
-            <include name="**/jboss/**" />
         	<include name="**/caservice/**" />
         	<include name="**/util/**" />
-            <classpath refid="extracajbossservice.classpath" />
+        	<include name="**/db/**" />
+            <classpath refid="extracaservice.classpath" />
             <classpath refid="compile.classpath" />
         </javac>
 
-        <mkdir dir="${extracajbossservice.build}" />
-        <copy todir="${extracajbossservice.build}">
-            <fileset dir="${tmp}">
-                <include name="extraca-service.xml" />
+        <mkdir dir="${extracaservice.build}" />
+        <copy todir="${extracaservice.build}">
+            <fileset dir=".">
+                <include name="conf/externalra-caservice.properties" />
+            </fileset>
+            <fileset dir="src/db">
+                <include name="hibernate*.cfg.xml" />
+                <include name="Message.hbm.xml" />
             </fileset>
         </copy>
-        <copy todir="${extracajbossservice.build}">
+        <copy todir="${extracaservice.build}">
             <fileset dir="${build}">
-                <include name="org/ejbca/extra/caservice/*.class" />
-                <include name="org/ejbca/extra/caservice/jboss/*.class" />
-                <include name="org/ejbca/extra/util/*.class" />
+                <include name="org/ejbca/extra/caservice/**/*.class" />
+                <include name="org/ejbca/extra/util/**/*.class" />
+                <include name="org/ejbca/extra/db/**/*.class" />
                 <exclude name="org/ejbca/extra/**/*Test*" />
             </fileset>
         </copy>
 
-        <jar basedir="${extracajbossservice.build}" jarfile="${extracajbossservicejar}">
+        <jar basedir="${extracaservice.build}" jarfile="${extracaservicejar}">
             <manifest>
                 <attribute name="Class-Path" value="" />
             </manifest>
@@ -311,15 +257,15 @@
     <!-- ======================================================================= -->
     <!-- Deploy Ext RA CA Service jar to JBoss                                               -->
     <!-- ======================================================================= -->
-    <target name="deploy-ra-caservice" depends="ra-ca-jbossservice" description="Deploys the ra ca service to EJBCA app server">
-        <antcall target="j2ee:deploy-ra-caservice" />
+    <target name="deploy-ra-caservice" depends="ra-ca-service" description="Deploys the ra ca service to EJBCA app server">
+        <antcall target="extraj2ee:deploy-ra-caservice" />
     </target>
 	
     <!-- ======================================================================= -->
     <!-- Deploy Ext RA CA Service keystore to JBoss                                               -->
     <!-- ======================================================================= -->
     <target name="deploy-keystore" description="Copies the ra ca service keystore to EJBCA app server">
-        <antcall target="j2ee:configure" />
+        <antcall target="extraj2ee:configure" />
     </target>
 	
 	

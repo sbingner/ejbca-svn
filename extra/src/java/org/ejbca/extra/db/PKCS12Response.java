@@ -28,13 +28,13 @@ import org.bouncycastle.util.encoders.Base64;
  * $Id: ExtRAPKCS12Response.java,v 1.2 2007-05-15 12:57:59 anatom Exp $
  */
 
-public class ExtRAPKCS12Response extends ExtRAResponse {
+public class PKCS12Response extends ExtRAResponse {
 
 	public static final float LATEST_VERSION = (float) 1.0;
 	
-	private static final Log log = LogFactory.getLog(ExtRAPKCS12Response.class);
+	private static final Log log = LogFactory.getLog(PKCS12Response.class);
 	
-	static final int CLASS_TYPE = 6; // Must be uniqu to all submessage classes
+	static final int CLASS_TYPE = 6; // Must be unique to all submessage classes
 		// Field constants
 	private static final String KEYSTORE           = "KEYSTORE";
 		
@@ -45,7 +45,7 @@ public class ExtRAPKCS12Response extends ExtRAResponse {
 	 * Default constructor that should be used.
 	 *  
 	 */
-	public ExtRAPKCS12Response(long requestId, boolean success, String failinfo, KeyStore pkcs12, String password){
+	public PKCS12Response(long requestId, boolean success, String failinfo, KeyStore pkcs12, String password){
         super(requestId, success, failinfo);
         try {
     		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
@@ -66,7 +66,7 @@ public class ExtRAPKCS12Response extends ExtRAResponse {
 	 * Constructor used when laoded from a persisted state
 	 * 
 	 */	
-	public ExtRAPKCS12Response(){}
+	public PKCS12Response(){}
 	
 	/**
 	 * Returns the generated keystore.

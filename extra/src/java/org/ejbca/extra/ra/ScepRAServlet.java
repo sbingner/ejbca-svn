@@ -55,8 +55,8 @@ import org.ejbca.core.protocol.IResponseMessage;
 import org.ejbca.core.protocol.ResponseStatus;
 import org.ejbca.core.protocol.ScepRequestMessage;
 import org.ejbca.core.protocol.ScepResponseMessage;
-import org.ejbca.extra.db.ExtRAPKCS10Request;
-import org.ejbca.extra.db.ExtRAPKCS10Response;
+import org.ejbca.extra.db.PKCS10Request;
+import org.ejbca.extra.db.PKCS10Response;
 import org.ejbca.extra.db.HibernateUtil;
 import org.ejbca.extra.db.Message;
 import org.ejbca.extra.db.MessageHome;
@@ -94,7 +94,7 @@ public class ScepRAServlet extends HttpServlet {
 	private RAKeyStore scepraks;
 	private String keyStoreNumber;
 	private String cryptProvider;
-	private MessageHome msgHome = new MessageHome(MessageHome.MESSAGETYPE_SCEPRA);
+	private MessageHome msgHome = null;
 
     /**
      * Inits the SCEP servlet
@@ -127,7 +127,8 @@ public class ScepRAServlet extends HttpServlet {
             randomSource = SecureRandom.getInstance(randomAlgorithm);
             
             SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
-            HibernateUtil.setSessionFactory(HibernateUtil.SESSIONFACTORY_RAMESSAGE, sessionFactory,false);
+            HibernateUtil hu = new HibernateUtil(HibernateUtil.SESSIONFACTORY_RAMESSAGE, sessionFactory, false);
+            msgHome = new MessageHome(hu, MessageHome.MESSAGETYPE_SCEPRA);
 
         } catch (Exception e) {
             throw new ServletException(e);
@@ -256,7 +257,7 @@ public class ScepRAServlet extends HttpServlet {
                 			log.debug("Request is processed with status: "+msg.getStatus());
                 			SubMessages submessagesresp = msg.getSubMessages(null,null,null);
                 			Iterator iter =  submessagesresp.getSubMessages().iterator();
-                			ExtRAPKCS10Response resp = (ExtRAPKCS10Response) iter.next();
+                			PKCS10Response resp = (PKCS10Response) iter.next();
                 			// create proper ScepResponseMessage
                 			IResponseMessage ret = reqmsg.createResponseMessage(org.ejbca.core.protocol.ScepResponseMessage.class, reqmsg, racert, rapriv, rapriv, cryptProvider);
                 			ret.setCACert(cacert);
@@ -333,7 +334,7 @@ public class ScepRAServlet extends HttpServlet {
                         String certificateProfile = ExtraConfiguration.instance().getString(ExtraConfiguration.SCEPCERTPROFILEKEY);
                         String entityProfile = ExtraConfiguration.instance().getString(ExtraConfiguration.SCEPENTITYPROFILEKEY);
                 		boolean createOrEditUser = ExtraConfiguration.instance().getBoolean(ExtraConfiguration.SCEPEDITUSER);
-                		ExtRAPKCS10Request req = new ExtRAPKCS10Request(100,username, reqmsg.getRequestDN(), altNames, null, null, entityProfile, certificateProfile, caName, pkcs10);
+                		PKCS10Request req = new PKCS10Request(100,username, reqmsg.getRequestDN(), altNames, null, null, entityProfile, certificateProfile, caName, pkcs10);
                 		req.setCreateOrEditUser(createOrEditUser);
                 		SubMessages submessages = new SubMessages();
                 		submessages.addSubMessage(req);

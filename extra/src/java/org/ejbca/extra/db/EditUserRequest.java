@@ -19,7 +19,7 @@ package org.ejbca.extra.db;
  * @author philip
  * $Id: ExtRAEditUserRequest.java,v 1.2 2007-05-15 12:58:00 anatom Exp $
  */
-public class ExtRAEditUserRequest extends ExtRARequest {
+public class EditUserRequest extends ExtRARequest {
 
 	public static final float LATEST_VERSION = (float) 1.0;
 	
@@ -49,7 +49,7 @@ public class ExtRAEditUserRequest extends ExtRARequest {
      * @param tokenname, the hard token profile if a hard token should be issued, p12 for a pkcs12 file etc.
 	 * @param hardtokenissuername, the alias of the issuer or null if no hardtoken should be issued.
 	 */
-	public ExtRAEditUserRequest(long requestId, String username, String subjectDN, String subjectAltName, 
+	public EditUserRequest(long requestId, String username, String subjectDN, String subjectAltName, 
             String email, String subjectDirectoryAttributes, String endEntityProfileName, String certificateProfileName,
             String cAName, String password, int status, int type, String tokenname, String hardtokenissuername){
         super(requestId, username, subjectDN, subjectAltName, email, subjectDirectoryAttributes, endEntityProfileName, certificateProfileName,cAName);
@@ -65,7 +65,7 @@ public class ExtRAEditUserRequest extends ExtRARequest {
 	/**
 	 * Constructor used when laoded from a persisted state
 	 */	
-	public ExtRAEditUserRequest(){}
+	public EditUserRequest(){}
 	
 
 	public float getLatestVersion() {

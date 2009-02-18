@@ -32,9 +32,9 @@ import org.ejbca.util.CertTools;
  * $Id: ExtRAPKCS10Response.java,v 1.4 2007-05-15 12:58:00 anatom Exp $
  */
 
-public class ExtRAPKCS10Response extends ExtRAResponse {
+public class PKCS10Response extends ExtRAResponse {
 
-	private static final Log log = LogFactory.getLog(ExtRAPKCS10Response.class);
+	private static final Log log = LogFactory.getLog(PKCS10Response.class);
 	
 	public static final float LATEST_VERSION = (float) 2.0;
 	
@@ -56,7 +56,7 @@ public class ExtRAPKCS10Response extends ExtRAResponse {
 	 * @param pkcs7 the generated certificate in a pkcs7 signed by the CA andincluding the certificate chain, or null if request or pkcs7 generation failed.
 	 *  
 	 */
-	public ExtRAPKCS10Response(long requestId, boolean success, String failinfo, X509Certificate certificate, byte[] pkcs7) {
+	public PKCS10Response(long requestId, boolean success, String failinfo, X509Certificate certificate, byte[] pkcs7) {
         super(requestId, success, failinfo);
         try {
     		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
@@ -78,7 +78,7 @@ public class ExtRAPKCS10Response extends ExtRAResponse {
 	 * Constructor used when laoded from a persisted state
 	 * 
 	 */	
-	public ExtRAPKCS10Response(){}
+	public PKCS10Response(){}
 	
 	/**
 	 * Returns the generated certifcate.

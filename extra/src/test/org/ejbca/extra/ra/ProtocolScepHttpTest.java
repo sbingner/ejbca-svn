@@ -68,7 +68,7 @@ import org.ejbca.util.CertTools;
 import org.ejbca.util.keystore.KeyTools;
 
 /** Tests SCEP enrollment with an RA. 
- * This test assumes a CA hierarch. One root CA AdminCA1 and one sub CA ScepCA.
+ * This test assumes a CA hierarchy. One root CA AdminCA1 and one sub CA ScepCA.
  * 
  * @version $Id: ProtocolScepHttpTest.java,v 1.11 2008-02-07 10:33:29 anatom Exp $
  **/
@@ -100,17 +100,17 @@ public class ProtocolScepHttpTest extends TestCase {
     }
 
 
-    public ProtocolScepHttpTest(String name) {
+    public ProtocolScepHttpTest(String name) throws Exception {
         super(name);
         // Install BouncyCastle provider
         CertTools.installBCProvider();
+		if (keys == null) {
+			keys = KeyTools.genKeys("512", CATokenConstants.KEYALGORITHM_RSA);
+		}
     }
 
     protected void setUp() throws Exception {
         log.debug(">setUp()");
-		if (keys == null) {
-			keys = KeyTools.genKeys("512", CATokenConstants.KEYALGORITHM_RSA);
-		}
         log.debug("<setUp()");
     }
 
@@ -220,8 +220,8 @@ public class ProtocolScepHttpTest extends TestCase {
         int keeprunning = 0;
         boolean processed = false;
         while ( (keeprunning < 5) && !processed) {
-        	System.out.println("Waiting 15 secs...");
-        	Thread.sleep(15000); // wait 15 seconds between polls
+        	System.out.println("Waiting 5 secs...");
+        	Thread.sleep(5000); // wait 5 seconds between polls
             msgBytes = genScepGetCertInitial(gen, CMSSignedGenerator.DIGEST_SHA1);
             // Send message with GET
             retMsg = sendScep(false, msgBytes, false);
@@ -245,7 +245,7 @@ public class ProtocolScepHttpTest extends TestCase {
     // It will then start polling the RA waiting for a real reply.
     // When polling it will accept a pending or a success reply
     public void test06ScepRequestOKSHA1PostNoCA() throws Exception {
-        log.debug(">test05ScepRequestOKSHA1()");
+        log.debug(">test06ScepRequestOKSHA1PostNoCA()");
         // send SCEP req to RA server and get pending request, until the request is processed on the CA
         // Then we will get a certificate response back    
         ScepRequestGenerator gen = new ScepRequestGenerator();
@@ -272,7 +272,7 @@ public class ProtocolScepHttpTest extends TestCase {
             keeprunning++;
         }
         assertTrue(processed);
-        log.debug("<test05ScepRequestOKSHA1()");
+        log.debug("<test06ScepRequestOKSHA1PostNoCA()");
     }
 
     //
@@ -357,7 +357,7 @@ public class ProtocolScepHttpTest extends TestCase {
         return false;
     }
 
-    private void checkScepResponse(byte[] retMsg, String senderNonce, String transId, boolean crlRep, String digestOid, boolean noca, ResponseStatus extectedResponseStatus) throws CMSException, NoSuchProviderException, NoSuchAlgorithmException, CertStoreException, InvalidKeyException, CertificateException, SignatureException, CRLException, IOException {
+    private void checkScepResponse(byte[] retMsg, String senderNonce, String transId, boolean crlRep, String digestOid, boolean noca, ResponseStatus expectedResponseStatus) throws CMSException, NoSuchProviderException, NoSuchAlgorithmException, CertStoreException, InvalidKeyException, CertificateException, SignatureException, CRLException, IOException {
         //
         // Parse response message
         //
@@ -381,7 +381,7 @@ public class ProtocolScepHttpTest extends TestCase {
         // --Fail info
         Attribute attr = tab.get(new DERObjectIdentifier(ScepRequestMessage.id_failInfo));
         // No failInfo on this success message
-        if(extectedResponseStatus == ResponseStatus.SUCCESS){
+        if(expectedResponseStatus == ResponseStatus.SUCCESS){
           assertNull(attr);
         }  
           
@@ -400,7 +400,7 @@ public class ProtocolScepHttpTest extends TestCase {
         assertEquals(values.size(), 1);
         str = DERPrintableString.getInstance((values.getObjectAt(0)));
         String responsestatus =  str.getString();
-        assertEquals(extectedResponseStatus.getValue(), responsestatus);
+        assertEquals(expectedResponseStatus.getValue(), responsestatus);
         // --SenderNonce
         attr = tab.get(new DERObjectIdentifier(ScepRequestMessage.id_senderNonce));
         assertNotNull(attr);

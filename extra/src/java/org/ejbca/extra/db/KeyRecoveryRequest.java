@@ -23,7 +23,7 @@ import java.math.BigInteger;
  * @author philip
  * $Id: ExtRAKeyRecoveryRequest.java,v 1.2 2007-05-15 12:57:59 anatom Exp $
  */
-public class ExtRAKeyRecoveryRequest extends ExtRARequest {
+public class KeyRecoveryRequest extends ExtRARequest {
 
 	public static final float LATEST_VERSION = (float) 1.0;
 	
@@ -47,7 +47,7 @@ public class ExtRAKeyRecoveryRequest extends ExtRARequest {
 	/**
 	 * Constructor that should be used when the original certificate should be returned in keystore
 	 */
-	public ExtRAKeyRecoveryRequest(long requestId, String username,  String password,  String issuerdn, BigInteger certificatesn){    
+	public KeyRecoveryRequest(long requestId, String username,  String password,  String issuerdn, BigInteger certificatesn){    
 		data.put(REQUESTID, Long.valueOf(requestId));
 		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
 		data.put(VERSION, Float.valueOf(LATEST_VERSION));
@@ -61,7 +61,7 @@ public class ExtRAKeyRecoveryRequest extends ExtRARequest {
 	/**
 	 * Constructor that should be used.when requesting a keystore with a new certificate with the same key.
 	 */
-	public ExtRAKeyRecoveryRequest(long requestId, String username, String subjectDN, String subjectAltName, 
+	public KeyRecoveryRequest(long requestId, String username, String subjectDN, String subjectAltName, 
             String email, String subjectDirectoryAttributes, String endEntityProfileName, String certificateProfileName,
             String cAName, String password, String issuerdn, BigInteger certificatesn){
         super(requestId, username, subjectDN, subjectAltName, email, subjectDirectoryAttributes, endEntityProfileName, certificateProfileName,cAName);
@@ -76,7 +76,7 @@ public class ExtRAKeyRecoveryRequest extends ExtRARequest {
 	/**
 	 * Constructor used when laoded from a persisted state
 	 */	
-	public ExtRAKeyRecoveryRequest(){}
+	public KeyRecoveryRequest(){}
 	
 
 	public float getLatestVersion() {

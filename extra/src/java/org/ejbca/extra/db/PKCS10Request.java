@@ -21,7 +21,7 @@ import org.apache.commons.lang.BooleanUtils;
  * $Id: ExtRAPKCS10Request.java,v 1.3 2007-05-15 12:57:59 anatom Exp $
  */
 
-public class ExtRAPKCS10Request extends ExtRARequest {
+public class PKCS10Request extends ExtRARequest {
 
 	public static final float LATEST_VERSION = (float) 2.0;
 	
@@ -39,7 +39,7 @@ public class ExtRAPKCS10Request extends ExtRARequest {
 	 * Default constructor that should be used.
 	 * @param pkcs10 the PKCS10 request
 	 */
-	public ExtRAPKCS10Request(long requestId, String username, String subjectDN, String subjectAltName, 
+	public PKCS10Request(long requestId, String username, String subjectDN, String subjectAltName, 
             String email, String subjectDirectoryAttributes,
             String endEntityProfileName, String certificateProfileName,
             String cAName, String pkcs10){
@@ -53,7 +53,7 @@ public class ExtRAPKCS10Request extends ExtRARequest {
 	/**
 	 * Constructor used when loaded from a persisted state
 	 */	
-	public ExtRAPKCS10Request(){}
+	public PKCS10Request(){}
 	
 
 	public float getLatestVersion() {

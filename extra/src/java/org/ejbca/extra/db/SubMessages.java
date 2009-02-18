@@ -79,7 +79,7 @@ public class SubMessages {
     public SubMessages(){}
     
     /**
-     * Method use by db api to load a perstent submessage
+     * Method use by db api to load a persisted submessage
      */
 	void load(String data, PrivateKey userKey, Collection cACertChain, Collection crls){
 		try {		

@@ -19,7 +19,7 @@ package org.ejbca.extra.db;
  * @author philip
  * $Id: ExtRAPKCS12Request.java,v 1.3 2007-05-15 12:58:00 anatom Exp $
  */
-public class ExtRAPKCS12Request extends ExtRARequest {
+public class PKCS12Request extends ExtRARequest {
 
 	public static final float LATEST_VERSION = (float) 1.0;
 	
@@ -50,7 +50,7 @@ public class ExtRAPKCS12Request extends ExtRARequest {
 	/**
 	 * Default constructor that should be used.
 	 */
-	public ExtRAPKCS12Request(long requestId, String username, String subjectDN, String subjectAltName, 
+	public PKCS12Request(long requestId, String username, String subjectDN, String subjectAltName, 
             String email, String subjectDirectoryAttributes, 
             String endEntityProfileName, String certificateProfileName,
             String cAName, String password, int keyAlg, String keySpec, boolean storeKeys){
@@ -66,7 +66,7 @@ public class ExtRAPKCS12Request extends ExtRARequest {
 	/**
 	 * Constructor used when laoded from a persisted state
 	 */	
-	public ExtRAPKCS12Request(){}
+	public PKCS12Request(){}
 	
 
 	public float getLatestVersion() {

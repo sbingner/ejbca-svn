@@ -40,10 +40,12 @@ public class MessageHome {
     private static final Log log = LogFactory.getLog(MessageHome.class);
 
     private final Integer type;
+    private HibernateUtil util;
 
     
-    public MessageHome(Integer type){
+    public MessageHome(HibernateUtil util, Integer type){
     	this.type = type;
+    	this.util = util;
     }
      
 
@@ -63,13 +65,11 @@ public class MessageHome {
         String ret = msg.getUniqueId();
     	Transaction transaction = null;
         try {
-        	Session session = HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);   
-        	if(HibernateUtil.isManageTransactions()){
+        	Session session = util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);   
+        	if(util.isManageTransactions()){
         	  transaction = session.beginTransaction();
         	}
            	Message data = (Message) session.get(Message.class, msg.getUniqueId());
-           	
-           	
            	
         	if(data != null){
         		data.update(submessages,Message.STATUS_WAITING);
@@ -79,8 +79,8 @@ public class MessageHome {
         		data.setSubMessages(submessages);
         		session.persist(data);   
         	}		
-        	HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).flush();
-        	if(HibernateUtil.isManageTransactions()){
+        	util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).flush();
+        	if(util.isManageTransactions()){
         		transaction.commit();
           	}
  
@@ -88,7 +88,7 @@ public class MessageHome {
         }
         catch (RuntimeException re) {
             log.error("create failed", re);
-        	if(HibernateUtil.isManageTransactions() && transaction != null){
+        	if(util.isManageTransactions() && transaction != null){
         		transaction.rollback();
         	}           
             throw re;
@@ -109,20 +109,20 @@ public class MessageHome {
       Transaction transaction = null;
       try {    	  
     	  msg.setModifytime(new Date().getTime());
-      	  Session session = HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);   
-          if(HibernateUtil.isManageTransactions()){
+      	  Session session = util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);   
+          if(util.isManageTransactions()){
       	    transaction = session.beginTransaction();
       	  }
     	  try{
             session.update(msg);
-            HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).flush();
-        	if(HibernateUtil.isManageTransactions()){
+            util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).flush();
+        	if(util.isManageTransactions()){
         		transaction.commit();
           	}   	  
             log.debug("update successful");
     	  }catch(HibernateException e){
     		  log.error("update failed", e);
-          	if(HibernateUtil.isManageTransactions()){
+          	if(util.isManageTransactions()){
           		transaction.rollback();
           	}
     		
@@ -131,7 +131,7 @@ public class MessageHome {
       }
       catch (RuntimeException re) {
           log.error("update failed", re);
-          if(HibernateUtil.isManageTransactions() && transaction != null){
+          if(util.isManageTransactions() && transaction != null){
     		transaction.rollback();
     	  }       
           throw re;
@@ -152,21 +152,21 @@ public class MessageHome {
         Message msg = new Message(Messageid,type);
         Transaction transaction = null;
         try {
-           	Session session = HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);   
-            if(HibernateUtil.isManageTransactions()){
+           	Session session = util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);   
+            if(util.isManageTransactions()){
           	    transaction = session.beginTransaction();
           	  }
         	try{
-        	  Message instance = (Message) HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).get("org.ejbca.extra.db.Message", msg.getUniqueId());
-        	  HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).delete(instance);
-        	  HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).flush();
-            	if(HibernateUtil.isManageTransactions()){
+        	  Message instance = (Message) util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).get("org.ejbca.extra.db.Message", msg.getUniqueId());
+        	  util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).delete(instance);
+        	  util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).flush();
+            	if(util.isManageTransactions()){
               		transaction.commit();
               	}
         	  log.debug("delete successful");
         	}catch(HibernateException e){
         		log.error("delete failed", e);
-              	if(HibernateUtil.isManageTransactions()){
+              	if(util.isManageTransactions()){
               		transaction.rollback();
               	}
             	throw e;
@@ -174,7 +174,7 @@ public class MessageHome {
         }
         catch (RuntimeException re) {
             log.error("delete failed", re);
-            if(HibernateUtil.isManageTransactions() && transaction != null){
+            if(util.isManageTransactions() && transaction != null){
         		transaction.rollback();
         	} 
             throw re;
@@ -185,21 +185,6 @@ public class MessageHome {
         log.debug("<remove : Message, Messageid : " + Messageid);
       }
         
-    /**
-     * Method that finds the Message for the unique messageId.
-     * 
-     * This method does not alter the state or lock the message 
-     * in any way.
-     * 
-     * @param Messageid, the unique message id.
-     * @return the Message or null if user doesn't exist in database.
-     * 
-     * @deprecated Use findByMessageId instead
-     */
-    public Message findByUser(String Messageid) {
-       return findByMessageId(Messageid);
-    }
-    
     /**
      * Method that finds the Message for the unique messageid.
      * 
@@ -213,14 +198,14 @@ public class MessageHome {
         log.debug(">findByMessageId Message with Messageid: " + Messageid);
         Message msg = new Message(Messageid,type);
         try {
-        	HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).flush();
-            Message instance = (Message) HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE)
+        	util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).flush();
+            Message instance = (Message) util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE)
                     .get(Message.class, msg.getUniqueId());
             if (instance==null) {
                 log.debug("get successful, no instance found");
             }
             else {
-            	HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).refresh(instance);
+            	util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).refresh(instance);
                 log.debug("get successful, instance found");
             }
             log.debug("<findByMessageId Message with Messageid: " + Messageid);
@@ -242,33 +227,18 @@ public class MessageHome {
      * to avoid confilicts.
      * 
      * @return the Message or null if no message is waiting.
-     * @deprecated use getNextWaitingMessage instead.
-     */
-    public Message getNextWaitingUser() {
-      return getNextWaitingMessage();
-    }
-    
-    
-    /**
-     * Method that finds the oldest created Message with status waiting.
-     * 
-     * This method will for concurrency reasons be update the message
-     * with status STATUS_INPROCESS in one transaction
-     * to avoid confilicts.
-     * 
-     * @return the Message or null if no message is waiting.
      */
     public Message getNextWaitingMessage() {
         log.debug(">getNextWaitingMessage()");
         Transaction transaction = null;
         try {
-        	Session session = HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);
-            if(HibernateUtil.isManageTransactions()){
+        	Session session = util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);
+            if(util.isManageTransactions()){
           	    transaction = session.beginTransaction();
           	  }
             try{        	
             	
-            	List messages = HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).createCriteria(Message.class)
+            	List messages = util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).createCriteria(Message.class)
             	.add( Restrictions.eq("status", Message.STATUS_WAITING) )
             	.addOrder( Order.asc("createtime"))
             	.setFetchSize(1)
@@ -283,7 +253,7 @@ public class MessageHome {
             		msg.setStatus(Message.STATUS_INPROCESS);
             		session.update(msg);
             		session.flush();
-                	if(HibernateUtil.isManageTransactions()){
+                	if(util.isManageTransactions()){
                   		transaction.commit();
                   	}
             		log.debug("<getNextWaitingMessage() : Message " + msg.getMessageid() +" found");
@@ -291,7 +261,7 @@ public class MessageHome {
             	}     
             }catch(HibernateException e){
             	log.error("get failed", e);
-              	if(HibernateUtil.isManageTransactions()){
+              	if(util.isManageTransactions()){
               		transaction.rollback();
               	}
             	throw e;
@@ -302,12 +272,12 @@ public class MessageHome {
         }
         catch (RuntimeException re) {        	
         	log.error("get failed", re);
-            if(HibernateUtil.isManageTransactions() && transaction != null){
+            if(util.isManageTransactions() && transaction != null){
         		transaction.rollback();
         	} 
         	throw re;
         }finally{
-        	//HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).close();
+        	//util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).close();
         }
     }
  

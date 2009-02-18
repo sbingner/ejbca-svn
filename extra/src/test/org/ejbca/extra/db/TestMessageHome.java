@@ -27,7 +27,7 @@ import org.hibernate.cfg.Configuration;
 
 public class TestMessageHome extends TestCase {
 
-	public static final MessageHome msghome = new MessageHome(MessageHome.MESSAGETYPE_EXTRA);
+	public static MessageHome msghome = null;
 
     static {
         Configuration dbconfig = new Configuration().
@@ -44,7 +44,8 @@ public class TestMessageHome extends TestCase {
             setProperty("hibernate.show_sql", "true")
             .addDirectory(new File("src/db"));
 
-            HibernateUtil.setSessionFactory(HibernateUtil.SESSIONFACTORY_RAMESSAGE, dbconfig.buildSessionFactory(), true);
+            HibernateUtil util = new HibernateUtil(HibernateUtil.SESSIONFACTORY_RAMESSAGE, dbconfig.buildSessionFactory(), true);
+            msghome = new MessageHome(util, MessageHome.MESSAGETYPE_EXTRA);
     }
 
 	protected void setUp() throws Exception {

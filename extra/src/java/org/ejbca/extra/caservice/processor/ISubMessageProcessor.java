@@ -10,41 +10,18 @@
  *  See terms of license at gnu.org.                                     *
  *                                                                       *
  *************************************************************************/
-package org.ejbca.extra.caservice;
+package org.ejbca.extra.caservice.processor;
 
-public interface IExtRACAService  extends IRACAService
-{
+import org.ejbca.core.model.log.Admin;
+import org.ejbca.extra.db.ISubMessage;
 
-   /**
-    * Indicates if recieved messages must be encrypted 
-	*/
-	public boolean getEncryptionRequired();
-	public void setEncryptionRequired(boolean required);
-	
-	
-	/**
-	 * Indicates if recieved message must be signed
-	 */
-	public boolean getSignatureRequired();
-	public void setSignatureRequired(boolean required);
-	
-	
-	/**
-	 * Path to key store used to sign and encrypt messages
-	 */
-	public String getKeyStorePath();
-	public void setKeyStorePath(String keyStorePath);
-	
-	/**
-	 * Password to unlock key store used to sign and encrypt messages
-	 */
-	public String getKeyStorePassword();
-	public void setKeyStorePassword(String keyStorePassword);
-	
-	/**
-	 * CA Name of the CA issuing RA Certificates
-	 */
-	public String getRAIssuer();
-	public void setRAIssuer(String rAIssuer);
-	
+/**
+ * 
+ * @author tomas
+ * @version $Id$
+ */
+public interface ISubMessageProcessor {
+
+    public ISubMessage process(Admin admin, ISubMessage submessage, String errormessage);
+
 }

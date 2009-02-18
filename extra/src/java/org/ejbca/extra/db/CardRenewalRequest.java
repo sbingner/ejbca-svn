@@ -29,8 +29,8 @@ import org.ejbca.util.CertTools;
  * @author tomas
  * @version $Id: ExtRACardRenewalRequest.java,v 1.4 2007-05-15 12:57:58 anatom Exp $
  */
-public class ExtRACardRenewalRequest extends ExtRARequest {
-	private static final Log log = LogFactory.getLog(ExtRACardRenewalRequest.class);
+public class CardRenewalRequest extends ExtRARequest {
+	private static final Log log = LogFactory.getLog(CardRenewalRequest.class);
 
 	public static final float LATEST_VERSION = (float) 1.0;
 	
@@ -55,7 +55,7 @@ public class ExtRACardRenewalRequest extends ExtRARequest {
 	/**
 	 * Constructor revoking a specific certificate.
 	 */
-	public ExtRACardRenewalRequest(long requestId, String authcert, String signcert, String authreq, String signreq){    
+	public CardRenewalRequest(long requestId, String authcert, String signcert, String authreq, String signreq){    
 		data.put(REQUESTID, Long.valueOf(requestId));
 		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
 		data.put(VERSION, Float.valueOf(LATEST_VERSION));
@@ -73,7 +73,7 @@ public class ExtRACardRenewalRequest extends ExtRARequest {
 	/**
 	 * Constructor revoking a specific certificate.
 	 */
-	public ExtRACardRenewalRequest(long requestId, String authcert, String signcert, String authreq, String signreq, int authProfile, int signProfile, int authCA, int signCA){    
+	public CardRenewalRequest(long requestId, String authcert, String signcert, String authreq, String signreq, int authProfile, int signProfile, int authCA, int signCA){    
 		data.put(REQUESTID, Long.valueOf(requestId));
 		data.put(CLASSTYPE, Integer.valueOf(CLASS_TYPE));
 		data.put(VERSION, Float.valueOf(LATEST_VERSION));
@@ -90,7 +90,7 @@ public class ExtRACardRenewalRequest extends ExtRARequest {
 	/**
 	 * Constructor used when laoded from a persisted state
 	 */	
-	public ExtRACardRenewalRequest(){}
+	public CardRenewalRequest(){}
 	
 
 	public float getLatestVersion() {

@@ -34,45 +34,45 @@ class SubMessageFactory {
 		ISubMessage retval = null;
 		int classType = ((Integer) data.get(ISubMessage.CLASSTYPE)).intValue();
 		switch(classType){
-		case ExtRAPKCS10Request.CLASS_TYPE:
-			retval =  new ExtRAPKCS10Request();
-			log.debug("Class of type ExtRAPKCS10Request created");
+		case PKCS10Request.CLASS_TYPE:
+			retval =  new PKCS10Request();
+			log.debug("Class of type PKCS10Request created");
 			break;
-		case ExtRAPKCS12Request.CLASS_TYPE:
-			retval =  new ExtRAPKCS12Request();
-			log.debug("Class of type ExtRAPKCS12Request created");
+		case PKCS12Request.CLASS_TYPE:
+			retval =  new PKCS12Request();
+			log.debug("Class of type PKCS12Request created");
 			break;
-		case ExtRAKeyRecoveryRequest.CLASS_TYPE:
-			retval =  new ExtRAKeyRecoveryRequest();
-			log.debug("Class of type ExtRAKeyRecoveryRequest created");
+		case KeyRecoveryRequest.CLASS_TYPE:
+			retval =  new KeyRecoveryRequest();
+			log.debug("Class of type KeyRecoveryRequest created");
 			break;
-		case ExtRARevocationRequest.CLASS_TYPE:
-			retval =  new ExtRARevocationRequest();
-			log.debug("Class of type ExtRARevocationRequest created");
+		case RevocationRequest.CLASS_TYPE:
+			retval =  new RevocationRequest();
+			log.debug("Class of type RevocationRequest created");
 			break;			
-		case ExtRAPKCS10Response.CLASS_TYPE:
-			retval =  new ExtRAPKCS10Response();
-			log.debug("Class of type ExtRAPKCS10Response created");
+		case PKCS10Response.CLASS_TYPE:
+			retval =  new PKCS10Response();
+			log.debug("Class of type PKCS10Response created");
 			break;
-		case ExtRAPKCS12Response.CLASS_TYPE:
-			retval =  new ExtRAPKCS12Response();
-			log.debug("Class of type ExtRAPKCS12Response created");
+		case PKCS12Response.CLASS_TYPE:
+			retval =  new PKCS12Response();
+			log.debug("Class of type PKCS12Response created");
 			break;
-		case ExtRAEditUserRequest.CLASS_TYPE:
-			retval =  new ExtRAEditUserRequest();
-			log.debug("Class of type ExtRAEditUserRequest created");
+		case EditUserRequest.CLASS_TYPE:
+			retval =  new EditUserRequest();
+			log.debug("Class of type EditUserRequest created");
 			break;				
 		case ExtRAResponse.CLASS_TYPE:
 			retval =  new ExtRAResponse();
-			log.debug("Class of type ExtRAResponse created");
+			log.debug("Class of type Response created");
 			break;			
-        case ExtRACardRenewalRequest.CLASS_TYPE:
-            retval =  new ExtRACardRenewalRequest();
-            log.debug("Class of type ExtRACardRenewalRequest created");
+        case CardRenewalRequest.CLASS_TYPE:
+            retval =  new CardRenewalRequest();
+            log.debug("Class of type CardRenewalRequest created");
             break;          
-        case ExtRACardRenewalResponse.CLASS_TYPE:
-            retval =  new ExtRACardRenewalResponse();
-            log.debug("Class of type ExtRACardRenewalResponse created");
+        case CardRenewalResponse.CLASS_TYPE:
+            retval =  new CardRenewalResponse();
+            log.debug("Class of type CardRenewalResponse created");
             break;          
 		default:
 			log.error("Error Class of type : " + classType + " not registred");

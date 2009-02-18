@@ -16,7 +16,7 @@ $Id $
 
       <!-- The jndi name of the DataSource, it is prefixed with java:/ -->
       <!-- Datasources are not available outside the virtual machine -->
-      <jndi-name>RAMessageDS</jndi-name>
+      <jndi-name>RAMessage1DS</jndi-name>
 
       <connection-url>jdbc:mysql://127.0.0.1/messages</connection-url>
       <!-- 
@@ -60,8 +60,9 @@ $Id $
 
       <!-- example of how to specify a class that determines a connection is valid before it is handed out from the pool
          <valid-connection-checker-class-name>org.jboss.resource.adapter.jdbc.vendor.DummyValidConnectionChecker</valid-connection-checker-class-name>
-         <valid-connection-checker-class-name>org.jboss.resource.adapter.jdbc.vendor.MySQLValidConnectionChecker</valid-connection-checker-class-name>
+         
       -->
+      <valid-connection-checker-class-name>org.jboss.resource.adapter.jdbc.vendor.MySQLValidConnectionChecker</valid-connection-checker-class-name>
 
       <!-- Whether to check all statements are closed when the connection is returned to the pool,
            this is a debugging feature that should be turned off in production 
