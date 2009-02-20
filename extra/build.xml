@@ -95,7 +95,6 @@
  compile                 : Compiles and builds ext-raclient.jar  (Default)   	        	
  ra-ca-service      : Builds racaservice.jar    
  deploy-keystore         : Copies the ra ca service keystore to EJBCA app server
- deploy-ra-caservice     : Deploys the ra ca service to EJBCA app server
  deployscepraserver      : Deploys the scep ra server to app server         	
  scepraserver            : Builds the scep ra server scepraserver.war
       </echo>
