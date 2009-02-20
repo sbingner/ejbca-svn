@@ -22,5 +22,11 @@
 	<classpathentry kind="lib" path="lib/ext/servlet-2.3.jar"/>
 	<classpathentry kind="var" path="JBOSS_HOME/client/jbossall-client.jar"/>
 	<classpathentry kind="var" path="JBOSS_HOME/lib/jboss-system.jar"/>
+	<classpathentry kind="var" path="JBOSS_HOME/client/jboss-javaee.jar">
+		<!--  JBoss 5.0.0 -->
+		<attributes>
+			<attributes name="optional" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="out/classes"/>
 </classpath>
