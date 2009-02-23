@@ -12,8 +12,6 @@
  *************************************************************************/
 package org.ejbca.extra.caservice.processor;
 
-import java.io.InputStream;
-import java.lang.reflect.Constructor;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Collection;
@@ -43,13 +41,7 @@ import org.ejbca.core.model.ra.UserDataVO;
 import org.ejbca.core.model.ra.raadmin.UserDoesntFullfillEndEntityProfile;
 import org.ejbca.core.model.util.EjbLocalHelper;
 import org.ejbca.extra.caservice.ConfigurationException;
-import org.ejbca.extra.db.CardRenewalRequest;
-import org.ejbca.extra.db.EditUserRequest;
-import org.ejbca.extra.db.KeyRecoveryRequest;
-import org.ejbca.extra.db.PKCS10Request;
-import org.ejbca.extra.db.PKCS12Request;
 import org.ejbca.extra.db.ExtRARequest;
-import org.ejbca.extra.db.RevocationRequest;
 import org.ejbca.extra.db.ISubMessage;
 import org.ejbca.util.CertTools;
 import org.ejbca.util.query.ApprovalMatch;
