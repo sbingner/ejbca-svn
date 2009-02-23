@@ -58,7 +58,6 @@ public class ExtRACAServiceWorker extends BaseWorker {
 	private static final Boolean defaultEncryptionRequired = Boolean.FALSE;
 	private static final Boolean defaultSignatureRequired = Boolean.FALSE;
 	private static final String defaultRAIssuer = "AdminCA1";
-	private static final String defaultHibernateResource = "hibernate1.cfg.xml";
 	
 	private boolean encryptionRequired = false;
 	private boolean signatureRequired = false;
@@ -73,6 +72,9 @@ public class ExtRACAServiceWorker extends BaseWorker {
 	
 	/** Used to help in looking up EJB interfaces */
 	private final EjbLocalHelper ejb = new EjbLocalHelper();
+	
+	/** Hibernate sessionfactory */
+	HibernateUtil util = null;
 	
 	/** Semaphore to keep several processes from running simultaneously on the same host */
 	private static boolean running = false;
@@ -91,6 +93,7 @@ public class ExtRACAServiceWorker extends BaseWorker {
 			    init();
 			    processWaitingMessage();
 			} finally {
+				cleanup();
 				running = false;
 			}			
 		} else {
@@ -98,14 +101,14 @@ public class ExtRACAServiceWorker extends BaseWorker {
 		}
 	}
 
-	public void init() {
+	private void init() {
 
 		// Read configuration properties
-		// First we get it from the built in configuration in the propertyies file using ConfigurationHolder
+		// First we get it from the built in configuration in the properties file using ConfigurationHolder
 		// Second we try to override this value with a value from the properties of this specific worker, configured in the GUI
 		// Oh, and if no configuration exist it uses the hard coded values from the top of this file.
 		
-		String hibernateconfresource = ConfigurationHolder.getString("externalra-caservice.hibernateresource", defaultHibernateResource);
+		String hibernateconfresource = ConfigurationHolder.getString("externalra-caservice.hibernateresource", HibernateUtil.defaultHibernateResource);
 		hibernateconfresource = this.properties.getProperty("externalra-caservice.hibernateresource", hibernateconfresource);
 		log.debug("externalra-caservice.hibernateresource: "+hibernateconfresource);
 
@@ -131,7 +134,7 @@ public class ExtRACAServiceWorker extends BaseWorker {
 		
 		// Initialize hibernate
         SessionFactory sessionFactory = new Configuration().configure(hibernateconfresource).buildSessionFactory();
-        HibernateUtil util = new HibernateUtil(HibernateUtil.SESSIONFACTORY_RAMESSAGE, sessionFactory, false);
+        util = new HibernateUtil(HibernateUtil.SESSIONFACTORY_RAMESSAGE, sessionFactory, false);
         msgHome = new MessageHome(util, MessageHome.MESSAGETYPE_EXTRA);
 
 		try {
@@ -145,6 +148,13 @@ public class ExtRACAServiceWorker extends BaseWorker {
 		}
 	}
 
+	private void cleanup() {
+		log.trace(">cleanup()");
+		util.closeSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);
+		util.closeSessionFactory(HibernateUtil.SESSIONFACTORY_RAMESSAGE);
+		log.trace("<cleanup()");
+	}
+	
 	public void processWaitingMessage() {
 
 		Collection cACertChain = null;

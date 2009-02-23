@@ -126,7 +126,7 @@ public class ScepRAServlet extends HttpServlet {
             String randomAlgorithm = "SHA1PRNG";
             randomSource = SecureRandom.getInstance(randomAlgorithm);
             
-            SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+            SessionFactory sessionFactory = new Configuration().configure(HibernateUtil.defaultHibernateResource).buildSessionFactory();
             HibernateUtil hu = new HibernateUtil(HibernateUtil.SESSIONFACTORY_RAMESSAGE, sessionFactory, false);
             msgHome = new MessageHome(hu, MessageHome.MESSAGETYPE_SCEPRA);
 

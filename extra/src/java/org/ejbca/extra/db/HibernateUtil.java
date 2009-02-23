@@ -20,6 +20,8 @@ import org.hibernate.SessionFactory;
 
 public class HibernateUtil {
 
+	public static final String defaultHibernateResource = "hibernate1.cfg.xml";
+
 	
 	public static final int SESSIONFACTORY_RAMESSAGE = 0;
 		
@@ -77,7 +79,20 @@ public class HibernateUtil {
         
         sessions[type]=null;
     }
-    
+
+    /**
+     * Method that retrieves and closes the session factory
+     * 
+     * @param type Should be one of the SESSIONFACTORY_ constants
+     */
+    public void closeSessionFactory(int type) {
+        if (sessionFactories[type] != null){
+        	sessionFactories[type].close();
+        }
+        
+        sessionFactories[type]=null;
+    }
+
     /**
      * 
      * @return  true if application should manage it's own transactions.
