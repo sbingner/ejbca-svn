@@ -150,8 +150,10 @@ public class ExtRACAServiceWorker extends BaseWorker {
 
 	private void cleanup() {
 		log.trace(">cleanup()");
-		util.closeSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);
-		util.closeSessionFactory(HibernateUtil.SESSIONFACTORY_RAMESSAGE);
+		if (util != null) {
+			util.closeSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);
+			util.closeSessionFactory(HibernateUtil.SESSIONFACTORY_RAMESSAGE);			
+		}
 		log.trace("<cleanup()");
 	}
 	
