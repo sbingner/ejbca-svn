@@ -46,7 +46,9 @@ import org.ejbca.util.CertTools;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
-/**
+/** An EJBCA Service worker that polls the External RA database for extRA messages and processes them.
+ * The design includes that no two workers can run on the same CA host at the same time.
+ * 
  * @version $Id: ExtRACAProcess.java,v 1.26 2008-01-25 12:40:24 anatom Exp $
  */
 public class ExtRACAServiceWorker extends BaseWorker {
@@ -73,7 +75,7 @@ public class ExtRACAServiceWorker extends BaseWorker {
 	/** Used to help in looking up EJB interfaces */
 	private final EjbLocalHelper ejb = new EjbLocalHelper();
 	
-	/** Hibernate sessionfactory */
+	/** Hibernate session factory */
 	HibernateUtil util = null;
 	
 	/** Semaphore to keep several processes from running simultaneously on the same host */
@@ -91,7 +93,7 @@ public class ExtRACAServiceWorker extends BaseWorker {
 			try {
 				running = true;
 			    init();
-			    processWaitingMessage();
+			    processWaitingMessages();
 			} finally {
 				cleanup();
 				running = false;
@@ -157,7 +159,11 @@ public class ExtRACAServiceWorker extends BaseWorker {
 		log.trace("<cleanup()");
 	}
 	
-	public void processWaitingMessage() {
+	/**
+	 * Loops and gets waiting messages from the extRA database as long as there are any, and processes them. 
+	 * If there are no more messages in status waiting the method ends.
+	 */
+	public void processWaitingMessages() {
 
 		Collection cACertChain = null;
 		try {
