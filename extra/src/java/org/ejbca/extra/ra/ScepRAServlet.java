@@ -53,8 +53,8 @@ import org.ejbca.core.protocol.FailInfo;
 import org.ejbca.core.protocol.IRequestMessage;
 import org.ejbca.core.protocol.IResponseMessage;
 import org.ejbca.core.protocol.ResponseStatus;
-import org.ejbca.core.protocol.ScepRequestMessage;
-import org.ejbca.core.protocol.ScepResponseMessage;
+import org.ejbca.core.protocol.scep.ScepRequestMessage;
+import org.ejbca.core.protocol.scep.ScepResponseMessage;
 import org.ejbca.extra.db.PKCS10Request;
 import org.ejbca.extra.db.PKCS10Response;
 import org.ejbca.extra.db.HibernateUtil;
@@ -259,7 +259,7 @@ public class ScepRAServlet extends HttpServlet {
                 			Iterator iter =  submessagesresp.getSubMessages().iterator();
                 			PKCS10Response resp = (PKCS10Response) iter.next();
                 			// create proper ScepResponseMessage
-                			IResponseMessage ret = reqmsg.createResponseMessage(org.ejbca.core.protocol.ScepResponseMessage.class, reqmsg, racert, rapriv, rapriv, cryptProvider);
+                			IResponseMessage ret = reqmsg.createResponseMessage(org.ejbca.core.protocol.scep.ScepResponseMessage.class, reqmsg, racert, rapriv, rapriv, cryptProvider);
                 			ret.setCACert(cacert);
             				X509Certificate respCert = resp.getCertificate();
                 			if ( resp.isSuccessful() && (respCert != null) ) {
@@ -434,7 +434,7 @@ public class ScepRAServlet extends HttpServlet {
     	ScepResponseMessage ret = null;
     	// Create the response message and set all required fields
     	try {
-    		ret = (ScepResponseMessage) Class.forName(org.ejbca.core.protocol.ScepResponseMessage.class.getName()).newInstance();
+    		ret = (ScepResponseMessage) Class.forName(org.ejbca.core.protocol.scep.ScepResponseMessage.class.getName()).newInstance();
     	} catch (InstantiationException e) {
     		//TODO : do something with these exceptions
     		log.error("Error creating response message", e);
