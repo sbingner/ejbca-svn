@@ -59,9 +59,8 @@ import org.bouncycastle.cms.CMSSignedGenerator;
 import org.bouncycastle.jce.PKCS10CertificationRequest;
 import org.bouncycastle.util.encoders.Base64;
 import org.ejbca.core.model.ca.catoken.CATokenConstants;
-import org.ejbca.core.protocol.ScepRequestMessage;
+import org.ejbca.core.protocol.scep.ScepRequestMessage;
 import org.ejbca.util.CertTools;
-import org.ejbca.util.keystore.KeyTools;
 
 public class ScepRequestGenerator {
     private static Logger log = Logger.getLogger(ScepRequestGenerator.class);
@@ -72,13 +71,10 @@ public class ScepRequestGenerator {
     private KeyPair keys = null;
     private String digestOid = CMSSignedGenerator.DIGEST_SHA1;
     private PKCS10CertificationRequest p10request;
-    String keyspec = "1024";
+
     private String senderNonce = null;
     private String transactionId = null;
     
-    public void setKeySpec(String spec) {
-        this.keyspec = spec;
-    }
     public void setKeys(KeyPair myKeys) {
         this.keys = myKeys;
     }
@@ -93,6 +89,9 @@ public class ScepRequestGenerator {
     public String getTransactionId() {
         return transactionId;
     }
+    /** Generates a SCEP CrlReq. Keys must have been set in the generator for this to succeed 
+     * 
+     */
     public byte[] generateCrlReq(String dn, X509Certificate ca) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, IOException, CMSException, InvalidAlgorithmParameterException, CertStoreException, CertificateEncodingException, IllegalStateException {
         this.cacert = ca;
         this.reqdn = dn;
@@ -105,13 +104,13 @@ public class ScepRequestGenerator {
         byte[] msg = wrap(ias.getEncoded(), "22");        
         return msg;
     }
+
+    /** Generates a SCEP CertReq. Keys must have been set in the generator for this to succeed 
+     * 
+     */
     public byte[] generateCertReq(String dn, String password, X509Certificate ca) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, SignatureException, IOException, CMSException, InvalidAlgorithmParameterException, CertStoreException, CertificateEncodingException, IllegalStateException {
         this.cacert = ca;
         this.reqdn = dn;
-        // Generate keys
-        if (keys == null) {
-            keys = KeyTools.genKeys(keyspec, CATokenConstants.KEYALGORITHM_RSA);            
-        }
 
         // Create challenge password attribute for PKCS10
         // Attributes { ATTRIBUTE:IOSet } ::= SET OF Attribute{{ IOSet }}
