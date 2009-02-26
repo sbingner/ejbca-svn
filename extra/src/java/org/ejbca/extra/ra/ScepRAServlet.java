@@ -55,11 +55,11 @@ import org.ejbca.core.protocol.IResponseMessage;
 import org.ejbca.core.protocol.ResponseStatus;
 import org.ejbca.core.protocol.scep.ScepRequestMessage;
 import org.ejbca.core.protocol.scep.ScepResponseMessage;
-import org.ejbca.extra.db.PKCS10Request;
-import org.ejbca.extra.db.PKCS10Response;
 import org.ejbca.extra.db.HibernateUtil;
 import org.ejbca.extra.db.Message;
 import org.ejbca.extra.db.MessageHome;
+import org.ejbca.extra.db.PKCS10Request;
+import org.ejbca.extra.db.PKCS10Response;
 import org.ejbca.extra.db.SubMessages;
 import org.ejbca.extra.util.ExtraConfiguration;
 import org.ejbca.extra.util.RAKeyStore;
@@ -243,6 +243,7 @@ public class ScepRAServlet extends HttpServlet {
                 byte[] reply = null;                                
                 ScepRequestMessage reqmsg = new ScepRequestMessage(scepmsg, includeCACert);
                 String transId = reqmsg.getTransactionId();
+                log.debug("Received a message of type: "+reqmsg.getMessageType());
                 if(reqmsg.getMessageType() == ScepRequestMessage.SCEP_TYPE_GETCERTINITIAL) {
                 	log.info("Received a GetCertInitial message from host: "+remoteAddr);
                 	Message msg = null;
@@ -345,6 +346,7 @@ public class ScepRAServlet extends HttpServlet {
                 
                 if (reply == null) {
                     // This is probably a getCert message?
+                	log.debug("Sending HttpServletResponse.SC_NOT_IMPLEMENTED (501) response");
                     response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, "Can not handle request");
                     return;
                 }
