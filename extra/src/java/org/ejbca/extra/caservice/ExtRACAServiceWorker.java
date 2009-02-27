@@ -36,7 +36,6 @@ import org.ejbca.core.model.services.BaseWorker;
 import org.ejbca.core.model.services.ServiceExecutionFailedException;
 import org.ejbca.core.model.util.EjbLocalHelper;
 import org.ejbca.extra.caservice.processor.MessageProcessor;
-import org.ejbca.extra.db.HibernateUtil;
 import org.ejbca.extra.db.ISubMessage;
 import org.ejbca.extra.db.Message;
 import org.ejbca.extra.db.MessageHome;
@@ -55,6 +54,7 @@ public class ExtRACAServiceWorker extends BaseWorker {
 
 	private static Logger log = Logger.getLogger(ExtRACAServiceWorker.class);
 
+	private static final String defaultHibernateResource = "hibernate1.cfg.xml";
 	private static final String defaultKeyStorePath = "keystore/extrakeystore.p12";
 	private static final String defaultKeyStorePwd = "foo123";
 	private static final Boolean defaultEncryptionRequired = Boolean.FALSE;
@@ -66,6 +66,7 @@ public class ExtRACAServiceWorker extends BaseWorker {
 	private String keystorePwd = null;
 	private String caname = null;
 	
+	private SessionFactory sessionFactory = null;
 	private MessageHome msgHome = null;
 	
 	private RAKeyStore serviceKeyStore = null;
@@ -74,9 +75,6 @@ public class ExtRACAServiceWorker extends BaseWorker {
 	
 	/** Used to help in looking up EJB interfaces */
 	private final EjbLocalHelper ejb = new EjbLocalHelper();
-	
-	/** Hibernate session factory */
-	HibernateUtil util = null;
 	
 	/** Semaphore to keep several processes from running simultaneously on the same host */
 	private static boolean running = false;
@@ -110,7 +108,7 @@ public class ExtRACAServiceWorker extends BaseWorker {
 		// Second we try to override this value with a value from the properties of this specific worker, configured in the GUI
 		// Oh, and if no configuration exist it uses the hard coded values from the top of this file.
 		
-		String hibernateconfresource = ConfigurationHolder.getString("externalra-caservice.hibernateresource", HibernateUtil.defaultHibernateResource);
+		String hibernateconfresource = ConfigurationHolder.getString("externalra-caservice.hibernateresource", defaultHibernateResource);
 		hibernateconfresource = this.properties.getProperty("externalra-caservice.hibernateresource", hibernateconfresource);
 		log.debug("externalra-caservice.hibernateresource: "+hibernateconfresource);
 
@@ -135,9 +133,8 @@ public class ExtRACAServiceWorker extends BaseWorker {
 		log.debug("externalra-caservice.raissuer: "+caname);
 		
 		// Initialize hibernate
-        SessionFactory sessionFactory = new Configuration().configure(hibernateconfresource).buildSessionFactory();
-        util = new HibernateUtil(HibernateUtil.SESSIONFACTORY_RAMESSAGE, sessionFactory, false);
-        msgHome = new MessageHome(util, MessageHome.MESSAGETYPE_EXTRA);
+        sessionFactory = new Configuration().configure(hibernateconfresource).buildSessionFactory();
+        msgHome = new MessageHome(sessionFactory, MessageHome.MESSAGETYPE_EXTRA, false);
 
 		try {
 			serviceKeyStore = new RAKeyStore(keystorePath, keystorePwd);
@@ -152,9 +149,8 @@ public class ExtRACAServiceWorker extends BaseWorker {
 
 	private void cleanup() {
 		log.trace(">cleanup()");
-		if (util != null) {
-			util.closeSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);
-			util.closeSessionFactory(HibernateUtil.SESSIONFACTORY_RAMESSAGE);			
+		if (sessionFactory != null) {
+			sessionFactory.close();
 		}
 		log.trace("<cleanup()");
 	}

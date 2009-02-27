@@ -55,7 +55,6 @@ import org.ejbca.core.protocol.IResponseMessage;
 import org.ejbca.core.protocol.ResponseStatus;
 import org.ejbca.core.protocol.scep.ScepRequestMessage;
 import org.ejbca.core.protocol.scep.ScepResponseMessage;
-import org.ejbca.extra.db.HibernateUtil;
 import org.ejbca.extra.db.Message;
 import org.ejbca.extra.db.MessageHome;
 import org.ejbca.extra.db.PKCS10Request;
@@ -89,6 +88,7 @@ public class ScepRAServlet extends HttpServlet {
 
 	private static final Logger log = Logger.getLogger(ScepRAServlet.class);   
     
+	private static final String defaultHibernateResource = "hibernate1.cfg.xml";
 
 	private SecureRandom randomSource;
 	private RAKeyStore scepraks;
@@ -126,9 +126,8 @@ public class ScepRAServlet extends HttpServlet {
             String randomAlgorithm = "SHA1PRNG";
             randomSource = SecureRandom.getInstance(randomAlgorithm);
             
-            SessionFactory sessionFactory = new Configuration().configure(HibernateUtil.defaultHibernateResource).buildSessionFactory();
-            HibernateUtil hu = new HibernateUtil(HibernateUtil.SESSIONFACTORY_RAMESSAGE, sessionFactory, false);
-            msgHome = new MessageHome(hu, MessageHome.MESSAGETYPE_SCEPRA);
+            SessionFactory sessionFactory = new Configuration().configure(defaultHibernateResource).buildSessionFactory();
+            msgHome = new MessageHome(sessionFactory, MessageHome.MESSAGETYPE_SCEPRA, false);
 
         } catch (Exception e) {
             throw new ServletException(e);

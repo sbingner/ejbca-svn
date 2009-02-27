@@ -24,13 +24,12 @@ import java.util.Random;
 import java.util.Vector;
 
 import org.apache.log4j.PropertyConfigurator;
+import org.ejbca.extra.db.Message;
+import org.ejbca.extra.db.MessageHome;
 import org.ejbca.extra.db.PKCS10Request;
 import org.ejbca.extra.db.PKCS10Response;
 import org.ejbca.extra.db.PKCS12Request;
 import org.ejbca.extra.db.PKCS12Response;
-import org.ejbca.extra.db.HibernateUtil;
-import org.ejbca.extra.db.Message;
-import org.ejbca.extra.db.MessageHome;
 import org.ejbca.extra.db.SubMessages;
 import org.ejbca.extra.util.RAKeyStore;
 import org.ejbca.util.CertTools;
@@ -128,8 +127,7 @@ public class ExtRATestClient {
             addInputStream(ExtRATestClient.class.getResourceAsStream("/Message.hbm.xml"));
             //addDirectory(new File("src/db")); // Uncomment if running from eclipse
 
-            HibernateUtil util = new HibernateUtil(HibernateUtil.SESSIONFACTORY_RAMESSAGE, dbconfig.buildSessionFactory(), true);
-            msghome = new MessageHome(util, MessageHome.MESSAGETYPE_EXTRA);
+            msghome = new MessageHome(dbconfig.buildSessionFactory(), MessageHome.MESSAGETYPE_EXTRA, true);
 			securitylevel = args[ARG_SECURITYLEVEL];
 			if(!securitylevel.equalsIgnoreCase(SECURITY_UNSECURED) &&
 			   !securitylevel.equalsIgnoreCase(SECURITY_SIGNED) &&

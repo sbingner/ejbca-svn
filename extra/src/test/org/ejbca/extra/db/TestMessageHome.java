@@ -17,10 +17,6 @@ import java.util.ArrayList;
 
 import junit.framework.TestCase;
 
-import org.ejbca.extra.db.HibernateUtil;
-import org.ejbca.extra.db.Message;
-import org.ejbca.extra.db.MessageHome;
-import org.ejbca.extra.db.SubMessages;
 import org.ejbca.util.CertTools;
 import org.hibernate.cfg.Configuration;
 
@@ -44,8 +40,7 @@ public class TestMessageHome extends TestCase {
             setProperty("hibernate.show_sql", "true")
             .addDirectory(new File("src/db"));
 
-            HibernateUtil util = new HibernateUtil(HibernateUtil.SESSIONFACTORY_RAMESSAGE, dbconfig.buildSessionFactory(), true);
-            msghome = new MessageHome(util, MessageHome.MESSAGETYPE_EXTRA);
+            msghome = new MessageHome(dbconfig.buildSessionFactory(), MessageHome.MESSAGETYPE_EXTRA, true);
     }
 
 	protected void setUp() throws Exception {

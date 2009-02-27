@@ -20,6 +20,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
@@ -40,12 +41,14 @@ public class MessageHome {
     private static final Log log = LogFactory.getLog(MessageHome.class);
 
     private final Integer type;
-    private HibernateUtil util;
+    private SessionFactory factory;
+    private boolean manageTransaction = false;
 
     
-    public MessageHome(HibernateUtil util, Integer type){
+    public MessageHome(SessionFactory factory, Integer type, boolean manageTransaction){
     	this.type = type;
-    	this.util = util;
+    	this.factory = factory;
+    	this.manageTransaction = manageTransaction;
     }
      
 
@@ -60,13 +63,14 @@ public class MessageHome {
      */
     
     public String create(String messageid, SubMessages submessages){
-    	log.debug(">create : Message, messageid : " + messageid);
+    	log.trace(">create : Message, messageid : " + messageid);
     	Message msg = new Message(messageid,type);
         String ret = msg.getUniqueId();
     	Transaction transaction = null;
+    	Session session = factory.openSession();
         try {
-        	Session session = util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);   
-        	if(util.isManageTransactions()){
+        	
+        	if(manageTransaction){
         	  transaction = session.beginTransaction();
         	}
            	Message data = (Message) session.get(Message.class, msg.getUniqueId());
@@ -78,24 +82,23 @@ public class MessageHome {
         		data =  new Message(messageid,type);
         		data.setSubMessages(submessages);
         		session.persist(data);   
-        	}		
-        	util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).flush();
-        	if(util.isManageTransactions()){
+        	}
+        	session.flush();
+        	if(manageTransaction){
         		transaction.commit();
           	}
  
             log.debug("create successful");                         
-        }
-        catch (RuntimeException re) {
+        } catch (RuntimeException re) {
             log.error("create failed", re);
-        	if(util.isManageTransactions() && transaction != null){
+        	if(manageTransaction && transaction != null){
         		transaction.rollback();
         	}           
             throw re;
         }finally{
-        	//HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).close();
+        	session.close();
         }
-    	log.debug("<create : Message, messageid : " + messageid);
+    	log.trace("<create : Message, messageid : " + messageid);
         return ret;
     }
    
@@ -105,41 +108,39 @@ public class MessageHome {
      * @param msg the message class.
      */
     public void update(Message msg){
-      log.debug(">update : Message, Messageid : " + msg.getMessageid()); 
+      log.trace(">update : Message, Messageid : " + msg.getMessageid()); 
       Transaction transaction = null;
+      Session session = factory.openSession();
       try {    	  
     	  msg.setModifytime(new Date().getTime());
-      	  Session session = util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);   
-          if(util.isManageTransactions()){
+          if(manageTransaction){
       	    transaction = session.beginTransaction();
       	  }
     	  try{
             session.update(msg);
-            util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).flush();
-        	if(util.isManageTransactions()){
+            session.flush();
+        	if(manageTransaction){
         		transaction.commit();
           	}   	  
             log.debug("update successful");
     	  }catch(HibernateException e){
     		  log.error("update failed", e);
-          	if(util.isManageTransactions()){
+          	if(manageTransaction){
           		transaction.rollback();
           	}
-    		
-    		  throw e;
-    	  }
-      }
-      catch (RuntimeException re) {
+          	throw e;
+    	  } 
+      } catch (RuntimeException re) {
           log.error("update failed", re);
-          if(util.isManageTransactions() && transaction != null){
+          if(manageTransaction && transaction != null){
     		transaction.rollback();
     	  }       
           throw re;
       }finally{
-      	//HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).close();
+    	  session.close();
       }        
             
-      log.debug("<update : Message, Messageid : " + msg.getMessageid());
+      log.trace("<update : Message, Messageid : " + msg.getMessageid());
     }
     
     /**
@@ -148,41 +149,40 @@ public class MessageHome {
      * @param Messageid, the unique message id.
      */
     public void remove(String Messageid){
-        log.debug(">remove : Message, Messageid : " + Messageid);
+        log.trace(">remove : Message, Messageid : " + Messageid);
         Message msg = new Message(Messageid,type);
         Transaction transaction = null;
+        Session session = factory.openSession();
         try {
-           	Session session = util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);   
-            if(util.isManageTransactions()){
+            if(manageTransaction){
           	    transaction = session.beginTransaction();
           	  }
         	try{
-        	  Message instance = (Message) util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).get("org.ejbca.extra.db.Message", msg.getUniqueId());
-        	  util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).delete(instance);
-        	  util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).flush();
-            	if(util.isManageTransactions()){
+        	  Message instance = (Message) session.get("org.ejbca.extra.db.Message", msg.getUniqueId());
+        	  session.delete(instance);
+        	  session.flush();
+            	if(manageTransaction){
               		transaction.commit();
               	}
         	  log.debug("delete successful");
         	}catch(HibernateException e){
         		log.error("delete failed", e);
-              	if(util.isManageTransactions()){
+              	if(manageTransaction){
               		transaction.rollback();
               	}
             	throw e;
             }  
-        }
-        catch (RuntimeException re) {
+        } catch (RuntimeException re) {
             log.error("delete failed", re);
-            if(util.isManageTransactions() && transaction != null){
+            if(manageTransaction && transaction != null){
         		transaction.rollback();
         	} 
             throw re;
         }finally{
-        //	HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).close();
+        	session.close();
         }
               
-        log.debug("<remove : Message, Messageid : " + Messageid);
+        log.trace("<remove : Message, Messageid : " + Messageid);
       }
         
     /**
@@ -195,27 +195,25 @@ public class MessageHome {
      * @return the Message or null if message doesn't exist in database.
      */
     public Message findByMessageId(String Messageid) {
-        log.debug(">findByMessageId Message with Messageid: " + Messageid);
+        log.trace(">findByMessageId Message with Messageid: " + Messageid);
         Message msg = new Message(Messageid,type);
+        Session session = factory.openSession();
         try {
-        	util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).flush();
-            Message instance = (Message) util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE)
-                    .get(Message.class, msg.getUniqueId());
+            Message instance = (Message) session.get(Message.class, msg.getUniqueId());
             if (instance==null) {
                 log.debug("get successful, no instance found");
-            }
-            else {
-            	util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).refresh(instance);
+            } else {
+            	session.refresh(instance);
                 log.debug("get successful, instance found");
             }
-            log.debug("<findByMessageId Message with Messageid: " + Messageid);
+            log.trace("<findByMessageId Message with Messageid: " + Messageid);
             return instance;
         }
         catch (RuntimeException re) {
             log.error("get failed", re);
             throw re;
         }finally{
-        //	HibernateUtil.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).close();
+        	session.close();
         }
     }
     
@@ -229,16 +227,16 @@ public class MessageHome {
      * @return the Message or null if no message is waiting.
      */
     public Message getNextWaitingMessage() {
-        log.debug(">getNextWaitingMessage()");
+        log.trace(">getNextWaitingMessage()");
         Transaction transaction = null;
+        Session session = factory.openSession();
         try {
-        	Session session = util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE);
-            if(util.isManageTransactions()){
+            if(manageTransaction){
           	    transaction = session.beginTransaction();
           	  }
             try{        	
             	
-            	List messages = util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).createCriteria(Message.class)
+            	List messages = session.createCriteria(Message.class)
             	.add( Restrictions.eq("status", Message.STATUS_WAITING) )
             	.addOrder( Order.asc("createtime"))
             	.setFetchSize(1)
@@ -253,31 +251,30 @@ public class MessageHome {
             		msg.setStatus(Message.STATUS_INPROCESS);
             		session.update(msg);
             		session.flush();
-                	if(util.isManageTransactions()){
+                	if(manageTransaction){
                   		transaction.commit();
                   	}
-            		log.debug("<getNextWaitingMessage() : Message " + msg.getMessageid() +" found");
+            		log.trace("<getNextWaitingMessage() : Message " + msg.getMessageid() +" found");
             		return msg;
             	}     
             }catch(HibernateException e){
             	log.error("get failed", e);
-              	if(util.isManageTransactions()){
+              	if(manageTransaction){
               		transaction.rollback();
               	}
             	throw e;
             }
             
-            log.debug("<getNextWaitingMessage() : No Message found");
+            log.trace("<getNextWaitingMessage() : No Message found");
         	return null;
-        }
-        catch (RuntimeException re) {        	
+        } catch (RuntimeException re) {        	
         	log.error("get failed", re);
-            if(util.isManageTransactions() && transaction != null){
+            if(manageTransaction && transaction != null){
         		transaction.rollback();
         	} 
         	throw re;
         }finally{
-        	//util.currentSession(HibernateUtil.SESSIONFACTORY_RAMESSAGE).close();
+        	session.close();
         }
     }
  
