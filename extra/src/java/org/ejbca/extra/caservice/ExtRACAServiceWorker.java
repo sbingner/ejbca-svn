@@ -21,6 +21,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import javax.ejb.CreateException;
@@ -46,7 +47,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
 /** An EJBCA Service worker that polls the External RA database for extRA messages and processes them.
- * The design includes that no two workers can run on the same CA host at the same time.
+ * The design includes that no two workers with the same serviceName can run on the same CA host at the same time.
  * 
  * @version $Id: ExtRACAProcess.java,v 1.26 2008-01-25 12:40:24 anatom Exp $
  */
@@ -77,7 +78,7 @@ public class ExtRACAServiceWorker extends BaseWorker {
 	private final EjbLocalHelper ejb = new EjbLocalHelper();
 	
 	/** Semaphore to keep several processes from running simultaneously on the same host */
-	private static boolean running = false;
+	private static HashMap running = new HashMap();
 
 	/**
 	 * Checks if there are any new messages on the External RA and processes them.
@@ -85,22 +86,44 @@ public class ExtRACAServiceWorker extends BaseWorker {
 	 * @see org.ejbca.core.model.services.IWorker#work()
 	 */
 	public void work() throws ServiceExecutionFailedException {
-		// A semaphore used to not run parallel CRL generation jobs if it is slow
-		// in generating CRLs, and this job runs very often
-		if (!running) {
+		log.debug(">work: "+serviceName);
 			try {
-				running = true;
-			    init();
-			    processWaitingMessages();
+				// A semaphore used to not run parallel service jobs on the same host so not to start unlimited number of threads just
+				// because there is a lot of work to do.
+				if (startWorking()) {
+					init();
+					processWaitingMessages();
+				} else {
+					log.info("Service "+ExtRACAServiceWorker.class.getName()+" is already running in this VM! Not starting work.");
+				}
 			} finally {
 				cleanup();
-				running = false;
+				stopWorking();
 			}			
-		} else {
-			log.info("Service "+ExtRACAServiceWorker.class.getName()+" is already running in this VM! Not starting work.");
-		}
+		log.debug("<work: "+serviceName);
 	}
 
+	/** Synchronized method that makes checks if another service thread with this particular service name is already running. 
+	 * If another service thread is running, false is returned. If another service is not running true is returned and an object is inserted in the running HashMap
+	 * to indicate that this service thread is running. 
+	 * @return false is another service thread with the same serviceName is running, false otherwise.
+	 */
+	private synchronized boolean startWorking() {
+		boolean ret = false;
+		Object o = running.get(serviceName);
+		if (o == null) {
+			running.put(serviceName, new Object());
+			ret = true;
+		} 
+		return ret;
+	}
+	/** Removes the object, that was inserted in startWorking() from the running HashMap.
+	 * @see #startWorking 
+	 */
+	private synchronized void stopWorking() {
+		running.remove(serviceName);
+	}
+	
 	private void init() {
 
 		// Read configuration properties
