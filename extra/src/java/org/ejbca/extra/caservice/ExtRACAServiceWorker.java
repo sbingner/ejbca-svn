@@ -87,19 +87,19 @@ public class ExtRACAServiceWorker extends BaseWorker {
 	 */
 	public void work() throws ServiceExecutionFailedException {
 		log.debug(">work: "+serviceName);
+		if (startWorking()) {
 			try {
 				// A semaphore used to not run parallel service jobs on the same host so not to start unlimited number of threads just
 				// because there is a lot of work to do.
-				if (startWorking()) {
-					init();
-					processWaitingMessages();
-				} else {
-					log.info("Service "+ExtRACAServiceWorker.class.getName()+" is already running in this VM! Not starting work.");
-				}
+				init();
+				processWaitingMessages();
 			} finally {
 				cleanup();
 				stopWorking();
 			}			
+		} else {
+			log.info("Service "+ExtRACAServiceWorker.class.getName()+" with name "+serviceName+" is already running in this VM! Not starting work.");
+		}
 		log.debug("<work: "+serviceName);
 	}
 
@@ -200,88 +200,84 @@ public class ExtRACAServiceWorker extends BaseWorker {
 		String lastMessageId = null;
 		do{	
 			msg = msgHome.getNextWaitingMessage();
-			// A small section that makes sure we don't loop too quickly over the same message, if we are leaving it in the queue
-			// Check if we are trying to process the same messageId as the last time. If this is the case increase a counter that counts to 5 before
-			// we try to process the message again, and sleep for 1 second
-			// If it is not the same messageId, re-set counter to 0 and process the message immediately.
+			// A small section that makes sure we don't loop too quickly over the same message.
+			// Check if we are trying to process the same messageId as the last time. If this is the case exit from the loop and let the next 
+			// worker try to process it.
+			// If it is not the same messageId process the message immediately.
 			if (msg != null) {
 				String id = msg.getMessageid();
 				if (StringUtils.equals(id, lastMessageId)) {
-					log.debug("The same message was in the queue, putting back and exiting from the current loop");
+					log.info("The same message was in the queue twice, putting back and exiting from the current loop");
 					// Re-set status to waiting so we will process it the next time the service is run
 					msg.setStatus(Message.STATUS_WAITING);
 					msgHome.update(msg);							
 					msg = null;
+				} else {
+					String errormessage = null;
+					SubMessages submgs = null;
+					try {
+						log.info("Started processing message with messageId: " + msg.getMessageid()+", and uniqueId: "+msg.getUniqueId()); 
+
+						if (serviceKeyStore != null) {
+							submgs = msg.getSubMessages(
+									(PrivateKey) serviceKeyStore.getKeyStore().getKey(serviceKeyStore.getAlias(), keystorePwd.toCharArray()),
+									cACertChain,null);
+						} else {
+							submgs =  msg.getSubMessages(null,null,null);
+						}
+						if (submgs.isSigned()) {
+							log.debug("Message from : " + msg.getMessageid() + " was signed");
+						}
+						if (signatureRequired && !submgs.isSigned()) {
+							errormessage = "Error: Message from : " + msg.getMessageid() + " wasn't signed which is a requirement";
+							log.error(errormessage);
+
+						}
+						if (submgs.isEncrypted()) {
+							log.debug("Message from : " + msg.getMessageid() + " was encrypted");
+						}
+						if (encryptionRequired && !submgs.isEncrypted()) {
+							errormessage = "Error: Message from : " + msg.getMessageid() + " wasn't encrypted which is a requirement";
+							log.error(errormessage);
+						}
+					} catch (Exception e) {
+						errormessage = "Error processing waiting message with Messageid : " + msg.getMessageid() + " : "+ e.getMessage();
+						log.error("Error processing waiting message with Messageid : " + msg.getMessageid(), e);
+					}
+
+					if (submgs != null) {
+						SubMessages respSubMsg;
+						try {
+							respSubMsg = generateResponseSubMessage(submgs.getSignerCert());
+							Iterator iter = submgs.getSubMessages().iterator();
+							boolean somethingprocessed = false;
+							while(iter.hasNext()){
+								ISubMessage respMsg = MessageProcessor.processSubMessage(getAdmin(submgs), (ISubMessage) iter.next(), errormessage);
+								if (respMsg != null) {
+									// if the response message is null here, we will ignore this message, 
+									// it means that we should not do anything with it this round 
+									respSubMsg.addSubMessage(respMsg);
+									somethingprocessed = true;
+								}
+							}
+							if (somethingprocessed) {
+								msg.setStatus(Message.STATUS_PROCESSED);
+								msg.setSubMessages(respSubMsg);
+							} else {
+								log.info("Nothing processed for msg with messageId: "+msg.getMessageid()+", leaving it in the queue");
+								msg.setStatus(Message.STATUS_WAITING);
+								// Update create time, so that we will process the next message instead of this again the next round in the loop
+								msg.setCreatetime((new Date()).getTime());
+							}
+							msgHome.update(msg);							
+						} catch (Exception e) {
+							log.error("Error generating response message with Messageid : " + msg.getMessageid(), e);
+						}
+
+					}					
 				}
 				lastMessageId = id;	    	 
 			}
-
-			if (msg != null) {
-				String errormessage = null;
-				SubMessages submgs = null;
-				try {
-					log.info("Started processing message with messageId: " + msg.getMessageid()+", and uniqueId: "+msg.getUniqueId()); 
-
-					if(serviceKeyStore != null){
-						submgs = msg.getSubMessages(
-								(PrivateKey) serviceKeyStore.getKeyStore().getKey(serviceKeyStore.getAlias(), keystorePwd.toCharArray()),
-								cACertChain,null);
-					}else{
-						submgs =  msg.getSubMessages(null,null,null);
-					}
-					if (submgs.isSigned()) {
-						log.debug("Message from : " + msg.getMessageid() + " was signed");
-					}
-					if(signatureRequired && !submgs.isSigned()){
-						errormessage = "Error: Message from : " + msg.getMessageid() + " wasn't signed which is a requirement";
-						log.error(errormessage);
-
-					}
-					if (submgs.isEncrypted()) {
-						log.debug("Message from : " + msg.getMessageid() + " was encrypted");
-					}
-					if(encryptionRequired && !submgs.isEncrypted()){
-						errormessage = "Error: Message from : " + msg.getMessageid() + " wasn't encrypted which is a requirement";
-						log.error(errormessage);
-
-					}
-				} catch (Exception e) {
-					errormessage = "Error processing waiting message with Messageid : " + msg.getMessageid() + " : "+ e.getMessage();
-					log.error("Error processing waiting message with Messageid : " + msg.getMessageid(), e);
-				}
-
-				if(submgs != null){
-					SubMessages respSubMsg;
-					try {
-						respSubMsg = generateResponseSubMessage(submgs.getSignerCert());
-						Iterator iter = submgs.getSubMessages().iterator();
-						boolean somethingprocessed = false;
-						while(iter.hasNext()){
-							ISubMessage respMsg = MessageProcessor.processSubMessage(getAdmin(submgs), (ISubMessage) iter.next(), errormessage);
-							if (respMsg != null) {
-								// if the response message is null here, we will ignore this message, 
-								// it means that we should not do anything with it this round 
-								respSubMsg.addSubMessage(respMsg);
-								somethingprocessed = true;
-							}
-						}
-						if (somethingprocessed) {
-							msg.setStatus(Message.STATUS_PROCESSED);
-							msg.setSubMessages(respSubMsg);
-						} else {
-							log.info("Nothing processed for msg with messageId: "+msg.getMessageid()+", leaving it in the queue");
-							msg.setStatus(Message.STATUS_WAITING);
-							// Update create time, so that we will process the next message instead of this again the next round in the loop
-							msg.setCreatetime((new Date()).getTime());
-						}
-						msgHome.update(msg);							
-					} catch (Exception e) {
-						log.error("Error generating response message with Messageid : " + msg.getMessageid(), e);
-					}
-
-				}
-
-			}	     
 		} while (msg != null);
 
 	} // processWaitingMessage
