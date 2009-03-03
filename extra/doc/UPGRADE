@@ -1,0 +1,24 @@
+$Id$
+
+UPGRADE
+=======
+
+This document describes procedures needed to upgrade from one 
+version of External RA to a new version.
+Upgrades within a major version, from 3.6.1 to 3.6.2 for example, are 
+usually plug-in upgrades and can be made simply by deploying the new 
+software. See doc/RELEASE_NOTES for info about such upgrades.
+
+From ExtRA 3.8.x to ExtRA 3.9.x
+-------------------------------
+In 3.9.x the External RA CA service, running on the CA host, has changed dramatically.
+It is no longer a JBoss specific MBean, but is implemented in the generic EJBCA service framework.
+
+To upgrade to ExtRA 3.9.x on EJBCA 3.9.x:
+
+1. Remove all traces of External RA from the CA host.
+   rm JBOSS_HOME/server/default/deploy/extrajbosshibernite.har
+   rm JBOSS_HOME/server/default/deploy/extracajbossservice.jar
+   rm JBOSS_HOME/server/default/deploy/ramessage-ds.xml
+
+2. Follow the installation instructions for ExtRA 3.9.x.
