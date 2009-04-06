@@ -5,8 +5,33 @@
     <property name="app.name.cap" value="ExtRAServer" />
 	<property name="app.version" value="${app.name.cap} 3.9.0" />
 	
+    <property name="extra.home" location="." />
     <property environment="env" />
 	
+	<!--
+		Merge custom modifications from customextra.home to
+		extra.home before reading the other configuration files.
+	-->
+    <property file="conf/config.properties" />
+    <property name="customextra.home" location="${extra.home}/../extra-custom" />
+    <available file="${customextra.home}" type="dir" property="customextra.present" />
+    <condition property="customextra.message" else="No custom changes to merge."
+    	value="Merging available external modifications from ${customextra.home}.">
+    	<isset property="customextra.present" />
+    </condition>
+	<echo message="${customextra.message}" />
+    <condition property="customextra.extensions" value="*" else="none-at-all">
+    	<isset property="customextra.present" />
+    </condition>
+    <condition property="customextra.dir" value="${customextra.home}" else="conf">
+    	<isset property="customextra.present" />
+    </condition>
+	<copy todir="${extra.home}" overwrite="true" failonerror="false">
+		<fileset dir="${customextra.dir}" >
+			<include name="**/*.${customextra.extensions}"/>
+   		</fileset>
+	</copy>
+
     <!-- Give user a chance to override without editing this file
        (and without typing -D each time it compiles it).
        First it checks your home directory for ejbca.properties
