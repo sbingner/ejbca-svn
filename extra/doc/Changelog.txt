@@ -1,3 +1,8 @@
+3.9.0
+-----
+- [ECA-1101] - ExtRA: Make RA CA service as an EJBCA service and make clusterable and support multiple RAs
+               Also possibility to use extra-custom working like ejbca-custom, a place to keep your configuration separated from the extra distribution.
+               
 3.8.0
 -----
 - Updated to work with EJBCA 3.8.0
