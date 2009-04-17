@@ -22,11 +22,11 @@ import org.ejbca.core.model.log.Admin;
 import org.ejbca.core.model.ra.UserDataConstants;
 import org.ejbca.core.model.ra.UserDataVO;
 import org.ejbca.core.protocol.PKCS10RequestMessage;
-import org.ejbca.core.protocol.RequestMessageUtils;
 import org.ejbca.extra.db.PKCS10Request;
 import org.ejbca.extra.db.PKCS10Response;
 import org.ejbca.extra.db.ExtRARequest;
 import org.ejbca.extra.db.ISubMessage;
+import org.ejbca.util.RequestMessageUtils;
 
 /**
  * 

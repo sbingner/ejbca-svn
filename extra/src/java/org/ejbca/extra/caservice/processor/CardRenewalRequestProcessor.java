@@ -38,7 +38,6 @@ import org.ejbca.core.model.ra.UserDataConstants;
 import org.ejbca.core.model.ra.UserDataVO;
 import org.ejbca.core.protocol.IResponseMessage;
 import org.ejbca.core.protocol.PKCS10RequestMessage;
-import org.ejbca.core.protocol.RequestMessageUtils;
 import org.ejbca.core.protocol.X509ResponseMessage;
 import org.ejbca.extra.db.CardRenewalRequest;
 import org.ejbca.extra.db.CardRenewalResponse;
@@ -46,6 +45,7 @@ import org.ejbca.extra.db.ExtRARequest;
 import org.ejbca.extra.db.ExtRAResponse;
 import org.ejbca.extra.db.ISubMessage;
 import org.ejbca.util.CertTools;
+import org.ejbca.util.RequestMessageUtils;
 
 /**
  * 
