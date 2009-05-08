@@ -55,7 +55,7 @@ public class TestCVCertificate
    }
 
    protected void tearDown() throws Exception {
-      // Uninstallera BC 
+      // Uninstall BC 
       Security.removeProvider("BC");
    }
 
@@ -169,9 +169,9 @@ public class TestCVCertificate
 
 	}
 
-   // Hj�lpmetod f�r att skapa ett cert
+   // Helper for creating a test certificate
    private CVCertificate createTestCertificate() throws Exception {
-      // Skaffa nytt nyckelpar
+      // Create new key pair
       KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", "BC");
       keyGen.initialize(1024, new SecureRandom());
       KeyPair keyPair = keyGen.generateKeyPair();
@@ -179,7 +179,7 @@ public class TestCVCertificate
       CAReferenceField caRef = new CAReferenceField(CA_COUNTRY_CODE, CA_HOLDER_MNEMONIC, CA_SEQUENCE_NO);
       HolderReferenceField holderRef = new HolderReferenceField(HR_COUNTRY_CODE, HR_HOLDER_MNEMONIC, HR_SEQUENCE_NO);
 
-      // Anropa metod i CertificateGenerator
+      // Call CertificateGenerator
       return CertificateGenerator.createTestCertificate(keyPair.getPublic(), keyPair.getPrivate(), caRef, holderRef, "SHA1WithRSA", AuthorizationRoleEnum.IS);
    }
 
