@@ -52,11 +52,11 @@ public class CVCertificate extends AbstractSequence implements Signable {
    }
 
    /**
-    * Creates an instance from a CVCRequestBody
+    * Creates an instance from a CVCertificateBody
     * @param body
     * @throws IllegalArgumentException if the argument is null
     */
-   CVCertificate(CVCertificateBody body) throws ConstructionException {
+   public CVCertificate(CVCertificateBody body) throws ConstructionException {
       this();
       
       if( body==null ){
