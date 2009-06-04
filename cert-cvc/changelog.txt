@@ -1,6 +1,7 @@
 1.2.9
 -----
 - Changed visibility of constructor CVCertificate(CVCertificateBody, byte[]) to public.
+- Changed visibility of KeyFactory.createInstance to public.
 
 1.2.8
 -----
