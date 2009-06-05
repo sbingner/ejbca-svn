@@ -22,3 +22,6 @@ To upgrade to ExtRA 3.9.x on EJBCA 3.9.x:
    rm JBOSS_HOME/server/default/deploy/ramessage-ds.xml
 
 2. Follow the installation instructions for ExtRA 3.9.x.
+
+On the external RA host installation is basically the same as usual. 
+It is on the CA host where the large changes have been made.
