@@ -1,3 +1,7 @@
+3.9.1
+-----
+- [ECA-1354] - Update bc jars to run with EJBCA 3.9.1
+
 3.9.0
 -----
 - [ECA-1101] - ExtRA: Make RA CA service as an EJBCA service and make clusterable and support multiple RAs
