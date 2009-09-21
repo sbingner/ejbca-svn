@@ -1,3 +1,7 @@
+1.2.10
+-----
+- Fixed encoding of EC public points in the edge cases where affineX.length != affineY.length. Cone by adding the required left zero padding.
+
 1.2.9
 -----
 - Changed visibility of constructor CVCertificate(CVCertificateBody, byte[]) to public.

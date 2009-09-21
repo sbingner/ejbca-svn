@@ -129,6 +129,28 @@ public class TestPublicKey
       ECPoint decodedPoint = PublicKeyEC.decodePoint(new BigInteger(expectedByteStr,16).toByteArray());
       assertEquals("AffineX", affineX, decodedPoint.getAffineX());
 
+      // Test with a point with an affineY that is one byte shorted than the affineX, should be 0 padded on the left
+      String x = "9FDAB8773ADEE1735BB58E8D0A81C29924EC3F94D9F4B182E887CBDC7CDDD357";
+      String y = "D758F858BF3C84575E93D13D072AD9255CD47F18F40A262F43A237132B55A1";
+      expectedByteStr = "04"+x+"00"+y;
+      affineX = new BigInteger(x, 16);
+      affineY = new BigInteger(y, 16);
+      point = new ECPoint(affineX, affineY);
+      data = PublicKeyEC.encodePoint(point);
+      String result = StringConverter.byteToHex(data);
+      assertEquals("Encoded ECPoint", expectedByteStr, result);
+
+      // Test with a point with an affineX that is one byte shorted than the affineY, should be 0 padded on the left
+      x = "9FDAB8773ADEE1735BB58E8D0A81C29924EC3F94D9F4B182E887CBDC7CDDD3";
+      y = "57D758F858BF3C84575E93D13D072AD9255CD47F18F40A262F43A237132B55A1";
+      expectedByteStr = "04"+"00"+x+y;
+      affineX = new BigInteger(x, 16);
+      affineY = new BigInteger(y, 16);
+      point = new ECPoint(affineX, affineY);
+      data = PublicKeyEC.encodePoint(point);
+      result = StringConverter.byteToHex(data);
+      assertEquals("Encoded ECPoint", expectedByteStr, result);
+
       // Create key with BouncyCastle (v1.36 supports key lengths 192, 239 and 256)...
       // See org.bouncycastle.jce.provider.JDKKeyPairGenerator.EC
       KeyPairGenerator keyGen = KeyPairGenerator.getInstance("ECDSA", "BC");

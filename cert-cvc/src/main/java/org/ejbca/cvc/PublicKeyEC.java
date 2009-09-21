@@ -20,6 +20,7 @@ import java.security.spec.ECParameterSpec;
 import java.security.spec.ECPoint;
 import java.security.spec.EllipticCurve;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.bouncycastle.jce.ECPointUtil;
@@ -240,11 +241,44 @@ public class PublicKeyEC
       byte[] pointY = trimByteArray(ecPoint.getAffineY().toByteArray());
 
       // pointX.length should be equal to pointY.length...
-      byte[] encoded = new byte[1 + pointX.length + pointY.length];
+      // Below is a tad bit too much logic to handle this edge case...but what to do. It's easy to understand at least 
+      // and in the general case (about 99.5% of all keys) the if clauses will rapidly return false.
+      int addxlen = 0;
+      int addylen = 0;
+      if (pointX.length != pointY.length) {
+    	  // differing lengths, we need 0 padding
+    	  if (pointY.length < pointX.length) {
+    		  addylen = pointX.length - pointY.length;
+    	  }
+    	  if (pointX.length < pointY.length) {
+    		  addxlen = pointY.length - pointX.length;
+    	  }
+      }
+      byte[] encoded = new byte[1 + pointX.length + pointY.length+addxlen+addylen];
+      // Add 0x04, required tag by the encoding
       encoded[0] = UNCOMPRESSED_POINT_TAG;
-      System.arraycopy(pointX, 0, encoded, 1, pointX.length);
-      System.arraycopy(pointY, 0, encoded, 1+pointX.length, pointY.length);
-
+      int pos = 1;
+      // If x was larger than y we need to pad x on the left with 0
+      // If we must pad with more than two bytes, this key must be seriously f..ed up so leave it and let it break instead.
+      if ((addxlen != 0) && (addxlen < 3)) {
+          byte[] zeroes = new byte[addxlen];
+          Arrays.fill(zeroes, (byte)0);
+          System.arraycopy(zeroes, 0, encoded, pos, addxlen);
+          pos = pos + addxlen;
+      }
+      // Add the affineX
+      System.arraycopy(pointX, 0, encoded, pos, pointX.length);
+      pos = pos + pointX.length;
+      // If y was larger than x we need to pad y on the left with 0
+      // If we must pad with more than two bytes, this key must be seriously f..ed up so leave it and let it break instead.
+      if ((addylen != 0) && (addylen < 3)) {
+          byte[] zeroes = new byte[addylen];
+          Arrays.fill(zeroes, (byte)0);
+          System.arraycopy(zeroes, 0, encoded, pos, addylen);
+          pos = pos + addylen;
+      }      
+      // Add the affineY
+      System.arraycopy(pointY, 0, encoded, pos, pointY.length);
       return encoded;
    }
 

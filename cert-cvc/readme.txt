@@ -17,4 +17,3 @@ Using
 There are example and test code which demonstrates the use of cert-cvc.jar. 
 Some examples are under src/main/java/org/ejbca/cvc/example, and the test code (JUnit tests) are under 
 src/test.
-   
