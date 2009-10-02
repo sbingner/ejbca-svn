@@ -190,12 +190,24 @@ public class TestDatafields
       // Compare byte by byte
       assertTrue("Byte arrays not equal", Arrays.equals(enc, dateRef));
 
-      // Compare strings to avoid problems with seconds etc
+      // Compare strings to avoid problems with seconds, minutes from current time etc
       DateField date2 = new DateField(CVCTagEnum.EFFECTIVE_DATE, enc);
       Calendar cal2 = Calendar.getInstance();
       cal2.setTime(date2.getDate());
       String s2 = FORMAT_PRINTABLE.format(cal2.getTime());
       assertEquals(s1, s2);
+      // Also test the time part, should be all zeroes
+      assertEquals(0, cal2.get(Calendar.HOUR_OF_DAY));
+      assertEquals(0, cal2.get(Calendar.MINUTE));
+      assertEquals(0, cal2.get(Calendar.SECOND));
+
+      DateField date3 = new DateField(CVCTagEnum.EXPIRATION_DATE, enc);
+      Calendar cal3 = Calendar.getInstance();
+      cal3.setTime(date3.getDate());
+      // The time part should be 'maximum' in this case
+      assertEquals(23, cal3.get(Calendar.HOUR_OF_DAY));
+      assertEquals(59, cal3.get(Calendar.MINUTE));
+      assertEquals(59, cal3.get(Calendar.SECOND));
    }
 
  
