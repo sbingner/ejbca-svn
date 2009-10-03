@@ -1,6 +1,8 @@
 1.2.10
 -----
 - Fixed encoding of EC public points in the edge cases where affineX.length != affineY.length. Cone by adding the required left zero padding.
+- Fixed returning of date field so returning expire date returns <day> 23.59.59, insdead of <day> 00.00.00. 
+  When comparing dates expire date means that the CV certificate is valid for the whole of the <day> (CVC expire date only contains day resolution). 
 
 1.2.9
 -----
