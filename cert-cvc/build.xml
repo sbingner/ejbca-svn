@@ -16,7 +16,7 @@
 	</target>
 
     <target name="compilecvc" depends="init" >
-        <javac destdir="build" debug="on" includeantruntime="no" encoding="iso8859-1">
+        <javac destdir="build" debug="on" includeantruntime="no" encoding="iso8859-1" target="1.5">
             <classpath refid="compile.classpath" />
             <src path="src/main" />
         </javac>
