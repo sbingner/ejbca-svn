@@ -20,6 +20,8 @@ import java.util.Calendar;
 
 import junit.framework.TestCase;
 
+import org.ejbca.cvc.util.StringConverter;
+
 /**
  * Tests basic functionality for AbstractDataField
  * 
@@ -220,10 +222,19 @@ public class TestDatafields
       // First two numbers in the OID are encoded as 40*i1 + i2, the rest as i3, i4, ...
       byte[] oidRef = new byte[] { 0x2A, 0x03 };
       
+      System.out.println("Ref: " + StringConverter.byteToHex(oidRef));
+      System.out.println("Val: " + StringConverter.byteToHex(der));
       assertTrue("Byte arrays not equal", Arrays.equals(der,oidRef));
 
-      OIDField oid2 = new OIDField(der);
-      assertEquals("Parsed oid not equal", oidValue, oid2.getValue());
+      OIDField oidDec = new OIDField(der);
+      assertEquals("Parsed oid not equal", oidValue, oidDec.getValue());
+
+      // Test 2, OID with values > 128
+      String oidValue2 = "2.16.840.1.113719.1.1.4.1.2";      
+      OIDField oid2 = new OIDField(oidValue2);
+      byte[] oidRef2 = new byte[] { 0x60, (byte)0x86, 0x48, 0x01, (byte)0x86, (byte)0xF8, 0x37, 0x01, 0x01, 0x04, 0x01, 0x02 };
+      byte[] der2 = oid2.getEncoded();
+      assertTrue("Byte arrays(2) not equal", Arrays.equals(der2, oidRef2));
    }
    
 }
