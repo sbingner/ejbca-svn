@@ -9,6 +9,11 @@ Upgrades within a major version, from 3.6.1 to 3.6.2 for example, are
 usually plug-in upgrades and can be made simply by deploying the new 
 software. See doc/RELEASE_NOTES for info about such upgrades.
 
+From ExtRA 3.9.x to ExtRA 3.10.x
+--------------------------------
+From EJBCA 3.10, the External RA is part of the main EJBCA bundle. Please refer to the EJBCA
+documentation for more information. 
+
 From ExtRA 3.8.x to ExtRA 3.9.x
 -------------------------------
 In 3.9.x the External RA CA service, running on the CA host, has changed dramatically.
