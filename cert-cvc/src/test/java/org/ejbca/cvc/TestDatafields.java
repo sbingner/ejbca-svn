@@ -20,7 +20,7 @@ import java.util.Calendar;
 
 import junit.framework.TestCase;
 
-import org.ejbca.cvc.util.StringConverter;
+import org.ejbca.cvc.exception.ParseException;
 
 /**
  * Tests basic functionality for AbstractDataField
@@ -43,6 +43,20 @@ public class TestDatafields
 
    protected void tearDown() throws Exception {
       super.tearDown();
+   }
+
+   public void testParseError() throws Exception {
+	 try {
+		 CertificateParser.parseCertificate(new byte[] {'1','2','3','4','5'});  // Something unparseable
+		 fail("ParseException should have been thrown");
+	 }
+	 catch (ParseException e) {
+		 // Ok!
+	 }
+	 catch (Exception e) {
+		 // Not Ok!
+	     fail("ParseException should have been thrown, not " + e);
+	 }
    }
 
    
@@ -222,8 +236,6 @@ public class TestDatafields
       // First two numbers in the OID are encoded as 40*i1 + i2, the rest as i3, i4, ...
       byte[] oidRef = new byte[] { 0x2A, 0x03 };
       
-      System.out.println("Ref: " + StringConverter.byteToHex(oidRef));
-      System.out.println("Val: " + StringConverter.byteToHex(der));
       assertTrue("Byte arrays not equal", Arrays.equals(der,oidRef));
 
       OIDField oidDec = new OIDField(der);
