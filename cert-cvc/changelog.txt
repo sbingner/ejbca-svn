@@ -1,6 +1,7 @@
 1.2.11
 -----
 - Fixed slight chance that EC public points would still be wrongly encoded (1 out of 2^16). Patch from Mark Baaijens of Ministerie van Binnenlandse Zaken en Koninkrijksrelaties, Netherlands.
+- parseCertificate() does not throw IllegalArgumentException anymore but throws ParseException instead)
 
 1.2.10
 -----
