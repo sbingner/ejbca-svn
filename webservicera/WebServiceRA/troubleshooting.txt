@@ -1,0 +1,91 @@
+/*************************************************************************
+ *                                                                       *
+ *  EJBCA: The OpenSource Certificate Authority                          *
+ *                                                                       *
+ *  This software is free software; you can redistribute it and/or       *
+ *  modify it under the terms of the GNU Lesser General Public           *
+ *  License as published by the Free Software Foundation; either         *
+ *  version 2.1 of the License, or any later version.                    *
+ *                                                                       *
+ *  See terms of license at gnu.org.                                     *
+ *                                                                       *
+ *  Copyright (c) PrimeKey Solutions AB.                                 *
+ *                                                                       *
+ *************************************************************************/
+ 
+Troubleshooting notes:
+
+
+1)  Error message:
+javax.xml.ws.WebServiceException: Failed to access the WSDL at: https://ejbca.course:8443/ejbca/ejbcaws/ejbcaws?wsdl. It failed with: 
+	Operation timed out.
+This means that the appserver isn't accessible; it may not be running or the url (eg, ejbca.course:8443) may be incorrect.
+
+
+
+2)  If the option is made to generate the end entity's certificate (instead of just adding the new end entity to the EJBCA database),
+then the end entity profile needs to have "Batch generation (clear text pwd storage) use" checkbox selected.
+ 
+
+ 
+3)  Make sure that the appriopriate access rules are marked as "Accept" in the admin web page interface (System Functions | Edit Administrator Privileges | Access Rules)
+including the access rules for the selected end entity profile.
+See the Admin Guide 
+	https://ejbca.course:8443/ejbca/doc/adminguide.html#Accessrules%20required%20when%20using%20the%20Web%20Service%20API
+or the Interface EjbcaWS section of the EJBCA Web Service API Reference
+	https://ejbca.course:8443/ejbca/doc/ws/index.html
+for more information on the access rules needed by the web service API.	
+
+
+
+4)  The UI only exposes a subset of available DN fields.  If the end entity profile selected requires fields to be set that are not available in this UI,
+or if an available field is filled in but is not marked as "use" in the end entity profile, then an exception will be reported
+when attempting to create the new item.
+  
+  
+ 
+5)  If you are encountering problems using the send email notification functionality:
+
+Make sure that the appserver is configured correctly for sending mail.
+Note that this has nothing to do with whether or not the sendmail service is running on the server.
+
+If the appserver is jboss, the settings for sending email can be found in the
+	jboss/server/default/deploy/ejbca-mail-service.xml file.
+In particular, check that the smtp, user and pw settings are correct.
+Try enabling the mail.debug property in the xml file for more info.
+
+Check that the end entity profile settings for mail notifications are correct:
+	a) "Send Notification Use" should be checked;
+	b) the email address for "Notification Sender" should be set to something meaningful that indicates it is coming from the CA;
+	c) the "Notification Recipient" should be set to "USER";
+	d) the selection of "Notification Events" should include "STATUSNEW";
+	e) if this notification is being used to indicate to a user that he needs to go to the public web page interface to create a certificate or keystore,
+	and if the email delivery is deemed secure,
+	then the "Notification Message" could indicate the password for the newly added user.
+	See the section on
+	"Dynamic Substitution Variables" under "Email notifications" in the EJBCA Admin Guide; in particular your message may
+	include the ${USERNAME}, ${PASSWORD}, and instructions on creating the certificate (such as the url of the public web page interface). 
+ 
+Also, is an email address in the Subject DN field enabled in the end entity profile, and is the value provided for the current user correct?
+
+Check firewall issues affecting the sending of email.
+
+5a) If you get the following exception:
+	org.ejbca.core.protocol.ws.client.gen.UserDoesntFullfillEndEntityProfile_Exception: Email notification cannot be used.
+then you probably have the "Send Email Notification" checkbox selected in the client application but the actual end entity profile does not have the Use checkbox selected for "Send Notification".
+  
+
+  
+General tips:
+ 
+1)  Make sure that the date/time of the appserver is correct.
+For example, if this is a test or learning system that you are running in a VM, it will almost certainly not have the correct time if you pause and restart the VM.
+On Linux, run "date" to see the current date time; you can also use date (as su) to set the correct time.
+
+
+2)  Make sure that the hostname set for the appserver is recognized on your client machine (set it in the hosts file if necessary).
+The server expects requests to be made through the value set in the EJBCA/conf/web.properties file for httpsserver.hostname.
+
+
+3)  Bug (3.10):  When editing an end entity profile in the admin web page interface, previously saved send notification settings (recipient and message) cannot be changed.
+The workaround is to add a new send notification, copy the previous settings, and then modify them.

@@ -1,0 +1,166 @@
+/*************************************************************************
+ *                                                                       *
+ *  EJBCA: The OpenSource Certificate Authority                          *
+ *                                                                       *
+ *  This software is free software; you can redistribute it and/or       *
+ *  modify it under the terms of the GNU Lesser General Public           *
+ *  License as published by the Free Software Foundation; either         *
+ *  version 2.1 of the License, or any later version.                    *
+ *                                                                       *
+ *  See terms of license at gnu.org.                                     *
+ *                                                                       *
+ *  Copyright (c) PrimeKey Solutions AB.                                 *
+ *                                                                       *
+ *************************************************************************/
+ 
+Notes on TODO items, Issues, and Open Questions:
+
+
+1)  If you care about serialization, you should check that the project Properties | Java Compiler | Errors/Warnings | Potential Programming Problems 
+does not have the "Serializable class without serialVersionUID" warning set to Ignore.
+
+In its current state, most source files will generate this warning and the project ignores the warning.
+
+
+
+2)  The current app supports an SDI interface, but it could be converted to an MDI app if deemed desirable.
+The main issue for an MDI would be to support an arbitrary number of appservers.
+This would require working around the current method in which System properties are used to set the keyStore and trustStore settings;
+this can be deduced from the code used to avoid the standard SSL session caching (see WebServiceConnection.java and OptionsPanel.java)
+when the appserver settings may have changed.
+ 
+ 
+
+3)  Advanced queries (boolean combinations of the currently supported queries) are not currently added.
+The logic for providing this would not be difficult.
+However, what would be a nice UI that makes this straightforward to use?
+
+
+
+4)  The UI only exposes a subset of available DN fields.  If the end entity profile selected requires fields to be set that are not available in this UI,
+or if an available field is filled in but is not marked as "use" in the end entity profile, then an exception will be reported
+when attempting to create the new item.
+
+This can be a major limitation to some users.
+
+One possible fix is to modify the app to change the set of available DN fields modifiable in the UI.
+
+Anther possible change would be to provide a set of end entity profiles with the application.  After the choice of end entity profile
+is made, the UI would display only fields used by that profile.
+The UI could also present default values and prevent changes to fields that are marked as not modifiable.
+("ca exportprofiles" can be used to export profiles from the EJBCA database into .xml files; these would be the files that would
+be imported into the application to define the end entity profile information).
+
+This last change would also be easier to achieve if the EJBCA web service API is enhanced in the future to include 
+a method for querying this kind of end entity profile information.
+
+4a)  Assuming the second suggestion above, 
+which profiles should we assume are provided (via an .xml file?) with the app?
+
+4b)  Assuming the first suggestion, which fields should we always assume are present and which not present?  
+eg, email, subject alt name?
+
+4c)  Regardless of the choice made above, make the UI flexible to support displaying only fields used by the current end
+entity profile.  This would include displaying default values for fields and disabling fields that are not modifiable (or which
+have only a single selectable value).
+
+
+
+5)  If EMPTY end entity profile can never be used to create an end entity (is this true?),
+then should we exclude it from the first wizard page?
+
+
+
+6)  Exception handling.
+This application has a philosophy on exception handling that is contrary to that of many others.
+Namely: the app just wants to report that there is a problem with a simple message for the user.
+In other words, the code will often simple catch the base class Exception.
+
+If you wish to handle individual Exception types separately, then the order their catch statements is listed
+may be relevant.
+6a)  Is the order of exceptions as listed in 
+ 	https://ejbca.course:8443/ejbca/doc/ws/index.html
+significant?
+Should this be the same order used for their corresponding catch statements?
+Does the order in the documentation reflect this same order?  
+Or is it the order of the first possible occurrence of each exception?
+Or possibly none of the above?
+ 
+
+
+7)  What types of validation should be performed on fields in the wizard panels?
+For example, if an error message will result if a field (such as user name) is empty,
+why not catch the problem sooner rather than wait until a web service request has been made?
+What are the most common user errors that can be caught before a ws call is made?
+ 
+7a) Many fields have a length of at most 64 characters.  Which ones are these and for which should we make this a validation test?
+
+
+
+8)  Should any of the web service calls be made asynchronously (for better perceived user interaction)?
+For example, we could defer web service calls until a page is loaded; this would improve the performance
+of the wizard dialogs when they are slow to appear because of web service calls made during initialization of all the pages.
+Note this is really only an issue if, say, the server is not available (the CA hasn't been started or the network is down).
+
+
+
+9)  UI:  Should labels in dialogs be right-aligned or left?  
+Right-aligned would conform more with Apple UI guidelines but what would we want on other platforms?
+Or should this change depending on which underlying OS the app is run on?
+
+
+
+10)  To be investigated:  Are there any issues with compiling against web service for one version of EJBCA but running against another?
+In particular, should the code take any special precautions or provide a more helpful message when running against an older version
+of EJBCA but invoking a method that was added in a later version?
+
+
+
+11)  With regards to the certificate generation code in EndEntitySaveAsPage.java:
+Which options should be hard-wired (as currently) and which should the user be allowed to set?  
+(eg, what the X509name be?  
+the algorithm?  
+the alias?).
+ 
+
+ 
+12)  Querying end entities:
+What should the order be for the items in the query type list?
+What should the default query type be?  By user name or by CA?
+(The later is a quick test that communications with the appserver are good as the combo box is automatically populated by a ws call). 
+
+ 
+
+EJBCA Web Service feature requests:
+ 
+Some features of the EJBCA web page interface are not available in this client app because the web service API does not
+provide support for them.  Web service methods for the following would enable the development of many of these features:
+
+1)  A request for information on end entity profiles, particularly, the fields that are used, required, modifiable and their default values if any.
+(See item 4) above).
+
+ 
+2)  A request for all certificate profiles.
+ (There is a workaround to this but it generates multiple network requests instead of a single one:
+ request all end entity profiles and then for each one, request its available certificate profiles.
+ In theory, there could miss a certificate profile if it was not available to any end entity profiles,
+ but such a profile would be of dubious value anyway).  
+ 
+3) A query by start and/or end time.
+ (Supported by the web page interface, not the WS-API).
+ 
+4) A request for all users.  
+ (The web page interface allows an "All" status query.
+ The workaround is simply to make multiple query requests, one for each different status value).
+ 
+5) A request for complex queries.
+ (Not a big deal, though it would be simpler if the web service api knew how to accept complex queries 
+ (as the web page interface does) instead
+ of requiring the client to perform the appropriate intersections and unions of multiple basic queries.
+ Probably the bigger issue here is how to present a simple UI that allows users to make these complex queries).
+ 
+6) An API for creating/editing profiles?
+ 
+7) Access to the End Entity history from log device?
+ 
+8) In "View End Entity", how are "Revocation reason to set", "Created", and "Modified" time implemented? 

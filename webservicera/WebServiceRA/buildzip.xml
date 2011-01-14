@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. -->
+<project basedir="." default="build" name="WebServiceRA">
+    <property environment="env"/>
+    <property name="ECLIPSE_HOME" value="../../../../../Applications/eclipse"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+    <path id="WebServiceRA.classpath">
+        <pathelement location="bin"/>
+        <pathelement location="lib/ejbca-ws-cli/ejbca-ws-cli.jar"/>
+        <pathelement location="lib/ejbca-ws-cli/lib/ejbca-util.jar"/>
+        <pathelement location="lib/ejbca-ws-cli/lib/bcprov-jdk15.jar"/>
+        <pathelement location="lib/ejbca-ws-cli/lib/commons-logging.jar"/>
+        <pathelement location="lib/ejbca-ws-cli/lib/log4j.jar"/>
+        <pathelement location="lib/ejbca-ws-cli/lib/ejbca-ws.jar"/>
+        <pathelement location="lib/ejbca-ws-cli/lib/commons-lang-2.4.jar"/>
+    </path>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="OSXAdapter/src">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="CJWizard/src">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    <target depends="clean" name="cleanall"/>
+    <target depends="build-subprojects,build-project" name="build"/>
+    <target name="build-subprojects"/>
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="WebServiceRA.classpath"/>
+        </javac>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
+            <src path="OSXAdapter/src"/>
+            <classpath refid="WebServiceRA.classpath"/>
+        </javac>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
+            <src path="CJWizard/src"/>
+            <classpath refid="WebServiceRA.classpath"/>
+        </javac>
+    </target>
+    <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
+    <target description="copy Eclipse compiler jars to ant lib directory" name="init-eclipse-compiler">
+        <copy todir="${ant.library.dir}">
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </copy>
+        <unzip dest="${ant.library.dir}">
+            <patternset includes="jdtCompilerAdapter.jar"/>
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </unzip>
+    </target>
+    <target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
+        <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
+        <antcall target="build"/>
+    </target>
+    <target name="MainFrame (1)">
+        <java classname="org.sio2.ejbca.MainFrame" failonerror="true" fork="yes">
+            <jvmarg line="-Xdock:name=&quot;RA Administrator&quot;"/>
+            <classpath refid="WebServiceRA.classpath"/>
+        </java>
+    </target>
+	
+    <!-- ======================================================================= -->
+    <!-- Make a ZIP release file of WebServiceRA.    -->
+	<!-- The ZIP file contains all the files used, but not temporary or compile files etc -->
+    <!-- ======================================================================= -->
+	<target name="ziprelease" description="Make a zip file for WebServiceRA release">
+
+		<zip destfile="../WebServiceRA.zip">
+		    <zipfileset dir="." prefix="WebServiceRA" filemode="600" dirmode="700"> 
+		    	<include name="**/**" />
+		    	<exclude name="**/*.class" />
+		    	<exclude name="ejbca**/**" />
+		    	<exclude name="RAAdmin.properties" />
+		    	<exclude name="OSXAdapter/**" />
+		    	<exclude name="**/.DS_Store" />
+		    </zipfileset>
+		</zip>
+	</target>
+
+</project>
